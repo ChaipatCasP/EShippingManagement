@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { mockNotifications, mockComments } from '../data/mockData';
-import type { Notification, Comment } from '../types/shipment';
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState(mockNotifications);

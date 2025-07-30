@@ -103,8 +103,8 @@ export function NotificationCenter({
   const counts = getNotificationCounts();
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="pb-3">
+    <Card className="w-full max-w-md bg-white border border-gray-200 shadow-lg">
+      <CardHeader className="pb-3 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
@@ -131,7 +131,7 @@ export function NotificationCenter({
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 bg-white">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 mb-4">
             <TabsTrigger value="all" className="relative">

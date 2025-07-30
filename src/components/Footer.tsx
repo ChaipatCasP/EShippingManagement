@@ -1,5 +1,4 @@
-import React from 'react';
-import jagotaLogo from 'figma:asset/ff4cc62167f856df08ea3a5c273f5de4c69e10c7.png';
+// import jagotaLogo from 'figma:asset/ff4cc62167f856df08ea3a5c273f5de4c69e10c7.png';
 
 export function Footer() {
   return (
@@ -9,14 +8,11 @@ export function Footer() {
           {/* Logo and Brand - Enhanced with larger logo */}
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <img 
-                src={jagotaLogo} 
-                alt="JAGOTA" 
-                className="h-10 w-auto object-contain drop-shadow-sm"
-                style={{
-                  filter: 'contrast(2) brightness(0.2)'
-                }}
-              />
+              <div 
+                className="h-10 px-4 bg-primary text-primary-foreground rounded flex items-center text-lg font-bold drop-shadow-sm"
+              >
+                JAGOTA
+              </div>
             </div>
             <div className="text-lg font-semibold text-gray-900">
               JAGOTA eShipping

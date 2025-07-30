@@ -18,6 +18,14 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.staging
+
+# Secrets and sensitive files
+secrets/
+*.key
+*.pem
+*.crt
+*.p12
 
 # IDE and Editor files
 .vscode/

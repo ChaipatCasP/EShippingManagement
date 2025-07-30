@@ -234,7 +234,7 @@ export function ColoadAccordion({
                           <div className="mt-1 flex flex-wrap gap-1">
                             {Object.entries(statusCounts).map(([status, count]) => (
                               <Badge key={status} className={getStatusColor(status)}>
-                                {count}x {status}
+                                {String(count)}x {status}
                               </Badge>
                             ))}
                           </div>

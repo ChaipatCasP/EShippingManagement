@@ -21,9 +21,9 @@ export interface Shipment {
   etd: string;
   eta: string;
   status: 'pending' | 'pst-created' | 'pst-approved' | 'psw-waiting-approval' | 'completed';
-  billStatus: 'New Entry' | 'In Progress' | 'Completed' | 'On Hold';
-  jagotaStatus: 'Under Review' | 'Approved' | 'On Hold' | 'Completed';
-  billType: 'Urgent' | 'Regular';
+  billStatus: 'New Entry' | 'In Progress' | 'Completed' | 'On Hold' | 'Documentation Pending' | 'Approved' | 'Pending' | 'Processing';
+  jagotaStatus: 'Under Review' | 'Approved' | 'On Hold' | 'Completed' | 'Processing';
+  billType: 'Urgent' | 'Regular' | 'Express' | 'Premium' | 'Cold Chain' | 'Bulk';
   pstStatus: 'new-entry' | 'not-started' | 'in-progress' | 'completed';
   pstNumber: string | null;
   pswStatus?: 'not-started' | 'in-progress' | 'waiting-approval' | 'approved';
@@ -80,5 +80,5 @@ export interface Notification {
 }
 
 export type SortOption = 'none' | 'clearDate-asc' | 'clearDate-desc' | 'status-asc' | 'status-desc';
-export type CurrentView = 'dashboard' | 'create-pst';
+export type CurrentView = 'dashboard' | 'create-pst' | 'create-psw';
 export type DateFilterMode = 'today' | 'last7days' | 'custom';

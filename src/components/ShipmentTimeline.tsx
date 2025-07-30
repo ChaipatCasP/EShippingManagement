@@ -1,12 +1,10 @@
-import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { ArrowRight, Key, FileDigit, CalendarDays, MapPin, Package2, Layers, CreditCard, Flag, Users, FileText, Truck, Ship, Plane, Calendar } from 'lucide-react';
+import { ArrowRight, Key, FileDigit, MapPin, Package2, Layers, Flag, Users, FileText, Calendar } from 'lucide-react';
 import {
   getTypeIcon,
-  getBillStatusColor,
   getJagotaStatusColor,
   getActionButtonConfig
 } from '../lib/shipmentUtils';
@@ -18,6 +16,7 @@ interface ShipmentTimelineProps {
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
   onCreatePSW: (poNumber: string) => void;
+  isLoading?: boolean;
 }
 
 export function ShipmentTimeline({ 

@@ -1,0 +1,140 @@
+/**
+ * Dashboard & Analytics API Services
+ */
+
+import { apiClient, type ApiResponse } from '../apiClient';
+import type {
+  DashboardStats,
+  ShipmentAnalytics,
+  Notification,
+  NotificationSettings
+} from '../types';
+
+export class DashboardService {
+  /**
+   * ดึงสถิติหลักของ Dashboard
+   */
+  static async getDashboardStats(period?: string): Promise<ApiResponse<DashboardStats>> {
+    const params = period ? { period } : {};
+    return apiClient.get<DashboardStats>('/dashboard/stats', { params });
+  }
+
+  /**
+   * ดึงข้อมูลวิเคราะห์การจัดส่ง
+   */
+  static async getShipmentAnalytics(
+    period: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<ApiResponse<ShipmentAnalytics>> {
+    const params: any = { period };
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    
+    return apiClient.get<ShipmentAnalytics>('/dashboard/analytics', { params });
+  }
+
+  /**
+   * ดึงข้อมูลรายได้ตามช่วงเวลา
+   */
+  static async getRevenueStats(
+    period: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<ApiResponse<{ period: string; revenue: number; growth: number }[]>> {
+    const params: any = { period };
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    
+    return apiClient.get<{ period: string; revenue: number; growth: number }[]>('/dashboard/revenue', { params });
+  }
+
+  /**
+   * ดึงข้อมูลประสิทธิภาพการส่ง
+   */
+  static async getDeliveryPerformance(): Promise<ApiResponse<{
+    onTimeDelivery: number;
+    averageDeliveryTime: number;
+    customerSatisfaction: number;
+    failureRate: number;
+  }>> {
+    return apiClient.get('/dashboard/performance');
+  }
+
+  /**
+   * ดึงการแจ้งเตือนทั้งหมด
+   */
+  static async getNotifications(limit?: number): Promise<ApiResponse<Notification[]>> {
+    const params = limit ? { limit } : {};
+    return apiClient.get<Notification[]>('/notifications', { params });
+  }
+
+  /**
+   * ดึงการแจ้งเตือนที่ยังไม่ได้อ่าน
+   */
+  static async getUnreadNotifications(): Promise<ApiResponse<Notification[]>> {
+    return apiClient.get<Notification[]>('/notifications/unread');
+  }
+
+  /**
+   * ทำเครื่องหมายการแจ้งเตือนว่าอ่านแล้ว
+   */
+  static async markNotificationAsRead(id: string): Promise<ApiResponse<void>> {
+    return apiClient.patch<void>(`/notifications/${id}/read`);
+  }
+
+  /**
+   * ทำเครื่องหมายการแจ้งเตือนทั้งหมดว่าอ่านแล้ว
+   */
+  static async markAllNotificationsAsRead(): Promise<ApiResponse<void>> {
+    return apiClient.patch<void>('/notifications/mark-all-read');
+  }
+
+  /**
+   * ลบการแจ้งเตือน
+   */
+  static async deleteNotification(id: string): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>(`/notifications/${id}`);
+  }
+
+  /**
+   * ดึงการตั้งค่าการแจ้งเตือน
+   */
+  static async getNotificationSettings(): Promise<ApiResponse<NotificationSettings>> {
+    return apiClient.get<NotificationSettings>('/settings/notifications');
+  }
+
+  /**
+   * อัปเดตการตั้งค่าการแจ้งเตือน
+   */
+  static async updateNotificationSettings(settings: Partial<NotificationSettings>): Promise<ApiResponse<NotificationSettings>> {
+    return apiClient.put<NotificationSettings>('/settings/notifications', settings);
+  }
+
+  /**
+   * ดึงข้อมูลกิจกรรมล่าสุด
+   */
+  static async getRecentActivities(limit?: number): Promise<ApiResponse<{
+    id: string;
+    type: string;
+    description: string;
+    user: string;
+    timestamp: string;
+    data?: any;
+  }[]>> {
+    const params = limit ? { limit } : {};
+    return apiClient.get('/dashboard/activities', { params });
+  }
+
+  /**
+   * ดึงข้อมูลการใช้งานระบบ
+   */
+  static async getSystemUsage(): Promise<ApiResponse<{
+    activeUsers: number;
+    totalShipmentsToday: number;
+    pendingTasks: number;
+    systemHealth: 'good' | 'warning' | 'critical';
+  }>> {
+    return apiClient.get('/dashboard/system-usage');
+  }
+}

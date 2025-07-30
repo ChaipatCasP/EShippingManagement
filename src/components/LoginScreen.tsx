@@ -11,20 +11,18 @@ import {
   EyeOff, 
   Mail, 
   Lock, 
-  Building, 
   Globe, 
   Shield,
-  CheckCircle,
   AlertTriangle,
   ArrowRight,
   Loader2
 } from 'lucide-react';
-import jagotaLogo from 'figma:asset/f9992255b81ceaea2bb1cfe9e3d3c7bbe4bb82bf.png';
+// import jagotaLogo from 'figma:asset/f9992255b81ceaea2bb1cfe9e3d3c7bbe4bb82bf.png';
 
 interface LoginScreenProps {
   onLogin: (credentials: LoginCredentials) => Promise<void>;
-  onForgotPassword: () => void;
-  onSignUp: () => void;
+  onForgotPassword: (email: string) => Promise<void>;
+  onSignUp: (credentials: LoginCredentials & { confirmPassword: string }) => Promise<void>;
 }
 
 interface LoginCredentials {
@@ -140,12 +138,6 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
     }
   };
 
-  const securityFeatures = [
-    { icon: <Shield className="w-4 h-4" />, text: "256-bit SSL Encryption" },
-    { icon: <CheckCircle className="w-4 h-4" />, text: "Multi-factor Authentication" },
-    { icon: <Globe className="w-4 h-4" />, text: "Global Security Standards" }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       
@@ -163,11 +155,11 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                 <div className="flex items-center space-x-3">
                   {/* JAGOTA Logo Image */}
                   <div className="flex items-center">
-                    <img 
-                      src={jagotaLogo} 
-                      alt="JAGOTA" 
-                      className="h-8 w-auto object-contain"
-                    />
+                    <div 
+                      className="h-8 px-4 bg-white text-black rounded flex items-center text-sm font-bold"
+                    >
+                      JAGOTA
+                    </div>
                   </div>
                   <div className="h-8 w-px bg-gray-400"></div>
                   <div>
@@ -300,7 +292,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                       type="button"
                       variant="link"
                       className="px-0 text-sm"
-                      onClick={onForgotPassword}
+                      onClick={() => onForgotPassword(credentials.email)}
                       disabled={isLoading}
                     >
                       Forgot password?
@@ -333,7 +325,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                         type="button"
                         variant="link"
                         className="px-0 text-sm font-medium"
-                        onClick={onSignUp}
+                        onClick={() => onSignUp({ ...credentials, confirmPassword: '' })}
                         disabled={isLoading}
                       >
                         Contact Administrator

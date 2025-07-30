@@ -3,8 +3,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Bell, Calendar, User, LogOut, Settings, HelpCircle, Home, Inbox, FileText } from 'lucide-react';
-import jagotaLogo from 'figma:asset/ff4cc62167f856df08ea3a5c273f5de4c69e10c7.png';
+import { Bell, User, LogOut, Settings, HelpCircle, Home, Inbox, FileText } from 'lucide-react';
+// import jagotaLogo from 'figma:asset/ff4cc62167f856df08ea3a5c273f5de4c69e10c7.png';
 
 interface HeaderProps {
   notifications?: any[];
@@ -66,14 +66,11 @@ export function Header({
           {/* Logo Section - Small minimal logo */}
           <div className="flex items-center space-x-2">
             <div className="relative">
-              <img 
-                src={jagotaLogo} 
-                alt="JAGOTA" 
-                className="h-6 w-auto object-contain"
-                style={{
-                  filter: 'contrast(2) brightness(0.2)'
-                }}
-              />
+              <div 
+                className="h-6 px-3 bg-primary text-primary-foreground rounded flex items-center text-sm font-semibold"
+              >
+                JAGOTA
+              </div>
             </div>
             <div className="text-base font-medium text-gray-900">
               JAGOTA eShipping
@@ -118,7 +115,7 @@ export function Header({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96 p-0" align="end">
+                <PopoverContent className="w-96 p-0 bg-white border border-gray-200 shadow-xl" align="end">
                   <NotificationCenter
                     notifications={notifications}
                     onMarkAsRead={onMarkNotificationAsRead}

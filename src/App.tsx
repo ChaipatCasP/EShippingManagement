@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { LoginScreen } from './components/LoginScreen';
+import { OTPVerification } from './components/OTPVerification';
 import { CreatePSTForm } from './components/CreatePSTForm';
 import { CreatePSWForm } from './components/CreatePSWForm';
 import { NotificationCenter } from './components/NotificationCenter';
@@ -29,13 +30,11 @@ interface LoginCredentials {
 }
 
 export default function ShippingDashboard() {
-  // PROTOTYPE MODE: Start with authenticated state for demo
-  // Change this to false for production mode with login screen
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [user, setUser] = useState<{ email: string; name: string } | null>(
-    // Default demo user for prototype mode
-    { email: 'demo@jagota.com', name: 'Demo User' }
-  );
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [needsOTP, setNeedsOTP] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
 
   // Filter state
   const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
@@ -88,14 +87,12 @@ export default function ShippingDashboard() {
 
   // Generate PST number
   const generatePSTNumber = () => {
-    const timestamp = new Date().getTime();
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `PST-${new Date().getFullYear()}-${random}`;
   };
 
   // Generate PSW number
   const generatePSWNumber = () => {
-    const timestamp = new Date().getTime();
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `PSW-${new Date().getFullYear()}-${random}`;
   };
@@ -111,12 +108,30 @@ export default function ShippingDashboard() {
       localStorage.removeItem('jagota_remember_credentials');
     }
 
-    // Simulate authentication
+    // Simulate authentication - send OTP
+    setOtpEmail(credentials.email);
+    setNeedsOTP(true);
+  };
+
+  const handleOTPVerification = () => {
+    // OTP verified successfully
     setIsAuthenticated(true);
     setUser({
-      email: credentials.email,
-      name: credentials.email.split('@')[0].charAt(0).toUpperCase() + credentials.email.split('@')[0].slice(1)
+      email: otpEmail,
+      name: otpEmail.split('@')[0].charAt(0).toUpperCase() + otpEmail.split('@')[0].slice(1)
     });
+    setNeedsOTP(false);
+    setOtpEmail('');
+  };
+
+  const handleBackToLogin = () => {
+    setNeedsOTP(false);
+    setOtpEmail('');
+  };
+
+  const handleResendOTP = async () => {
+    // Simulate resend OTP API call
+    console.log('Resending OTP to:', otpEmail);
   };
 
   const handleLogout = () => {
@@ -125,6 +140,8 @@ export default function ShippingDashboard() {
     
     setIsAuthenticated(false);
     setUser(null);
+    setNeedsOTP(false);
+    setOtpEmail('');
     setCurrentView('dashboard');
     // Reset other state as needed
     setSelectedShipment(null);
@@ -362,12 +379,24 @@ export default function ShippingDashboard() {
   };
 
   // Show login screen if not authenticated
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !needsOTP) {
     return (
       <LoginScreen
         onLogin={handleLogin}
         onForgotPassword={handleForgotPassword}
         onSignUp={handleSignUp}
+      />
+    );
+  }
+
+  // Show OTP verification screen
+  if (needsOTP && !isAuthenticated) {
+    return (
+      <OTPVerification
+        email={otpEmail}
+        onVerifySuccess={handleOTPVerification}
+        onBackToLogin={handleBackToLogin}
+        onResendOTP={handleResendOTP}
       />
     );
   }
@@ -386,21 +415,21 @@ export default function ShippingDashboard() {
         
         {/* PST Confirmation Dialog */}
         <AlertDialog open={showPSTConfirmDialog} onOpenChange={setShowPSTConfirmDialog}>
-          <AlertDialogContent className="max-w-lg">
-            <AlertDialogHeader>
+          <AlertDialogContent className="max-w-lg bg-white">
+            <AlertDialogHeader className="bg-white">
               <AlertDialogTitle className="flex items-center gap-2">
                 <Building className="w-5 h-5 text-blue-600" />
                 Confirm PST Submission
               </AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-gray-600">
                 You are about to submit your PST (Prepare for Shipping Tax) request. Please review the details before confirming.
               </AlertDialogDescription>
             </AlertDialogHeader>
             
             {/* Details Section - Outside of AlertDialogDescription to avoid nesting issues */}
             {pendingPSTData && (
-              <div className="px-6 pb-4">
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="px-6 pb-4 bg-white">
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">PO Number:</span>
                     <span className="font-medium">{selectedPOForPST || 'N/A'}</span>
@@ -434,10 +463,11 @@ export default function ShippingDashboard() {
               </div>
             )}
             
-            <AlertDialogFooter className="flex gap-2">
+            <AlertDialogFooter className="flex gap-2 bg-white border-t border-gray-100 pt-4">
               <Button
                 variant="outline"
                 onClick={handlePSTConfirmCancel}
+                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </Button>

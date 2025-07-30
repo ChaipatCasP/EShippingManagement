@@ -1,5 +1,4 @@
 import React from 'react';
-import { Badge } from '../components/ui/badge';
 import { 
   Plane, 
   Ship, 
@@ -9,15 +8,12 @@ import {
   Layers, 
   Clock, 
   Edit, 
-  FileX, 
   CheckSquare, 
   FileCheck, 
   AlertCircle, 
-  CircleCheck, 
+  CheckCircle, 
   FileText, 
   Zap,
-  CreditCard,
-  Flag,
   CalendarDays,
   Eye
 } from 'lucide-react';
@@ -96,7 +92,7 @@ export const getStatusIcon = (status: string) => {
     case 'pst-created': return <Edit className="w-4 h-4" />;
     case 'pst-approved': return <CheckSquare className="w-4 h-4" />;
     case 'psw-waiting-approval': return <CalendarDays className="w-4 h-4" />;
-    case 'completed': return <CircleCheck className="w-4 h-4" />;
+    case 'completed': return <CheckCircle className="w-4 h-4" />;
     default: return <Clock className="w-4 h-4" />;
   }
 };
@@ -163,7 +159,7 @@ export const isPSWEnabled = (shipment: Shipment) => {
   return shipment.status === 'pst-approved';
 };
 
-export const getPSTStatusBadge = (shipment: Shipment) => {
+export const getPSTStatusBadge = (_shipment: Shipment) => {
   return null;
 };
 
@@ -227,7 +223,7 @@ export const getActionButtonConfig = (shipment: Shipment): ActionButtonConfig =>
     case 'completed':
       return {
         text: 'Completed',
-        icon: <CircleCheck className="w-4 h-4" />,
+        icon: <CheckCircle className="w-4 h-4" />,
         action: 'completed',
         enabled: false,
         variant: 'outline',
