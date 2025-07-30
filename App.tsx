@@ -1,0 +1,576 @@
+import React, { useState, useMemo } from 'react';
+import { LoginScreen } from './components/LoginScreen';
+import { CreatePSTForm } from './components/CreatePSTForm';
+import { CreatePSWForm } from './components/CreatePSWForm';
+import { NotificationCenter } from './components/NotificationCenter';
+import { SidePanel } from './components/SidePanel';
+import { MainContent } from './components/MainContent';
+import { KPISection } from './components/KPISection';
+import { FilterBar } from './components/FilterBar';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
+import { Badge } from './components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './components/ui/alert-dialog';
+import { Button } from './components/ui/button';
+import { mockShipments } from './data/mockData';
+import { useNotifications } from './hooks/useNotifications';
+import { 
+  statusPriority,
+  getDateRange,
+  calculateKPIs
+} from './lib/shipmentUtils';
+import { CheckCircle, FileText, Calendar, Building, ArrowRight } from 'lucide-react';
+import type { Shipment, SortOption, CurrentView, DateFilterMode } from './types/shipment';
+
+interface LoginCredentials {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export default function ShippingDashboard() {
+  // PROTOTYPE MODE: Start with authenticated state for demo
+  // Change this to false for production mode with login screen
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user, setUser] = useState<{ email: string; name: string } | null>(
+    // Default demo user for prototype mode
+    { email: 'demo@jagota.com', name: 'Demo User' }
+  );
+
+  // Filter state
+  const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
+  const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('all');
+  const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('all');
+  
+  // Date filter state with chip-based approach
+  const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>('today');
+  const [customDateStart, setCustomDateStart] = useState<string>('');
+  const [customDateEnd, setCustomDateEnd] = useState<string>('');
+  
+  const [activePOTypeTab, setActivePOTypeTab] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'timeline' | 'table'>('timeline');
+  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('none');
+  
+  // Navigation state
+  const [currentView, setCurrentView] = useState<CurrentView>('dashboard');
+  const [selectedPOForPST, setSelectedPOForPST] = useState<string | null>(null);
+  const [selectedPOForPSW, setSelectedPOForPSW] = useState<string | null>(null);
+  const [pstCompleted, setPstCompleted] = useState<boolean>(false);
+  const [pswCompleted, setPswCompleted] = useState<boolean>(false);
+  
+  // Loading states
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // PST and PSW tracking state
+  const [createdPSTNumber, setCreatedPSTNumber] = useState<string | null>(null);
+  const [createdPSWNumber, setCreatedPSWNumber] = useState<string | null>(null);
+
+  // Confirmation dialog state
+  const [showPSTConfirmDialog, setShowPSTConfirmDialog] = useState(false);
+  const [pendingPSTData, setPendingPSTData] = useState<any>(null);
+
+  // Use notifications hook
+  const {
+    notifications,
+    unreadNotificationCount,
+    handleMarkNotificationAsRead,
+    handleMarkAllNotificationsAsRead,
+    handleDeleteNotification
+  } = useNotifications();
+
+  // Calculate enhanced PO KPIs for compact layout
+  const kpis = useMemo(() => calculateKPIs(mockShipments), []);
+
+  // Generate PST number
+  const generatePSTNumber = () => {
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `PST-${new Date().getFullYear()}-${random}`;
+  };
+
+  // Generate PSW number
+  const generatePSWNumber = () => {
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `PSW-${new Date().getFullYear()}-${random}`;
+  };
+
+  const handleLogin = async (credentials: LoginCredentials) => {
+    // Handle remember me functionality
+    if (credentials.rememberMe) {
+      localStorage.setItem('jagota_remember_credentials', JSON.stringify({
+        email: credentials.email,
+        rememberMe: true
+      }));
+    } else {
+      localStorage.removeItem('jagota_remember_credentials');
+    }
+
+    // Simulate authentication
+    setIsAuthenticated(true);
+    setUser({
+      email: credentials.email,
+      name: credentials.email.split('@')[0].charAt(0).toUpperCase() + credentials.email.split('@')[0].slice(1)
+    });
+  };
+
+  const handleLogout = () => {
+    // Clear saved credentials when logging out
+    localStorage.removeItem('jagota_remember_credentials');
+    
+    setIsAuthenticated(false);
+    setUser(null);
+    setCurrentView('dashboard');
+    // Reset other state as needed
+    setSelectedShipment(null);
+    setIsPanelOpen(false);
+    setIsNotificationOpen(false);
+    setCreatedPSTNumber(null);
+    setCreatedPSWNumber(null);
+  };
+
+  const handleForgotPassword = async (email: string) => {
+    console.log('Password reset requested for:', email);
+    // Simulate password reset
+    return Promise.resolve();
+  };
+
+  const handleSignUp = async (credentials: LoginCredentials & { confirmPassword: string }) => {
+    console.log('Sign up attempted:', credentials);
+    // Simulate sign up
+    return Promise.resolve();
+  };
+
+  // Helper function to handle date filter mode change
+  const handleDateFilterChange = (mode: DateFilterMode) => {
+    setIsDataLoading(true);
+    setDateFilterMode(mode);
+    // Clear custom dates when switching away from custom mode
+    if (mode !== 'custom') {
+      setCustomDateStart('');
+      setCustomDateEnd('');
+    }
+    // Simulate data loading delay
+    setTimeout(() => setIsDataLoading(false), 300);
+  };
+
+  // Enhanced filter and sort shipments with new separated status filters
+  const filteredShipments = useMemo(() => {
+    let filtered = mockShipments.filter(shipment => {
+      // Freight Status filtering
+      const matchesFreightStatus = selectedFreightStatus === 'all' || shipment.type === selectedFreightStatus;
+      
+      // PO Type filtering
+      const matchesTabPOType = activePOTypeTab === 'all' || shipment.poType === activePOTypeTab;
+      
+      // PST Status filtering
+      let matchesPSTStatus = true;
+      if (selectedPSTStatus !== 'all') {
+        switch (selectedPSTStatus) {
+          case 'new-entry':
+            matchesPSTStatus = shipment.pstStatus === 'new-entry';
+            break;
+          case 'pending':
+            matchesPSTStatus = shipment.pstStatus === 'not-started' || shipment.pstStatus === 'in-progress';
+            break;
+          case 'done':
+            matchesPSTStatus = shipment.pstStatus === 'completed';
+            break;
+        }
+      }
+      
+      // PSW Status filtering
+      let matchesPSWStatus = true;
+      if (selectedPSWStatus !== 'all') {
+        switch (selectedPSWStatus) {
+          case 'pending':
+            matchesPSWStatus = shipment.pstNumber !== null && !shipment.pswNumber;
+            break;
+          case 'done':
+            matchesPSWStatus = shipment.pswNumber !== null;
+            break;
+        }
+      }
+      
+      // Enhanced search functionality - search by Reference key, Invoice No., PO no., PE number, PST number, PSW number, import entry no., BL/AWB no., country of origin
+      const matchesSearch = searchTerm === '' || 
+        shipment.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        shipment.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        shipment.referenceKey.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        shipment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        shipment.importEntryNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (shipment.pstNumber && shipment.pstNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (shipment.pswNumber && shipment.pswNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        shipment.blAwbNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        shipment.originCountry.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Date range filtering based on current filter mode
+      let matchesDateRange = true;
+      const { start, end } = getDateRange(dateFilterMode, customDateStart, customDateEnd);
+      
+      if (start && end) {
+        matchesDateRange = shipment.etd >= start && shipment.etd <= end;
+      } else if (start) {
+        matchesDateRange = shipment.etd >= start;
+      } else if (end) {
+        matchesDateRange = shipment.etd <= end;
+      }
+      
+      return matchesFreightStatus && matchesTabPOType && matchesPSTStatus && 
+             matchesPSWStatus && matchesSearch && matchesDateRange;
+    });
+
+    // Apply sorting
+    if (sortOption !== 'none') {
+      filtered.sort((a, b) => {
+        if (sortOption === 'clearDate-asc' || sortOption === 'clearDate-desc') {
+          const aDate = new Date(a.dateClear).getTime();
+          const bDate = new Date(b.dateClear).getTime();
+          return sortOption === 'clearDate-asc' ? aDate - bDate : bDate - aDate;
+        }
+        
+        if (sortOption === 'status-asc' || sortOption === 'status-desc') {
+          const aPriority = statusPriority[a.status as keyof typeof statusPriority] || 999;
+          const bPriority = statusPriority[b.status as keyof typeof statusPriority] || 999;
+          return sortOption === 'status-asc' ? aPriority - bPriority : bPriority - aPriority;
+        }
+        
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, 
+      dateFilterMode, customDateStart, customDateEnd, 
+      activePOTypeTab, searchTerm, sortOption]);
+
+  const handleShipmentClick = (shipment: Shipment) => {
+    setSelectedShipment(shipment);
+    setIsPanelOpen(true);
+  };
+
+  const handleCreatePST = (poNumber?: string) => {
+    setIsTransitioning(true);
+    setSelectedPOForPST(poNumber || null);
+    setCurrentView('create-pst');
+    // Reset PST states when creating new
+    setCreatedPSTNumber(null);
+    setPstCompleted(false);
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleCreatePSW = (poNumber?: string) => {
+    setIsTransitioning(true);
+    setSelectedPOForPSW(poNumber || null);
+    setCurrentView('create-psw');
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleClosePSTForm = () => {
+    setIsTransitioning(true);
+    setCurrentView('dashboard');
+    setSelectedPOForPST(null);
+    // Keep PST completed status and number for dashboard display
+    // Don't reset these when just closing the form
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleClosePSWForm = () => {
+    setIsTransitioning(true);
+    setCurrentView('dashboard');
+    setSelectedPOForPSW(null);
+    // Keep PSW completed status and number for dashboard display
+    // Don't reset these when just closing the form
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handlePSTSubmit = async (data: any) => {
+    console.log('PST Form submitted:', data);
+    
+    // Store the pending data and show confirmation dialog
+    setPendingPSTData(data);
+    setShowPSTConfirmDialog(true);
+    
+    return Promise.resolve();
+  };
+
+  const handlePSTConfirmSubmit = async () => {
+    try {
+      // Generate PST number
+      const newPSTNumber = generatePSTNumber();
+      setCreatedPSTNumber(newPSTNumber);
+      
+      // Here you would typically send the data to your API
+      console.log('Processing PST data:', pendingPSTData);
+      
+      // Mark as completed
+      setPstCompleted(true);
+      
+      // Close the confirmation dialog
+      setShowPSTConfirmDialog(false);
+      setPendingPSTData(null);
+      
+      // Navigate to dashboard after a short delay to show success message
+      setTimeout(() => {
+        setCurrentView('dashboard');
+        setSelectedPOForPST(null);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error processing PST:', error);
+      // Handle error appropriately
+    }
+  };
+
+  const handlePSTConfirmCancel = () => {
+    setShowPSTConfirmDialog(false);
+    setPendingPSTData(null);
+  };
+
+  const handlePSWSubmit = async (data: any) => {
+    console.log('PSW Form submitted:', data);
+    
+    // Generate PSW number
+    const newPSWNumber = generatePSWNumber();
+    setCreatedPSWNumber(newPSWNumber);
+    
+    // Here you would typically send the data to your API
+    // For now, we'll just simulate success
+    setPswCompleted(true);
+    
+    return Promise.resolve();
+  };
+
+  const handleViewDocs = () => {
+    alert('View Documents functionality would be implemented here');
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    const shipment = mockShipments.find(s => s.poNumber === notification.poNumber);
+    if (shipment) {
+      setSelectedShipment(shipment);
+      setIsPanelOpen(true);
+      setIsNotificationOpen(false);
+    }
+  };
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+        onForgotPassword={handleForgotPassword}
+        onSignUp={handleSignUp}
+      />
+    );
+  }
+
+  // Render PST Form if currentView is 'create-pst'
+  if (currentView === 'create-pst') {
+    return (
+      <>
+        <CreatePSTForm
+          poNumber={selectedPOForPST || undefined}
+          importDeclarationRef="ID-2025-7890"
+          createdPSTNumber={createdPSTNumber}
+          onClose={handleClosePSTForm}
+          onSubmit={handlePSTSubmit}
+        />
+        
+        {/* PST Confirmation Dialog */}
+        <AlertDialog open={showPSTConfirmDialog} onOpenChange={setShowPSTConfirmDialog}>
+          <AlertDialogContent className="max-w-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Building className="w-5 h-5 text-blue-600" />
+                Confirm PST Submission
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                You are about to submit your PST (Prepare for Shipping Tax) request. Please review the details before confirming.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            {/* Details Section - Outside of AlertDialogDescription to avoid nesting issues */}
+            {pendingPSTData && (
+              <div className="px-6 pb-4">
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">PO Number:</span>
+                    <span className="font-medium">{selectedPOForPST || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Supplier:</span>
+                    <span className="font-medium">{pendingPSTData.supplierName}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Invoice No:</span>
+                    <span className="font-medium">{pendingPSTData.invoiceNo}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Currency:</span>
+                    <span className="font-medium">{pendingPSTData.currency}</span>
+                  </div>
+                  {pendingPSTData.expenseSummary && pendingPSTData.expenseSummary.total > 0 && (
+                    <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
+                      <span className="text-gray-600">Total Tax & Expenses:</span>
+                      <span className="font-semibold text-green-600">
+                        {pendingPSTData.expenseSummary.total.toFixed(2)} {pendingPSTData.currency}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg mt-3">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>After submission, you will be redirected to the dashboard where you can track your PST status.</span>
+                </div>
+              </div>
+            )}
+            
+            <AlertDialogFooter className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handlePSTConfirmCancel}
+              >
+                Cancel
+              </Button>
+              <AlertDialogAction
+                onClick={handlePSTConfirmSubmit}
+                className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
+              >
+                <span>Confirm & Submit</span>
+                <ArrowRight className="w-4 h-4" />
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
+
+  // Render PSW Form if currentView is 'create-psw'
+  if (currentView === 'create-psw') {
+    return (
+      <CreatePSWForm
+        poNumber={selectedPOForPSW || undefined}
+        pstNumber={createdPSTNumber || "PST-2025-001"}
+        onClose={handleClosePSWForm}
+        onSubmit={handlePSWSubmit}
+      />
+    );
+  }
+
+  // Render main dashboard with proper sticky layout
+  return (
+    <div className={`min-h-screen bg-gray-50 flex flex-col transition-all duration-300 ${isTransitioning ? 'opacity-90' : 'opacity-100'}`}>
+      {/* Header - Sticky at top */}
+      <Header
+        notifications={notifications}
+        unreadNotificationCount={unreadNotificationCount}
+        isNotificationOpen={isNotificationOpen}
+        setIsNotificationOpen={setIsNotificationOpen}
+        onNotificationClick={handleNotificationClick}
+        onMarkNotificationAsRead={handleMarkNotificationAsRead}
+        onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+        onDeleteNotification={handleDeleteNotification}
+        NotificationCenter={NotificationCenter}
+        user={user}
+        onLogout={handleLogout}
+      />
+
+      {/* Main Scrollable Content */}
+      <div className="flex-1 relative">
+        {/* Top Section - Status Badges and KPIs */}
+        <div className="px-6 pt-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Completion Badges - Show when completed */}
+            {(createdPSTNumber && pstCompleted) || (createdPSWNumber && pswCompleted) ? (
+              <div className="flex justify-center gap-4">
+                {createdPSTNumber && pstCompleted && (
+                  <Badge className="bg-green-50 text-green-700 border-green-200 px-4 py-2 text-sm font-medium">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    PST Completed: {createdPSTNumber}
+                    <FileText className="w-4 h-4 ml-2" />
+                  </Badge>
+                )}
+                {createdPSWNumber && pswCompleted && (
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 text-sm font-medium">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    PSW Completed: {createdPSWNumber}
+                    <Calendar className="w-4 h-4 ml-2" />
+                  </Badge>
+                )}
+              </div>
+            ) : null}
+
+            {/* KPI Section */}
+            <KPISection kpis={kpis} />
+          </div>
+        </div>
+
+        {/* Sticky Filter Bar with Segment & View Controls */}
+        <div className="sticky top-0 z-40">
+          <FilterBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedFreightStatus={selectedFreightStatus}
+            setSelectedFreightStatus={setSelectedFreightStatus}
+            selectedPSTStatus={selectedPSTStatus}
+            setSelectedPSTStatus={setSelectedPSTStatus}
+            selectedPSWStatus={selectedPSWStatus}
+            setSelectedPSWStatus={setSelectedPSWStatus}
+            dateFilterMode={dateFilterMode}
+            handleDateFilterChange={handleDateFilterChange}
+            customDateStart={customDateStart}
+            setCustomDateStart={setCustomDateStart}
+            customDateEnd={customDateEnd}
+            setCustomDateEnd={setCustomDateEnd}
+            filteredShipments={filteredShipments}
+            activePOTypeTab={activePOTypeTab}
+            setActivePOTypeTab={setActivePOTypeTab}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
+        </div>
+
+        {/* Main Content */}
+        <div className="px-6 pb-6">
+          <div className="max-w-7xl mx-auto">
+            <MainContent
+              activePOTypeTab={activePOTypeTab}
+              viewMode={viewMode}
+              filteredShipments={filteredShipments}
+              selectedShipment={selectedShipment}
+              sortOption={sortOption}
+              onShipmentClick={handleShipmentClick}
+              onCreatePST={handleCreatePST}
+              onCreatePSW={handleCreatePSW}
+              onSortOptionChange={setSortOption}
+              isLoading={isDataLoading}
+            />
+          </div>
+        </div>
+
+        {/* Side Panel - Positioned overlay */}
+        <SidePanel
+          isOpen={isPanelOpen}
+          onOpenChange={setIsPanelOpen}
+          selectedShipment={selectedShipment}
+          onCreatePST={handleCreatePST}
+          onCreatePSW={handleCreatePSW}
+          onViewDocs={handleViewDocs}
+        />
+      </div>
+      
+      {/* Footer */}
+      <Footer />
+    </div>
+  );
+}
