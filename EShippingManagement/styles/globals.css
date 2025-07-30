@@ -1,0 +1,616 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 14px;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #030213;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Date & Time Input Accessibility Fixes */
+@layer base {
+  /* Fix for WebKit browsers (Chrome, Safari) date/time picker icons */
+  input[type="date"], 
+  input[type="datetime-local"], 
+  input[type="time"] {
+    color-scheme: light;
+    position: relative;
+  }
+
+  /* WebKit calendar icon styling */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    color: #6b7280; /* gray-500 for good contrast */
+    background-color: transparent;
+    background-image: none;
+    cursor: pointer;
+    filter: invert(0.4) sepia(0) saturate(0) hue-rotate(0deg) brightness(0.6) contrast(1);
+    opacity: 0.7;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  /* Hover state for calendar icons */
+  input[type="date"]:hover::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator,
+  input[type="time"]:hover::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    filter: invert(0.2) sepia(0) saturate(0) hue-rotate(0deg) brightness(0.4) contrast(1);
+  }
+
+  /* Focus state for calendar icons */
+  input[type="date"]:focus::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]:focus::-webkit-calendar-picker-indicator,
+  input[type="time"]:focus::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    filter: invert(0.2) sepia(0) saturate(0) hue-rotate(0deg) brightness(0.4) contrast(1);
+  }
+
+  /* Firefox date/time input styling */
+  input[type="date"]::-moz-calendar-picker-indicator,
+  input[type="datetime-local"]::-moz-calendar-picker-indicator,
+  input[type="time"]::-moz-calendar-picker-indicator {
+    color: #6b7280;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  input[type="date"]:hover::-moz-calendar-picker-indicator,
+  input[type="datetime-local"]:hover::-moz-calendar-picker-indicator,
+  input[type="time"]:hover::-moz-calendar-picker-indicator {
+    opacity: 1;
+  }
+
+  input[type="date"]:focus::-moz-calendar-picker-indicator,
+  input[type="datetime-local"]:focus::-moz-calendar-picker-indicator,
+  input[type="time"]:focus::-moz-calendar-picker-indicator {
+    opacity: 1;
+  }
+
+  /* Dark mode adjustments for date/time icons */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) sepia(0) saturate(0) hue-rotate(0deg) brightness(1.2) contrast(1);
+  }
+
+  .dark input[type="date"]:hover::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]:hover::-webkit-calendar-picker-indicator {
+    filter: invert(1) sepia(0) saturate(0) hue-rotate(0deg) brightness(1) contrast(1);
+  }
+
+  .dark input[type="date"]::-moz-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-moz-calendar-picker-indicator,
+  .dark input[type="time"]::-moz-calendar-picker-indicator {
+    color: #d1d5db; /* gray-300 for dark mode */
+  }
+
+  /* Additional styling for better accessibility */
+  input[type="date"]:disabled::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]:disabled::-webkit-calendar-picker-indicator,
+  input[type="time"]:disabled::-webkit-calendar-picker-indicator {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  input[type="date"]:disabled::-moz-calendar-picker-indicator,
+  input[type="datetime-local"]:disabled::-moz-calendar-picker-indicator,
+  input[type="time"]:disabled::-moz-calendar-picker-indicator {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Custom placeholder styling for date inputs */
+  input[type="date"]:invalid,
+  input[type="datetime-local"]:invalid,
+  input[type="time"]:invalid {
+    color: #9ca3af; /* gray-400 for placeholder-like appearance */
+  }
+
+  input[type="date"]:focus:invalid,
+  input[type="datetime-local"]:focus:invalid,
+  input[type="time"]:focus:invalid {
+    color: var(--color-foreground);
+  }
+}
+
+/* Modern KPI Card Enhancements */
+@layer utilities {
+  .bg-gradient-radial {
+    background-image: radial-gradient(var(--tw-gradient-stops));
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 20px -5px var(--tw-shadow-color);
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .will-change-transform {
+    will-change: transform;
+  }
+}
+
+/* Smooth transitions for better Material Design 3 feel */
+@layer base {
+  .motion-safe * {
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  /* Enhanced card hover states */
+  .group:hover .group-hover\:scale-105 {
+    transform: scale(1.05);
+  }
+  
+  /* Improved focus states for accessibility */
+  .focus-visible\:ring-4:focus-visible {
+    box-shadow: 0 0 0 4px var(--color-ring);
+  }
+}
+
+/* Custom animations for KPI cards */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Enhanced Loading Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progressFill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--progress-width);
+  }
+}
+
+@keyframes dotsLoading {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-ripple {
+  animation: ripple 0.6s linear;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fadeInScale {
+  animation: fadeInScale 0.4s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.animate-bounceIn {
+  animation: bounceIn 0.6s ease-out;
+}
+
+.animate-progressFill {
+  animation: progressFill 0.8s ease-out forwards;
+}
+
+.animate-dotsLoading {
+  animation: dotsLoading 1.4s infinite ease-in-out both;
+}
+
+/* Staggered animations for lists */
+@keyframes staggerFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-staggerFadeIn {
+  animation: staggerFadeIn 0.4s ease-out both;
+}
+
+/* Button loading states */
+@keyframes buttonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-buttonPulse {
+  animation: buttonPulse 1.5s ease-in-out infinite;
+}
+
+/* Micro interactions */
+@keyframes microBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-microBounce {
+  animation: microBounce 0.3s ease-in-out;
+}
+
+/* Progress bar enhancements */
+.progress-bar-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* Loading skeleton improvements */
+.skeleton-wave {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-wave::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* Page transition effects */
+.page-enter {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.3s ease-in, transform 0.3s ease-in;
+}
+
+/* Enhanced loading states */
+.loading-dots > div:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots > div:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.loading-dots > div:nth-child(3) {
+  animation-delay: 0.3s;
+}
