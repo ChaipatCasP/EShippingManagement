@@ -42,6 +42,7 @@ export default function ShippingDashboard() {
   const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
   const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('all');
   const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('all');
+  const [selectedPriority, setSelectedPriority] = useState<string>('all');
   
   // Date filter state with chip-based approach
   const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>('today');
@@ -700,6 +701,8 @@ export default function ShippingDashboard() {
             setSelectedPSTStatus={setSelectedPSTStatus}
             selectedPSWStatus={selectedPSWStatus}
             setSelectedPSWStatus={setSelectedPSWStatus}
+            selectedPriority={selectedPriority}
+            setSelectedPriority={setSelectedPriority}
             dateFilterMode={dateFilterMode}
             handleDateFilterChange={handleDateFilterChange}
             customDateStart={customDateStart}

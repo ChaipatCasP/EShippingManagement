@@ -4,7 +4,6 @@ import {
   Ship, 
   Truck, 
   Package, 
-  Package2, 
   Layers, 
   Clock, 
   Edit, 
@@ -48,7 +47,6 @@ export const getTypeLabel = (type: string) => {
 export const getPOTypeIcon = (poType: string) => {
   switch (poType) {
     case 'Single': return <Package className="w-4 h-4" />;
-    case 'Multiple': return <Package2 className="w-4 h-4" />;
     case 'Co-load': return <Layers className="w-4 h-4" />;
     default: return null;
   }
@@ -57,7 +55,6 @@ export const getPOTypeIcon = (poType: string) => {
 export const getPOTypeColor = (poType: string) => {
   switch (poType) {
     case 'Single': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'Multiple': return 'bg-purple-100 text-purple-800 border-purple-200';
     case 'Co-load': return 'bg-orange-100 text-orange-800 border-orange-200';
     default: return 'bg-gray-100 text-gray-800 border-gray-200';
   }

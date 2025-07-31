@@ -12,7 +12,7 @@ export interface Shipment {
   destinationPort: string;
   dateClear: string;
   type: 'Air' | 'Sea' | 'Land';
-  poType: 'Single' | 'Multiple' | 'Co-load';
+  poType: 'Single' | 'Co-load';
   term: string;
   permitStatus: boolean;
   blAwbNumber: string;

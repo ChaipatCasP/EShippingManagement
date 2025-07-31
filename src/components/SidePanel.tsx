@@ -73,14 +73,6 @@ export function SidePanel({
           textColor: 'text-green-700',
           borderColor: 'border-green-200'
         };
-      case 'Multiple': 
-        return {
-          icon: <Package2 className="w-5 h-5 text-gray-500" />,
-          label: 'Multiple PO',
-          bgColor: 'bg-purple-50',
-          textColor: 'text-purple-700',
-          borderColor: 'border-purple-200'
-        };
       case 'Co-load': 
         return {
           icon: <Layers className="w-5 h-5 text-gray-500" />,
@@ -355,8 +347,8 @@ export function SidePanel({
             </div>
           </div>
 
-          {/* Multiple Suppliers Section - Only if applicable */}
-          {(selectedShipment.poType === 'Multiple' || selectedShipment.poType === 'Co-load') && selectedShipment.relatedSuppliers && selectedShipment.relatedSuppliers.length > 0 && (
+          {/* Co-load Suppliers Section - Only if applicable */}
+          {selectedShipment.poType === 'Co-load' && selectedShipment.relatedSuppliers && selectedShipment.relatedSuppliers.length > 0 && (
             <>
               <Separator />
               <div className="space-y-4">

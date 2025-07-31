@@ -71,14 +71,6 @@ export function ShipmentTimeline({
           borderColor: 'border-green-200',
           icon: <Package2 className="w-2.5 h-2.5" />
         };
-      case 'Multiple': 
-        return {
-          label: 'Multiple',
-          textColor: 'text-purple-700',
-          bgColor: 'bg-purple-100',
-          borderColor: 'border-purple-200',
-          icon: <Package2 className="w-2.5 h-2.5" />
-        };
       case 'Co-load': 
         return {
           label: 'Co-load',
@@ -172,8 +164,8 @@ export function ShipmentTimeline({
                       </div>
                       <h3 className="text-xl font-semibold text-gray-900">{shipment.supplierName}</h3>
                       
-                      {/* Multiple Suppliers Display */}
-                      {(shipment.poType === 'Multiple' || shipment.poType === 'Co-load') && totalSuppliers > 1 && (
+                      {/* Co-load Suppliers Display */}
+                      {shipment.poType === 'Co-load' && totalSuppliers > 1 && (
                         <Popover>
                           <PopoverTrigger asChild>
                             <button 

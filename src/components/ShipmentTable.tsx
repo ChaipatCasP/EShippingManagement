@@ -105,15 +105,6 @@ export function ShipmentTable({
           count: null,
           clickable: false
         };
-      case 'Multiple': 
-        return {
-          label: 'Multiple',
-          textColor: 'text-purple-600',
-          bgColor: 'bg-purple-50',
-          icon: <Package2 className="w-2.5 h-2.5" />,
-          count: totalPOs,
-          clickable: true
-        };
       case 'Co-load': 
         return {
           label: 'Co-load',
@@ -257,7 +248,7 @@ export function ShipmentTable({
                   <span className="text-gray-900 text-sm">{shipment.supplierName}</span>
                 </TableCell>
 
-                {/* PO Type - Subtle and clickable for Multiple/Co-load */}
+                {/* PO Type - Subtle and clickable for Co-load */}
                 <TableCell className="px-3 py-2">
                   <div className="flex items-center gap-1">
                     {poTypeStyle.clickable ? (
