@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { OTPVerification } from './components/OTPVerification';
 import { CreatePSTForm } from './components/CreatePSTForm';
@@ -82,78 +82,6 @@ export default function ShippingDashboard() {
     handleDeleteNotification
   } = useNotifications();
 
-  // Update URL based on authentication state and current view
-  useEffect(() => {
-    if (!isAuthenticated && !needsOTP) {
-      // Show login
-      window.history.replaceState(null, '', '/login');
-    } else if (needsOTP && !isAuthenticated) {
-      // Show OTP
-      window.history.replaceState(null, '', '/otp');
-    } else if (isAuthenticated) {
-      // Show authenticated views
-      switch (currentView) {
-        case 'dashboard':
-          window.history.replaceState(null, '', '/dashboard');
-          break;
-        case 'create-pst':
-          if (selectedPOForPST) {
-            window.history.replaceState(null, '', `/create-pst/${selectedPOForPST}`);
-          } else {
-            window.history.replaceState(null, '', '/create-pst');
-          }
-          break;
-        case 'create-psw':
-          if (selectedPOForPSW) {
-            window.history.replaceState(null, '', `/create-psw/${selectedPOForPSW}`);
-          } else {
-            window.history.replaceState(null, '', '/create-psw');
-          }
-          break;
-        default:
-          window.history.replaceState(null, '', '/dashboard');
-      }
-    }
-  }, [isAuthenticated, needsOTP, currentView, selectedPOForPST, selectedPOForPSW]);
-
-  // Handle browser back/forward navigation
-  useEffect(() => {
-    const handlePopState = () => {
-      const path = window.location.pathname;
-      
-      if (path === '/login') {
-        // User navigated to login page
-        if (isAuthenticated || needsOTP) {
-          // Only logout if currently authenticated or in OTP state
-          setIsAuthenticated(false);
-          setUser(null);
-          setNeedsOTP(false);
-          setOtpEmail('');
-          setCurrentView('dashboard');
-        }
-      } else if (path === '/otp' && isAuthenticated) {
-        // User trying to go back to OTP while authenticated
-        setCurrentView('dashboard');
-      } else if (path === '/dashboard' && isAuthenticated) {
-        setCurrentView('dashboard');
-      } else if (path.startsWith('/create-pst') && isAuthenticated) {
-        const poNumber = path.split('/')[2];
-        setSelectedPOForPST(poNumber || null);
-        setCurrentView('create-pst');
-      } else if (path.startsWith('/create-psw') && isAuthenticated) {
-        const poNumber = path.split('/')[2];
-        setSelectedPOForPSW(poNumber || null);
-        setCurrentView('create-psw');
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isAuthenticated, needsOTP]);
-
   // Calculate enhanced PO KPIs for compact layout
   const kpis = useMemo(() => calculateKPIs(mockShipments), []);
 
@@ -221,9 +149,6 @@ export default function ShippingDashboard() {
     setIsNotificationOpen(false);
     setCreatedPSTNumber(null);
     setCreatedPSWNumber(null);
-    
-    // Update URL to login page
-    window.history.pushState(null, '', '/login');
   };
 
   const handleForgotPassword = async (email: string) => {
