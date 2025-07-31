@@ -298,61 +298,64 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-10 bg-white">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+              <div className="h-6 w-px bg-gray-300" />
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">Create PSW (Payment Shipping Worksheet)</h1>
+                <p className="text-sm text-gray-600">Expense Management & Billing</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
             </Button>
-            <div className="h-6 w-px bg-gray-300" />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">Create PSW (Payment Shipping Worksheet)</h1>
-              <p className="text-sm text-gray-600">Expense Management & Billing</p>
-            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
         </div>
-      </div>
 
-      {/* Step Progress */}
-      <StepProgress currentStep="psw" pstCompleted={true} />
+        {/* Step Progress */}
+        <StepProgress currentStep="psw" pstCompleted={true} />
 
-      {/* PST Reference Bar */}
-      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
-          {/* Reference Info */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-600">PST:</span>
-              <span className="font-semibold text-gray-900">{pstReferenceData.pstNumber}</span>
+        {/* PST Reference Bar */}
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
+            {/* Reference Info */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <span className="text-gray-600">PST:</span>
+                <span className="font-semibold text-gray-900">{pstReferenceData.pstNumber}</span>
+              </div>
+              <div className="w-px h-4 bg-gray-300" />
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">PO:</span>
+                <span className="font-semibold text-gray-900">{pstReferenceData.poNumber}</span>
+              </div>
+              <div className="w-px h-4 bg-gray-300" />
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">Supplier:</span>
+                <span className="text-gray-900">{pstReferenceData.supplierName}</span>
+              </div>
             </div>
-            <div className="w-px h-4 bg-gray-300" />
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600">PO:</span>
-              <span className="font-semibold text-gray-900">{pstReferenceData.poNumber}</span>
-            </div>
-            <div className="w-px h-4 bg-gray-300" />
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600">Supplier:</span>
-              <span className="text-gray-900">{pstReferenceData.supplierName}</span>
-            </div>
-          </div>
 
-          {/* Tax Amount */}
-          <div className="flex items-center gap-3">
-            <span className="text-gray-600">JAGOTA Tax Liability:</span>
-            <div className="bg-red-100 text-red-800 px-3 py-1 rounded-md font-semibold">
-              {pstReferenceData.totalTaxDuty.toLocaleString()} {pstReferenceData.currency}
+            {/* Tax Amount */}
+            <div className="flex items-center gap-3">
+              <span className="text-gray-600">JAGOTA Tax Liability:</span>
+              <div className="bg-red-100 text-red-800 px-3 py-1 rounded-md font-semibold">
+                {pstReferenceData.totalTaxDuty.toLocaleString()} {pstReferenceData.currency}
+              </div>
             </div>
           </div>
         </div>
