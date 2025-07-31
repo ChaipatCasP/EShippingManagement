@@ -1,36 +1,15 @@
-import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
-import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { 
-  Key, 
-  Building, 
-  MapPin, 
-  Globe, 
-  FileDigit, 
-  FileText, 
-  CalendarDays, 
-  Package, 
-  Package2, 
-  Layers, 
-  CheckCircle, 
-  XCircle, 
-  CreditCard, 
-  Flag, 
   Eye,
-  Users,
-  Clock,
-  ArrowRight,
   Ship,
   Plane,
-  Truck
+  Truck,
+  Package2,
+  Layers
 } from 'lucide-react';
 import {
-  getTypeIcon,
-  getBillStatusColor,
-  getJagotaStatusColor,
-  getPriorityColor,
   getActionButtonConfig
 } from '../lib/shipmentUtils';
 import type { Shipment } from '../types/shipment';

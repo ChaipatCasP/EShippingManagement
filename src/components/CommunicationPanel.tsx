@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -11,11 +11,8 @@ import {
   Send, 
   Clock, 
   Eye,
-  Building,
-  Truck,
   CheckCircle,
   AlertCircle,
-  Info,
   Users,
   MessageCircle
 } from 'lucide-react';

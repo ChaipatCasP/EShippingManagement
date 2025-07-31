@@ -6,11 +6,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ArrowUpDown, ArrowUp, ArrowDown, Package2, Layers, Users, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { ColoadAccordion } from './ColoadAccordion';
-import { TableSkeleton, LoadingSpinner } from './ui/loading';
+import { TableSkeleton } from './ui/loading';
 import {
   getTypeIcon,
-  getBillStatusColor,
-  getJagotaStatusColor,
   getActionButtonConfig
 } from '../lib/shipmentUtils';
 import type { Shipment, SortOption } from '../types/shipment';
@@ -95,7 +93,6 @@ export function ShipmentTable({
 
   // Helper function to get PO type style and count - simplified and subtle
   const getPOTypeStyle = (shipment: Shipment) => {
-    const totalSuppliers = 1 + (shipment.relatedSuppliers?.length || 0);
     const totalPOs = shipment.relatedSuppliers ? shipment.relatedSuppliers.length + 1 : 1;
     
     switch (shipment.poType) {

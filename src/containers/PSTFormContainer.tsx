@@ -62,8 +62,6 @@ export function PSTFormContainer() {
   return (
     <>
       <CreatePSTForm
-        poNumber={poNumber}
-        importDeclarationRef="ID-2025-7890"
         createdPSTNumber={createdPSTNumber}
         onClose={handleClose}
         onSubmit={handleSubmit}

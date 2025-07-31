@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { StepProgress } from './StepProgress';
-import { X, ArrowLeft, Plus, Trash2, Upload, FileText, Calculator, DollarSign, Package, Building } from 'lucide-react';
+import { X, ArrowLeft, Plus, Trash2, Upload, FileText, Calculator, DollarSign } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface ExpenseItem {

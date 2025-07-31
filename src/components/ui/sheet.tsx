@@ -9,8 +9,8 @@ import { cn } from "./utils";
 const Sheet = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Root>,
   React.ComponentProps<typeof SheetPrimitive.Root>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Root ref={ref} data-slot="sheet" {...props} />;
+>(({ ...props }, _ref) => {
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 });
 Sheet.displayName = "Sheet";
 
@@ -33,8 +33,8 @@ SheetClose.displayName = "SheetClose";
 const SheetPortal = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Portal>,
   React.ComponentProps<typeof SheetPrimitive.Portal>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Portal ref={ref} data-slot="sheet-portal" {...props} />;
+>(({ ...props }, _ref) => {
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 });
 SheetPortal.displayName = "SheetPortal";
 

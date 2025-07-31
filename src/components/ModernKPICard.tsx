@@ -1,16 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { Badge } from './ui/badge';
 import { cn } from './ui/utils';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Minus,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity
-} from 'lucide-react';
 
 interface KPICardProps {
   title: string;
@@ -100,32 +91,6 @@ export function ModernKPICard({
 }: KPICardProps) {
   const styles = variantStyles[variant];
   const sizing = sizeStyles[size];
-
-  const getTrendIcon = () => {
-    if (!change) return null;
-    
-    switch (change.type) {
-      case 'increase':
-        return <TrendingUp className="w-3 h-3" />;
-      case 'decrease':
-        return <TrendingDown className="w-3 h-3" />;
-      default:
-        return <Minus className="w-3 h-3" />;
-    }
-  };
-
-  const getTrendColor = () => {
-    if (!change) return 'text-gray-500';
-    
-    switch (change.type) {
-      case 'increase':
-        return 'text-green-600';
-      case 'decrease':
-        return 'text-red-600';
-      default:
-        return 'text-gray-500';
-    }
-  };
 
   return (
     <motion.div

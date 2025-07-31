@@ -1,28 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Avatar } from './ui/avatar';
-import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { 
   Send, 
   Paperclip, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  User, 
   MessageCircle,
   Tag,
   AtSign,
   File,
   Image,
   Download,
-  MoreHorizontal,
-  Reply
+  MoreHorizontal
 } from 'lucide-react';
 
 interface Comment {
@@ -60,12 +51,6 @@ interface CommentThreadProps {
   currentUser: string;
 }
 
-const priorityColors = {
-  low: 'bg-green-100 text-green-800 border-green-200',
-  medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  high: 'bg-red-100 text-red-800 border-red-200'
-};
-
 const tagColors = {
   'Action Required': 'bg-red-100 text-red-800 border-red-200',
   'Follow Up': 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -85,7 +70,6 @@ export function CommentThread({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [mentionSuggestions, setMentionSuggestions] = useState<string[]>([]);
   const [showMentions, setShowMentions] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState(0);
   const [attachments, setAttachments] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -10,8 +10,8 @@ import { Separator } from './ui/separator';
 import { StepProgress } from './StepProgress';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { LoadingSpinner, LoadingDots, ProgressBar, LoadingOverlay } from './ui/loading';
-import { X, ArrowLeft, Building, Package, FileText, Calendar, DollarSign, Truck, Globe, CheckCircle, Plus, Trash2, Upload, Calculator, MessageSquare, Key, ArrowRight } from 'lucide-react';
+import { LoadingSpinner, ProgressBar } from './ui/loading';
+import { X, ArrowLeft, Building, FileText, Calendar, DollarSign, Truck, CheckCircle, Plus, Trash2, Upload, Calculator, MessageSquare, Key, ArrowRight } from 'lucide-react';
 
 interface ExpenseItem {
   id: string;
@@ -32,16 +32,12 @@ interface ExpenseItem {
 }
 
 interface CreatePSTFormProps {
-  poNumber?: string;
-  importDeclarationRef?: string;
   createdPSTNumber?: string | null;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }
 
 export function CreatePSTForm({ 
-  poNumber, 
-  importDeclarationRef, 
   createdPSTNumber,
   onClose, 
   onSubmit 
@@ -51,7 +47,6 @@ export function CreatePSTForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [step1Completed, setStep1Completed] = useState(false);
   
   // Communication Message Smart Button Logic

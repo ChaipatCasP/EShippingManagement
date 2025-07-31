@@ -487,8 +487,6 @@ export default function ShippingDashboard() {
     return (
       <>
         <CreatePSTForm
-          poNumber={selectedPOForPST || undefined}
-          importDeclarationRef="ID-2025-7890"
           createdPSTNumber={createdPSTNumber}
           onClose={handleClosePSTForm}
           onSubmit={handlePSTSubmit}

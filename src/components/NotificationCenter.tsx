@@ -1,24 +1,19 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Separator } from './ui/separator';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { 
   Bell, 
   MessageCircle, 
   AtSign, 
   AlertTriangle, 
   CheckCircle, 
-  Clock, 
   Eye,
   EyeOff,
   Trash2,
   Settings,
-  Filter,
-  User,
-  FileText,
   Package
 } from 'lucide-react';
 

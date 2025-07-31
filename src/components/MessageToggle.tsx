@@ -1,10 +1,6 @@
-import React from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { 
-  Shield, 
-  Globe, 
-  MessageCircle, 
   Lock,
   Users
 } from 'lucide-react';
