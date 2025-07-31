@@ -13,6 +13,7 @@ import { Footer } from './components/Footer';
 import { Badge } from './components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './components/ui/alert-dialog';
 import { Button } from './components/ui/button';
+import { InboxContainer } from './containers/InboxContainer';
 import { mockShipments } from './data/mockData';
 import { useNotifications } from './hooks/useNotifications';
 import { 
@@ -96,6 +97,9 @@ export default function ShippingDashboard() {
         case 'dashboard':
           window.history.replaceState(null, '', '/dashboard');
           break;
+        case 'inbox':
+          window.history.replaceState(null, '', '/inbox');
+          break;
         case 'create-pst':
           if (selectedPOForPST) {
             window.history.replaceState(null, '', `/create-pst/${selectedPOForPST}`);
@@ -136,6 +140,8 @@ export default function ShippingDashboard() {
         setCurrentView('dashboard');
       } else if (path === '/dashboard' && isAuthenticated) {
         setCurrentView('dashboard');
+      } else if (path === '/inbox' && isAuthenticated) {
+        setCurrentView('inbox');
       } else if (path.startsWith('/create-pst') && isAuthenticated) {
         const poNumber = path.split('/')[2];
         setSelectedPOForPST(poNumber || null);
@@ -572,6 +578,38 @@ export default function ShippingDashboard() {
     );
   }
 
+  // Render Inbox if currentView is 'inbox'
+  if (currentView === 'inbox') {
+    return (
+      <div className={`min-h-screen bg-gray-50 flex flex-col transition-all duration-300 ${isTransitioning ? 'opacity-90' : 'opacity-100'}`}>
+        {/* Header - Sticky at top */}
+        <Header
+          user={user}
+          onLogout={handleLogout}
+          unreadNotificationCount={unreadNotificationCount}
+          onNotificationClick={() => setIsNotificationOpen(true)}
+          onNavigate={(view) => setCurrentView(view as CurrentView)}
+          currentView={currentView}
+        />
+        
+        {/* Main Scrollable Content */}
+        <div className="flex-1 relative">
+          {/* Top Section for spacing */}
+          <div className="px-6 pt-6">
+            <div className="max-w-7xl mx-auto">
+              {/* Optional: Add breadcrumb or other top content here */}
+            </div>
+          </div>
+          
+          {/* Inbox Content */}
+          <InboxContainer />
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
   // Render main dashboard with proper sticky layout
   return (
     <div className={`min-h-screen bg-gray-50 flex flex-col transition-all duration-300 ${isTransitioning ? 'opacity-90' : 'opacity-100'}`}>
@@ -588,6 +626,8 @@ export default function ShippingDashboard() {
         NotificationCenter={NotificationCenter}
         user={user}
         onLogout={handleLogout}
+        onNavigate={(view) => setCurrentView(view as CurrentView)}
+        currentView={currentView}
       />
 
       {/* Main Scrollable Content */}

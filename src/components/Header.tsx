@@ -18,6 +18,8 @@ interface HeaderProps {
   NotificationCenter?: React.ComponentType<any>;
   user?: { email: string; name: string } | null;
   onLogout?: () => void;
+  onNavigate?: (view: string) => void;
+  currentView?: string;
 }
 
 export function Header({
@@ -31,19 +33,26 @@ export function Header({
   onDeleteNotification = () => {},
   NotificationCenter,
   user,
-  onLogout = () => {}
+  onLogout = () => {},
+  onNavigate = () => {},
+  currentView = 'dashboard'
 }: HeaderProps) {
   const [activeNavItem, setActiveNavItem] = useState('Home');
 
   const navigationItems = [
-    { name: 'Home', icon: Home, active: true },
-    { name: 'Inbox', icon: Inbox, active: false },
+    { name: 'Home', icon: Home, active: currentView === 'dashboard' },
+    { name: 'Inbox', icon: Inbox, active: currentView === 'inbox' },
     { name: 'Apply Permit', icon: FileText, active: false }
   ];
 
   const handleNavClick = (itemName: string) => {
     setActiveNavItem(itemName);
     // Add navigation logic here
+    if (itemName === 'Home') {
+      onNavigate('dashboard');
+    } else if (itemName === 'Inbox') {
+      onNavigate('inbox');
+    }
   };
 
   const handleLogout = () => {
