@@ -56,10 +56,10 @@ const mockInboxDocuments: InboxDocument[] = [
     poNumber: 'PO-2024-12345',
     supplierName: 'ABC Trading Co., Ltd.',
     invoiceNumber: 'INV-001-2025',
-    createdDate: '2025-01-30T10:30:00Z',
+    createdDate: '2025-01-31T10:30:00Z',
     status: 'submitted',
     priority: 'high',
-    description: 'Prepare Shipping Tax for electronics shipment',
+    description: 'Prepare Shipping Tax for electronics shipment from Thailand to Singapore',
     metadata: {
       currency: 'USD',
       totalAmount: 15250.00,
@@ -75,10 +75,10 @@ const mockInboxDocuments: InboxDocument[] = [
     poNumber: 'PO-2024-12346',
     supplierName: 'XYZ Manufacturing Ltd.',
     invoiceNumber: 'INV-002-2025',
-    createdDate: '2025-01-30T14:15:00Z',
+    createdDate: '2025-01-31T14:15:00Z',
     status: 'approved',
     priority: 'medium',
-    description: 'Prepare Shipping Waybill for textile goods',
+    description: 'Prepare Shipping Waybill for textile goods export to Japan',
     metadata: {
       currency: 'EUR',
       totalAmount: 8750.50,
@@ -94,16 +94,187 @@ const mockInboxDocuments: InboxDocument[] = [
     poNumber: 'PO-2024-12347',
     supplierName: 'Global Supplies Inc.',
     invoiceNumber: 'INV-003-2025',
-    createdDate: '2025-01-29T16:45:00Z',
+    createdDate: '2025-01-30T16:45:00Z',
     status: 'draft',
     priority: 'low',
-    description: 'Prepare Shipping Tax for machinery parts',
+    description: 'Prepare Shipping Tax for machinery parts shipment to Malaysia',
     metadata: {
       currency: 'USD',
       totalAmount: 25000.00,
       blAwbNumber: 'BL-2025-003',
       etd: '2025-02-05',
       eta: '2025-02-20'
+    }
+  },
+  {
+    id: '4',
+    type: 'PSW',
+    documentNumber: 'PSW-2025-004',
+    poNumber: 'PO-2024-12348',
+    supplierName: 'Tech Solutions Asia',
+    invoiceNumber: 'INV-004-2025',
+    createdDate: '2025-01-30T09:20:00Z',
+    status: 'rejected',
+    priority: 'high',
+    description: 'Prepare Shipping Waybill for IT equipment - requires documentation review',
+    metadata: {
+      currency: 'THB',
+      totalAmount: 450000.00,
+      blAwbNumber: 'AWB-2025-004',
+      etd: '2025-02-02',
+      eta: '2025-02-12'
+    }
+  },
+  {
+    id: '5',
+    type: 'PST',
+    documentNumber: 'PST-2025-005',
+    poNumber: 'PO-2024-12349',
+    supplierName: 'Southeast Logistics',
+    invoiceNumber: 'INV-005-2025',
+    createdDate: '2025-01-29T13:30:00Z',
+    status: 'approved',
+    priority: 'medium',
+    description: 'Prepare Shipping Tax for automotive parts to Indonesia',
+    metadata: {
+      currency: 'USD',
+      totalAmount: 12800.75,
+      blAwbNumber: 'BL-2025-005',
+      etd: '2025-02-04',
+      eta: '2025-02-19'
+    }
+  },
+  {
+    id: '6',
+    type: 'PSW',
+    documentNumber: 'PSW-2025-006',
+    poNumber: 'PO-2024-12350',
+    supplierName: 'Pacific Trade Group',
+    invoiceNumber: 'INV-006-2025',
+    createdDate: '2025-01-29T11:00:00Z',
+    status: 'submitted',
+    priority: 'low',
+    description: 'Prepare Shipping Waybill for food products export to Philippines',
+    metadata: {
+      currency: 'USD',
+      totalAmount: 6500.00,
+      blAwbNumber: 'AWB-2025-006',
+      etd: '2025-02-06',
+      eta: '2025-02-16'
+    }
+  },
+  {
+    id: '7',
+    type: 'PST',
+    documentNumber: 'PST-2025-007',
+    poNumber: 'PO-2024-12351',
+    supplierName: 'Industrial Materials Ltd.',
+    invoiceNumber: 'INV-007-2025',
+    createdDate: '2025-01-28T15:45:00Z',
+    status: 'draft',
+    priority: 'high',
+    description: 'Prepare Shipping Tax for steel products to Vietnam - urgent processing required',
+    metadata: {
+      currency: 'EUR',
+      totalAmount: 35000.00,
+      blAwbNumber: 'BL-2025-007',
+      etd: '2025-02-01',
+      eta: '2025-02-14'
+    }
+  },
+  {
+    id: '8',
+    type: 'PSW',
+    documentNumber: 'PSW-2025-008',
+    poNumber: 'PO-2024-12352',
+    supplierName: 'Bangkok Electronics Co.',
+    invoiceNumber: 'INV-008-2025',
+    createdDate: '2025-01-28T08:15:00Z',
+    status: 'approved',
+    priority: 'medium',
+    description: 'Prepare Shipping Waybill for consumer electronics to Cambodia',
+    metadata: {
+      currency: 'THB',
+      totalAmount: 280000.00,
+      blAwbNumber: 'AWB-2025-008',
+      etd: '2025-02-03',
+      eta: '2025-02-13'
+    }
+  },
+  {
+    id: '9',
+    type: 'PST',
+    documentNumber: 'PST-2025-009',
+    poNumber: 'PO-2024-12353',
+    supplierName: 'Chemical Industries Asia',
+    invoiceNumber: 'INV-009-2025',
+    createdDate: '2025-01-27T14:20:00Z',
+    status: 'submitted',
+    priority: 'high',
+    description: 'Prepare Shipping Tax for chemical products - hazardous materials classification',
+    metadata: {
+      currency: 'USD',
+      totalAmount: 18500.25,
+      blAwbNumber: 'BL-2025-009',
+      etd: '2025-02-07',
+      eta: '2025-02-22'
+    }
+  },
+  {
+    id: '10',
+    type: 'PSW',
+    documentNumber: 'PSW-2025-010',
+    poNumber: 'PO-2024-12354',
+    supplierName: 'Garment Export Thailand',
+    invoiceNumber: 'INV-010-2025',
+    createdDate: '2025-01-27T10:30:00Z',
+    status: 'approved',
+    priority: 'low',
+    description: 'Prepare Shipping Waybill for textile and garment products to Europe',
+    metadata: {
+      currency: 'EUR',
+      totalAmount: 22000.00,
+      blAwbNumber: 'AWB-2025-010',
+      etd: '2025-02-08',
+      eta: '2025-02-25'
+    }
+  },
+  {
+    id: '11',
+    type: 'PST',
+    documentNumber: 'PST-2025-011',
+    poNumber: 'PO-2024-12355',
+    supplierName: 'Agricultural Products Co.',
+    invoiceNumber: 'INV-011-2025',
+    createdDate: '2025-01-26T16:00:00Z',
+    status: 'draft',
+    priority: 'medium',
+    description: 'Prepare Shipping Tax for rice and agricultural products export',
+    metadata: {
+      currency: 'USD',
+      totalAmount: 9500.00,
+      blAwbNumber: 'BL-2025-011',
+      etd: '2025-02-09',
+      eta: '2025-02-24'
+    }
+  },
+  {
+    id: '12',
+    type: 'PSW',
+    documentNumber: 'PSW-2025-012',
+    poNumber: 'PO-2024-12356',
+    supplierName: 'Furniture Exports Ltd.',
+    invoiceNumber: 'INV-012-2025',
+    createdDate: '2025-01-26T12:45:00Z',
+    status: 'rejected',
+    priority: 'low',
+    description: 'Prepare Shipping Waybill for wooden furniture - documentation incomplete',
+    metadata: {
+      currency: 'THB',
+      totalAmount: 150000.00,
+      blAwbNumber: 'AWB-2025-012',
+      etd: '2025-02-10',
+      eta: '2025-02-26'
     }
   }
 ];

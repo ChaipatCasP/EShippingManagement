@@ -147,9 +147,13 @@ export function InboxContainer() {
           new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
         );
 
+        // If no documents loaded from localStorage, set empty array
+        // The Inbox component will use its mock data as fallback
         setDocuments(loadedDocuments);
       } catch (error) {
         console.error('Error loading documents:', error);
+        // Set empty array, let Inbox component handle mock data
+        setDocuments([]);
       } finally {
         setLoading(false);
       }
@@ -200,7 +204,7 @@ export function InboxContainer() {
 
   return (
     <Inbox
-      documents={documents}
+      documents={documents.length > 0 ? documents : undefined}
       onViewDocument={handleViewDocument}
       onDownloadDocument={handleDownloadDocument}
     />

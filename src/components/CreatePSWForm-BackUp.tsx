@@ -7,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { StepProgress } from './StepProgress';
-import { CommunicationPanel, CommunicationMessage } from './CommunicationPanel';
-import { X, ArrowLeft, Plus, Trash2, Upload, FileText, Calculator, DollarSign } from 'lucide-react';
+import { X, ArrowLeft, Plus, Trash2, Upload, FileText, Calculator, DollarSign, Package, Building } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface ExpenseItem {
@@ -29,20 +28,14 @@ interface ExpenseItem {
   total: number;
 }
 
-interface User {
-  email: string;
-  name: string;
-}
-
 interface CreatePSWFormProps {
   poNumber?: string;
   pstNumber?: string;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
-  user?: User | null;
 }
 
-export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: CreatePSWFormProps) {
+export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([
     {
@@ -66,37 +59,6 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  // Communication Messages State
-  const [messages, setMessages] = useState<CommunicationMessage[]>([
-    {
-      id: '1',
-      content: 'PSW creation initiated for PST-2025-101. Payment worksheet is ready for expense details input.',
-      sender: 'jagota',
-      senderName: 'JAGOTA Payment Team',
-      timestamp: new Date('2025-01-30T11:15:00'),
-      read: true,
-      type: 'general'
-    },
-    {
-      id: '2',
-      content: 'We have completed all import tax calculations verification. Ready to proceed with expense items and final billing submission.',
-      sender: 'shipping',
-      senderName: 'Sangthongsuk Shipping',
-      timestamp: new Date('2025-01-30T11:30:00'),
-      read: true,
-      type: 'general'
-    },
-    {
-      id: '3',
-      content: 'Please confirm the additional service charges before final submission. There are some new port handling fees that need your approval.',
-      sender: 'jagota',
-      senderName: 'JAGOTA Finance',
-      timestamp: new Date('2025-01-30T12:00:00'),
-      read: false,
-      type: 'urgent'
-    }
-  ]);
-
   // PST Reference Data (ข้อมูลย่อจาก PST)
   const pstReferenceData = {
     pstNumber: pstNumber || 'PST-2025-001',
@@ -108,13 +70,13 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
     importEntryNo: 'IE-2025-7890',
     // Import Tax Information
     importTaxRate: 12.5, // %
-    importTaxAmount: 15780.50, // THB
+    importTaxAmount: 15780.50, // USD
     vatRate: 7, // %
-    vatAmount: 3245.20, // THB
+    vatAmount: 3245.20, // USD
     dutyRate: 8.5, // %
-    dutyAmount: 8920.75, // THB
-    totalTaxDuty: 27946.45, // THB
-    invoiceValue: 125000.00 // THB
+    dutyAmount: 8920.75, // USD
+    totalTaxDuty: 27946.45, // USD
+    invoiceValue: 125000.00 // USD
   };
 
   const serviceProviders = [
@@ -135,26 +97,6 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
     'CUS - Customs Fee',
     'OTH - Other Charges'
   ];
-
-  // Communication Message Actions
-  const handleSendMessage = (content: string, type: 'general' | 'urgent') => {
-    const newMessage: CommunicationMessage = {
-      id: Date.now().toString(),
-      content,
-      sender: 'shipping',
-      senderName: user?.name || 'Shipping Team',
-      timestamp: new Date(),
-      read: true,
-      type
-    };
-    setMessages(prev => [...prev, newMessage]);
-  };
-
-  const handleMarkMessageAsRead = (messageId: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, read: true } : msg
-    ));
-  };
 
   const calculateExpenseTotal = (expense: ExpenseItem) => {
     const subTotal = expense.qty * expense.rate;
@@ -255,8 +197,7 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
         pstReference: pstReferenceData,
         expenses,
         uploadedFiles: uploadedFiles.map(f => f.name),
-        summary: getTotalSummary(),
-        messages
+        summary: getTotalSummary()
       };
       
       await onSubmit(formData);
@@ -277,17 +218,6 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
     } else if (action === 'save') {
       // Save as draft
       console.log('Saving draft...');
-      // Add system message about saving
-      const saveMessage: CommunicationMessage = {
-        id: Date.now().toString(),
-        content: 'PSW draft has been saved successfully. You can continue editing later.',
-        sender: 'jagota',
-        senderName: 'JAGOTA System',
-        timestamp: new Date(),
-        read: true,
-        type: 'general'
-      };
-      setMessages(prev => [...prev, saveMessage]);
     } else if (action === 'submit') {
       // Submit the form
       await handleSubmit(new Event('submit') as any);
@@ -313,7 +243,7 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
             </Button>
             <div className="h-6 w-px bg-gray-300" />
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Create PSW (Payment Shipping Worksheet)</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Create PSW (Prepare for Shipping Weekly)</h1>
               <p className="text-sm text-gray-600">Expense Management & Billing</p>
             </div>
           </div>
@@ -326,7 +256,7 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
       {/* Step Progress */}
       <StepProgress currentStep="psw" pstCompleted={true} />
 
-      {/* PST Reference Bar */}
+      {/* Simple PST Reference Bar */}
       <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
           {/* Reference Info */}
@@ -620,18 +550,36 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
                     )}
                   </CardContent>
                 </Card>
-              </form>
 
-              {/* Communication Panel */}
-              <CommunicationPanel
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                onMarkAsRead={handleMarkMessageAsRead}
-                disabled={isSubmitting}
-                title="Communication Messages - PSW Creation"
-                placeholder="Send a message to JAGOTA about expenses, charges, or billing details..."
-                user={user}
-              />
+                {/* Action Buttons */}
+                <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => handleAction('cancel')}
+                    disabled={isSubmitting}
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    Cancel Bill
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => handleAction('save')}
+                    disabled={isSubmitting}
+                  >
+                    Save Changes
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => handleAction('submit')}
+                    disabled={isSubmitting}
+                    className="min-w-32"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Bill'}
+                  </Button>
+                </div>
+              </form>
             </div>
 
             {/* Right Column - Sticky Expense Summary */}
