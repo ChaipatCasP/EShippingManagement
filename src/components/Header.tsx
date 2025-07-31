@@ -1,170 +1,173 @@
-import React, { useState } from 'react';
-import { Button } from './ui/button';
+import React from 'react';
 import { Badge } from './ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Bell, User, LogOut, Settings, HelpCircle, Home, Inbox, FileText } from 'lucide-react';
-// import jagotaLogo from 'figma:asset/ff4cc62167f856df08ea3a5c273f5de4c69e10c7.png';
+import { Button } from './ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Bell, User, LogOut, Settings, Clock, BarChart3 } from 'lucide-react';
+import jagotaLogo from '../assets/img/jagota.jpg';
+import type { Notification } from '../types/shipment';
 
 interface HeaderProps {
-  notifications?: any[];
-  unreadNotificationCount?: number;
-  isNotificationOpen?: boolean;
-  setIsNotificationOpen?: (open: boolean) => void;
-  onNotificationClick?: (notification: any) => void;
-  onMarkNotificationAsRead?: (id: string) => void;
-  onMarkAllNotificationsAsRead?: () => void;
-  onDeleteNotification?: (id: string) => void;
-  NotificationCenter?: React.ComponentType<any>;
-  user?: { email: string; name: string } | null;
-  onLogout?: () => void;
-  onNavigate?: (view: string) => void;
-  currentView?: string;
+  notifications: Notification[];
+  unreadNotificationCount: number;
+  isNotificationOpen: boolean;
+  setIsNotificationOpen: (open: boolean) => void;
+  onNotificationClick: (notification: Notification) => void;
+  onMarkNotificationAsRead: (notificationId: string) => void;
+  onMarkAllNotificationsAsRead: () => void;
+  onDeleteNotification: (notificationId: string) => void;
+  NotificationCenter: React.ComponentType<any>;
+  user: any;
+  onLogout: () => void;
+  onHistoryClick?: () => void;
 }
 
-export function Header({
-  notifications = [],
-  unreadNotificationCount = 0,
-  isNotificationOpen = false,
-  setIsNotificationOpen = () => {},
-  onNotificationClick = () => {},
-  onMarkNotificationAsRead = () => {},
-  onMarkAllNotificationsAsRead = () => {},
-  onDeleteNotification = () => {},
+export function Header({ 
+  notifications, 
+  unreadNotificationCount, 
+  isNotificationOpen, 
+  setIsNotificationOpen,
+  onNotificationClick,
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
+  onDeleteNotification,
   NotificationCenter,
   user,
-  onLogout = () => {},
-  onNavigate = () => {},
-  currentView = 'dashboard'
+  onLogout,
+  onHistoryClick
 }: HeaderProps) {
-  const [activeNavItem, setActiveNavItem] = useState('Home');
-
-  const navigationItems = [
-    { name: 'Home', icon: Home, active: currentView === 'dashboard' },
-    { name: 'Inbox', icon: Inbox, active: currentView === 'inbox' },
-    { name: 'Apply Permit', icon: FileText, active: false }
-  ];
-
-  const handleNavClick = (itemName: string) => {
-    setActiveNavItem(itemName);
-    // Add navigation logic here
-    if (itemName === 'Home') {
-      onNavigate('dashboard');
-    } else if (itemName === 'Inbox') {
-      onNavigate('inbox');
-    }
-  };
-
-  const handleLogout = () => {
-    if (confirm('Are you sure you want to logout?')) {
-      onLogout();
-    }
-  };
-
-  // Get user display name
-  const getUserDisplayName = () => {
-    if (!user) return 'Guest User';
-    return user.name || user.email.split('@')[0];
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 relative z-50">
-      {/* Main Header - Minimal single line */}
-      <div className="max-w-7xl mx-auto px-6 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo Section - Small minimal logo */}
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <div 
-                className="h-6 px-3 bg-primary text-primary-foreground rounded flex items-center text-sm font-semibold"
-              >
-                JAGOTA
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo and Title */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-20 h-12 rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200">
+                <img 
+                  src={jagotaLogo} 
+                  alt="JAGOTA Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
-            </div>
-            <div className="text-base font-medium text-gray-900">
-              JAGOTA eShipping
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">JAGOTA Shipping Dashboard</h1>
+                <p className="text-xs text-gray-600">Import Management System</p>
+              </div>
             </div>
           </div>
 
-          {/* Center Navigation - Minimal style */}
-          <nav className="flex items-center space-x-6">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeNavItem === item.name;
-              
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavClick(item.name)}
-                  className={`flex items-center space-x-1 px-2 py-1 text-sm font-medium transition-colors rounded-md ${
-                    isActive
-                      ? 'text-gray-900 bg-gray-100'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </button>
-              );
-            })}
-          </nav>
+          {/* Navigation Actions */}
+          <div className="flex items-center gap-3">
+            {/* History Button */}
+            {onHistoryClick && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onHistoryClick}
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                History
+              </Button>
+            )}
 
-          {/* Right Section - Compact actions */}
-          <div className="flex items-center space-x-2">
-            {/* Notification */}
-            {NotificationCenter && (
-              <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative text-gray-600 hover:text-gray-900 h-8 w-8 p-0">
-                    <Bell className="w-4 h-4" />
-                    {unreadNotificationCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center p-0 text-xs bg-red-500 text-white rounded-full border border-white">
-                        {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-96 p-0 bg-white border border-gray-200 shadow-xl" align="end">
+            {/* Notifications */}
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="relative"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadNotificationCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center text-xs"
+                  >
+                    {unreadNotificationCount}
+                  </Badge>
+                )}
+              </Button>
+
+              {isNotificationOpen && (
+                <div className="absolute right-0 top-full mt-2 z-50">
                   <NotificationCenter
                     notifications={notifications}
+                    onClose={() => setIsNotificationOpen(false)}
+                    onNotificationClick={onNotificationClick}
                     onMarkAsRead={onMarkNotificationAsRead}
                     onMarkAllAsRead={onMarkAllNotificationsAsRead}
-                    onDeleteNotification={onDeleteNotification}
-                    onNotificationClick={onNotificationClick}
+                    onDelete={onDeleteNotification}
                   />
-                </PopoverContent>
-              </Popover>
-            )}
+                </div>
+              )}
+            </div>
 
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 h-8 px-2">
-                  <User className="w-4 h-4 mr-1" />
-                  <span className="text-sm">{getUserDisplayName()}</span>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src="/avatars/user.png" alt={user?.name || 'User'} />
+                    <AvatarFallback className="bg-blue-100 text-blue-600">
+                      {getInitials(user?.name || 'User')}
+                    </AvatarFallback>
+                  </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-3 py-2 border-b">
-                  <p className="text-sm font-medium text-gray-900">{getUserDisplayName()}</p>
-                  <p className="text-xs text-gray-500">{user?.email || 'guest@jagota.com'}</p>
-                </div>
-                <DropdownMenuItem>
-                  <User className="w-4 h-4 mr-2" />
-                  Profile Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Account Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  Help & Support
-                </DropdownMenuItem>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email || 'user@example.com'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.company || 'Shipping Company'}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+
+                {onHistoryClick && (
+                  <DropdownMenuItem onClick={onHistoryClick} className="cursor-pointer">
+                    <Clock className="mr-2 h-4 w-4" />
+                    <span>Shipment History</span>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem className="cursor-pointer">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  <span>Analytics</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

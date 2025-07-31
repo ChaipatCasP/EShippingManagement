@@ -10,6 +10,7 @@ import { KPISection } from './components/KPISection';
 import { FilterBar } from './components/FilterBar';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { HistoryView } from './components/HistoryView';
 import { Badge } from './components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './components/ui/alert-dialog';
 import { Button } from './components/ui/button';
@@ -100,6 +101,9 @@ export default function ShippingDashboard() {
         case 'inbox':
           window.history.replaceState(null, '', '/inbox');
           break;
+        case 'history':
+          window.history.replaceState(null, '', '/history');
+          break;
         case 'create-pst':
           if (selectedPOForPST) {
             window.history.replaceState(null, '', `/create-pst/${selectedPOForPST}`);
@@ -142,6 +146,8 @@ export default function ShippingDashboard() {
         setCurrentView('dashboard');
       } else if (path === '/inbox' && isAuthenticated) {
         setCurrentView('inbox');
+      } else if (path === '/history' && isAuthenticated) {
+        setCurrentView('history');
       } else if (path.startsWith('/create-pst') && isAuthenticated) {
         const poNumber = path.split('/')[2];
         setSelectedPOForPST(poNumber || null);
@@ -230,6 +236,19 @@ export default function ShippingDashboard() {
     
     // Update URL to login page
     window.history.pushState(null, '', '/login');
+  };
+
+  const handleHistoryClick = () => {
+    setIsTransitioning(true);
+    setCurrentView('history');
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleCloseHistory = () => {
+    setIsTransitioning(true);
+    setCurrentView('dashboard');
+    setTimeout(() => setIsTransitioning(false), 400);
   };
 
   const handleForgotPassword = async (email: string) => {
@@ -586,8 +605,14 @@ export default function ShippingDashboard() {
           onLogout={handleLogout}
           unreadNotificationCount={unreadNotificationCount}
           onNotificationClick={() => setIsNotificationOpen(true)}
-          onNavigate={(view) => setCurrentView(view as CurrentView)}
-          currentView={currentView}
+          onHistoryClick={handleHistoryClick}
+          notifications={[]}
+          isNotificationOpen={false}
+          setIsNotificationOpen={() => {}}
+          onMarkNotificationAsRead={() => {}}
+          onMarkAllNotificationsAsRead={() => {}}
+          onDeleteNotification={() => {}}
+          NotificationCenter={NotificationCenter}
         />
         
         {/* Main Scrollable Content */}
@@ -608,6 +633,13 @@ export default function ShippingDashboard() {
     );
   }
 
+  // Render HistoryView if currentView is 'history'
+  if (currentView === 'history') {
+    return (
+      <HistoryView onBack={handleCloseHistory} />
+    );
+  }
+
   // Render main dashboard with proper sticky layout
   return (
     <div className={`min-h-screen bg-gray-50 flex flex-col transition-all duration-300 ${isTransitioning ? 'opacity-90' : 'opacity-100'}`}>
@@ -624,8 +656,7 @@ export default function ShippingDashboard() {
         NotificationCenter={NotificationCenter}
         user={user}
         onLogout={handleLogout}
-        onNavigate={(view) => setCurrentView(view as CurrentView)}
-        currentView={currentView}
+        onHistoryClick={handleHistoryClick}
       />
 
       {/* Main Scrollable Content */}
