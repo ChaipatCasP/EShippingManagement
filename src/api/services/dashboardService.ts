@@ -49,17 +49,21 @@ export class DashboardService {
     fromDate: string = '01-Jan-2021',
     toDate: string = '01-Jan-2026',
     transportBy: string = '',
-    keyword: string = ''
+    keyword: string = '',
+    pstStatus: string = '',
+    pswStatus: string = ''
   ): Promise<EShippingPOListResponse> {
     try {
       // Log parameters for debugging
-      console.log('PO List API Parameters:', { fromDate, toDate, transportBy, keyword });
+      console.log('PO List API Parameters:', { fromDate, toDate, transportBy, keyword, pstStatus, pswStatus });
       
       const params = new URLSearchParams();
       if (fromDate) params.append('fromDate', fromDate);
       if (toDate) params.append('toDate', toDate);
       if (transportBy) params.append('transportBy', transportBy);
       if (keyword) params.append('keyword', keyword);
+      if (pstStatus) params.append('pstStatus', pstStatus);
+      if (pswStatus) params.append('pswStatus', pswStatus);
       
       const apiUrl = `${env.jagotaApi.baseUrl}/v1/es/eshipping/po-list?${params.toString()}`;
       console.log('API URL:', apiUrl);

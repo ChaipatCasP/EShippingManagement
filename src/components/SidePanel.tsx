@@ -14,6 +14,24 @@ import {
 } from '../lib/shipmentUtils';
 import type { Shipment } from '../types/shipment';
 
+// Helper function to format date to yyyy-mm-dd
+const formatDate = (dateString: string): string => {
+  if (!dateString) return dateString;
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    return dateString;
+  }
+};
+
 interface SidePanelProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -263,21 +281,21 @@ export function SidePanel({
                   <div className="w-2 h-2 bg-blue-500 rounded-full" aria-hidden="true"></div>
                   <span className="text-gray-600 text-xs font-medium">ETD</span>
                 </div>
-                <span className="font-semibold text-gray-900">{selectedShipment.etd}</span>
+                <span className="font-semibold text-gray-900">{formatDate(selectedShipment.etd)}</span>
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-1 mb-1">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full" aria-hidden="true"></div>
                   <span className="text-gray-600 text-xs font-medium">ETA</span>
                 </div>
-                <span className="font-semibold text-gray-900">{selectedShipment.eta}</span>
+                <span className="font-semibold text-gray-900">{formatDate(selectedShipment.eta)}</span>
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-1 mb-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full" aria-hidden="true"></div>
                   <span className="text-gray-600 text-xs font-medium">Clear</span>
                 </div>
-                <span className="font-semibold text-gray-900">{selectedShipment.dateClear}</span>
+                <span className="font-semibold text-gray-900">{formatDate(selectedShipment.dateClear)}</span>
               </div>
             </div>
           </div>
@@ -293,7 +311,7 @@ export function SidePanel({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Invoice:</span>
-                  <span className="font-medium text-gray-900">{selectedShipment.invoiceNumber} ({selectedShipment.invoiceDate})</span>
+                  <span className="font-medium text-gray-900">{selectedShipment.invoiceNumber} ({formatDate(selectedShipment.invoiceDate)})</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">AWB:</span>

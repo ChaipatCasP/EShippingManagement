@@ -7,6 +7,8 @@ interface UseEShippingPOListParams {
   toDate?: string;
   transportBy?: string;
   keyword?: string;
+  pstStatus?: string;
+  pswStatus?: string;
   autoFetch?: boolean;
 }
 
@@ -23,6 +25,8 @@ export function useEShippingPOList({
   toDate = '01-Jan-2026',
   transportBy = '',
   keyword = '',
+  pstStatus = '',
+  pswStatus = '',
   autoFetch = true
 }: UseEShippingPOListParams = {}): UseEShippingPOListReturn {
   const [data, setData] = useState<POListItem[]>([]);
@@ -48,6 +52,8 @@ export function useEShippingPOList({
         toDate: params?.toDate || toDate,
         transportBy: params?.transportBy || transportBy,
         keyword: params?.keyword || keyword,
+        pstStatus: params?.pstStatus || pstStatus,
+        pswStatus: params?.pswStatus || pswStatus,
       };
       
       // สร้าง unique key เพื่อเช็คว่าพารามิเตอร์เปลี่ยนแปลงหรือไม่
@@ -63,7 +69,9 @@ export function useEShippingPOList({
         finalParams.fromDate,
         finalParams.toDate,
         finalParams.transportBy,
-        finalParams.keyword
+        finalParams.keyword,
+        finalParams.pstStatus,
+        finalParams.pswStatus
       );
       
       setData(result.data || []);
@@ -78,7 +86,7 @@ export function useEShippingPOList({
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, transportBy, keyword, data.length]);
+  }, [fromDate, toDate, transportBy, keyword, pstStatus, pswStatus, data.length]);
 
   useEffect(() => {
     if (autoFetch) {

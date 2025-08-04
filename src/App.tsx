@@ -193,7 +193,9 @@ export default function ShippingDashboard() {
     fromDate: dateRange.start,
     toDate: dateRange.end,
     transportBy: selectedFreightStatus === 'all' ? undefined : selectedFreightStatus,
-    keyword: ''
+    keyword: '',
+    pstStatus: selectedPSTStatus === 'all' ? '' : selectedPSTStatus,
+    pswStatus: selectedPSWStatus === 'all' ? '' : selectedPSWStatus
   });
 
   // Convert API data to Shipment format
@@ -330,7 +332,7 @@ export default function ShippingDashboard() {
       // เรียกทันทีสำหรับ predefined filters
       refetchPOList();
     }
-  }, [dateFilterMode, customDateStart, customDateEnd, selectedFreightStatus, isAuthenticated, refetchPOList]);
+  }, [dateFilterMode, customDateStart, customDateEnd, selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, isAuthenticated, refetchPOList]);
 
   // Enhanced filter and sort shipments with new separated status filters
   const filteredShipments = useMemo(() => {

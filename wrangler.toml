@@ -1,5 +1,7 @@
 name = "eshipping-management"
 compatibility_date = "2025-07-31"
+main = "src/worker.js"
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
