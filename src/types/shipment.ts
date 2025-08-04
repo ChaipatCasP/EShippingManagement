@@ -25,9 +25,9 @@ export interface Shipment {
   billStatus: 'New Entry' | 'In Progress' | 'Completed' | 'On Hold' | 'Documentation Pending' | 'Approved' | 'Pending' | 'Processing';
   jagotaStatus: 'Under Review' | 'Approved' | 'On Hold' | 'Completed' | 'Processing';
   billType: 'Urgent' | 'Regular' | 'Express' | 'Premium' | 'Cold Chain' | 'Bulk';
-  pstStatus: 'new-entry' | 'not-started' | 'in-progress' | 'completed';
+  pstStatus: 'N' | 'Y' | 'Z' | string;
   pstNumber: string | null;
-  pswStatus?: 'not-started' | 'in-progress' | 'waiting-approval' | 'approved';
+  pswStatus?: 'N' | 'Y' | 'Z' | string;
   pswNumber: string | null;
   supplierContact: string;
   supplierEmail: string;

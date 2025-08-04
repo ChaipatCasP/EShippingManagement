@@ -56,12 +56,6 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       return 'pst-approved';
     };
 
-    // สร้าง PST/PSW status
-    const getPSTStatus = (): 'new-entry' | 'not-started' | 'in-progress' | 'completed' => {
-      if (item.warehouseReceivedDate) return 'completed';
-      return 'in-progress';
-    };
-
     const shipment: Shipment = {
       id: `${item.supCode || 'SUP'}-${item.poNo || '000'}-${Date.now()}`,
       supplierName: item.supName || 'Unknown Supplier',
@@ -89,10 +83,10 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       billStatus: 'In Progress',
       jagotaStatus: 'Under Review',
       billType: 'Regular',
-      pstStatus: getPSTStatus(),
-      pstNumber: getPSTStatus() === 'completed' ? `PST-${item.poNo || '000'}` : null,
-      pswStatus: item.warehouseReceivedDate ? 'approved' : 'not-started',
-      pswNumber: item.warehouseReceivedDate ? `PSW-${item.poNo || '000'}` : null,
+      pstStatus: item.pstStatus || '', // ใช้ pstStatus จาก API
+      pstNumber: item.pstStatus === 'Y' ? `PST-${item.poNo || '000'}` : null, // ถ้า Submitted แล้วจะมี PST Number
+      pswStatus: item.pswStatus || '', // ใช้ pswStatus จาก API  
+      pswNumber: item.pswStatus === 'Y' ? `PSW-${item.poNo || '000'}` : null, // ถ้า Submitted แล้วจะมี PSW Number
       // Required fields with default values
       supplierContact: `${item.supCode || 'SUP'}-contact`,
       supplierEmail: `${(item.supCode || 'supplier').toLowerCase()}@supplier.com`,

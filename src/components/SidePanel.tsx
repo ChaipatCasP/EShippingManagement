@@ -198,8 +198,8 @@ export function SidePanel({
 
             {/* Row 4: Ref Key (conditional) + PO Number */}
             <div className="flex items-center gap-4 text-sm">
-              {/* Only show Ref Key if PST status is not "new-entry" */}
-              {selectedShipment.pstStatus !== 'new-entry' && (
+              {/* Only show Ref Key if PST status is not "N" (New Entry) */}
+              {selectedShipment.pstStatus !== 'N' && (
                 <div className="flex items-center gap-1">
                   <span className="text-gray-500">Ref:</span>
                   <span className="font-medium text-gray-900">{selectedShipment.referenceKey}</span>

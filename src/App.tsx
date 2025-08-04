@@ -43,8 +43,8 @@ export default function ShippingDashboard() {
 
   // Filter state
   const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
-  const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('all');
-  const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('all');
+  const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('');
+  const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   
   // Date filter state with chip-based approach
@@ -343,20 +343,11 @@ export default function ShippingDashboard() {
       // PO Type filtering
       const matchesTabPOType = activePOTypeTab === 'all' || shipment.poType === activePOTypeTab;
       
-      // PST Status filtering
+      // PST Status filtering (ใช้สำหรับ fallback หรือ mock data)
       let matchesPSTStatus = true;
-      if (selectedPSTStatus !== 'all') {
-        switch (selectedPSTStatus) {
-          case 'new-entry':
-            matchesPSTStatus = shipment.pstStatus === 'new-entry';
-            break;
-          case 'pending':
-            matchesPSTStatus = shipment.pstStatus === 'not-started' || shipment.pstStatus === 'in-progress';
-            break;
-          case 'done':
-            matchesPSTStatus = shipment.pstStatus === 'completed';
-            break;
-        }
+      if (selectedPSTStatus !== '') {
+        // ใช้ค่าตรงๆ จาก API (N, Y, Z)
+        matchesPSTStatus = shipment.pstStatus === selectedPSTStatus;
       }
       
       // PSW Status filtering

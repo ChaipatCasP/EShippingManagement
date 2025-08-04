@@ -234,6 +234,8 @@ export interface POListItem {
   warehouseReceivedDate: string;
   coLoadPOCount: number;
   coLoadSupplierCount: number;
+  pstStatus?: string; // PST Status จาก API
+  pswStatus?: string; // PSW Status จาก API
 }
 
 export interface EShippingPOListResponse {

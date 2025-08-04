@@ -187,7 +187,7 @@ const ColoadPOsPopoverContent: React.FC<ColoadPOsPopoverContentProps> = ({
                   Current
                 </span>
               </div>
-              {shipment.pstStatus !== 'new-entry' && (
+              {shipment.pstStatus !== 'N' && (
                 <div className="text-xs text-gray-600 mb-1">{shipment.referenceKey}</div>
               )}
               <div className="text-sm font-medium text-gray-800">{shipment.poNumber}</div>

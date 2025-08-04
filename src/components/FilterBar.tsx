@@ -59,8 +59,8 @@ export function FilterBar({
   // Helper function to check if any filters are active
   const hasActiveFilters = () => {
     return selectedFreightStatus !== 'all' || 
-           selectedPSTStatus !== 'all' || 
-           selectedPSWStatus !== 'all' || 
+           selectedPSTStatus !== '' || 
+           selectedPSWStatus !== '' || 
            selectedPriority !== 'all' ||
            (dateFilterMode === 'custom' && (customDateStart || customDateEnd)) ||
            dateFilterMode === 'today' ||
@@ -72,8 +72,8 @@ export function FilterBar({
   const clearAllFilters = () => {
     setSearchTerm('');
     setSelectedFreightStatus('all');
-    setSelectedPSTStatus('all');
-    setSelectedPSWStatus('all');
+    setSelectedPSTStatus('');
+    setSelectedPSWStatus('');
     setSelectedPriority('all');
     handleDateFilterChange('today'); // Reset to default 'today' instead of 'all'
     setCustomDateStart('');
@@ -200,10 +200,10 @@ export function FilterBar({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All PST</SelectItem>
-                      <SelectItem value="new-entry">New Entry</SelectItem>
-                      <SelectItem value="pending">PST Pending</SelectItem>
-                      <SelectItem value="done">PST Done</SelectItem>
+                      <SelectItem value="">All</SelectItem>
+                      <SelectItem value="N">New Entry</SelectItem>
+                      <SelectItem value="Y">Submitted</SelectItem>
+                      <SelectItem value="Z">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -212,9 +212,10 @@ export function FilterBar({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All PSW</SelectItem>
-                      <SelectItem value="pending">PSW Pending</SelectItem>
-                      <SelectItem value="done">PSW Done</SelectItem>
+                      <SelectItem value="">All</SelectItem>
+                      <SelectItem value="N">New Entry</SelectItem>
+                      <SelectItem value="Y">Submitted</SelectItem>
+                      <SelectItem value="Z">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
 

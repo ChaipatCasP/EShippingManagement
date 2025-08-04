@@ -31,8 +31,8 @@ export function DashboardContainer({
 
   // Filter state
   const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
-  const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('all');
-  const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('all');
+  const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('');
+  const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   
   // Date filter state
@@ -69,30 +69,15 @@ export function DashboardContainer({
       const matchesTabPOType = activePOTypeTab === 'all' || shipment.poType === activePOTypeTab;
       
       let matchesPSTStatus = true;
-      if (selectedPSTStatus !== 'all') {
-        switch (selectedPSTStatus) {
-          case 'new-entry':
-            matchesPSTStatus = shipment.pstStatus === 'new-entry';
-            break;
-          case 'pending':
-            matchesPSTStatus = shipment.pstStatus === 'not-started' || shipment.pstStatus === 'in-progress';
-            break;
-          case 'done':
-            matchesPSTStatus = shipment.pstStatus === 'completed';
-            break;
-        }
+      if (selectedPSTStatus !== '') {
+        // Match the exact pstStatus value from API
+        matchesPSTStatus = shipment.pstStatus === selectedPSTStatus;
       }
       
       let matchesPSWStatus = true;
-      if (selectedPSWStatus !== 'all') {
-        switch (selectedPSWStatus) {
-          case 'pending':
-            matchesPSWStatus = shipment.pstNumber !== null && !shipment.pswNumber;
-            break;
-          case 'done':
-            matchesPSWStatus = shipment.pswNumber !== null;
-            break;
-        }
+      if (selectedPSWStatus !== '') {
+        // Match the exact pswStatus value from API
+        matchesPSWStatus = shipment.pswStatus === selectedPSWStatus;
       }
       
       const matchesSearch = searchTerm === '' || 

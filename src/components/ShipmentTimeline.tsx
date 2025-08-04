@@ -6,7 +6,6 @@ import { ArrowRight, Key, FileDigit, MapPin, Package2, Layers, Flag, Users, File
 import ColoadPOsPopoverContent from './ColoadPOsPopoverContent';
 import {
   getTypeIcon,
-  getJagotaStatusColor,
   getActionButtonConfig
 } from '../lib/shipmentUtils';
 import type { Shipment } from '../types/shipment';
@@ -109,6 +108,29 @@ export function ShipmentTimeline({
     }
   };
 
+  // Helper function to get PST status display text
+  const getPSTStatusText = (pstStatus: string) => {
+
+    console.log('PST Status:', pstStatus);
+    switch (pstStatus) {
+      case 'N': return 'New Entry';
+      case 'Y': return 'Submitted';
+      case 'Z': return 'Cancelled';
+      case '': return 'No Status';
+      default: return pstStatus || 'No Status'; // แสดงค่าเดิมหรือ 'No Status' ถ้าเป็นค่าว่าง
+    }
+  };
+
+  // Helper function to get PST status color based on status
+  const getPSTStatusColor = (pstStatus: string) => {
+    switch (pstStatus) {
+      case 'N': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'Y': return 'bg-green-50 text-green-700 border-green-200';
+      case 'Z': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
   // Helper function to get PSW status color
   const getPSWStatusColor = (shipment: Shipment) => {
     if (shipment.pswNumber) {
@@ -136,12 +158,12 @@ export function ShipmentTimeline({
             <CardContent className="p-4">
               {/* Status badges positioned at top-right corner */}
               <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
-                {/* PST Status Badge */}
-                <Badge className={`text-xs ${getJagotaStatusColor(shipment.jagotaStatus)}`}>
+                {/* PST Status Badge - Always show */}
+                <Badge className={`text-xs ${getPSTStatusColor(shipment.pstStatus || '')}`}>
                   <div className="flex items-center gap-1">
                     <Flag className="w-2 h-2" />
                     <span className="text-xs opacity-75">PST:</span>
-                    <span>{shipment.jagotaStatus}</span>
+                    <span>{getPSTStatusText(shipment.pstStatus || '')}</span>
                     {shipment.pstNumber && (
                       <>
                         <span className="text-xs opacity-50">-</span>
@@ -246,8 +268,8 @@ export function ShipmentTimeline({
                     
                     {/* Consolidated Reference & PO Info */}
                     <div className="flex items-center gap-6 text-sm">
-                      {/* Only show Ref Key if PST status is not "new-entry" */}
-                      {shipment.pstStatus !== 'new-entry' && (
+                      {/* Only show Ref Key if PST status is not "N" (New Entry) */}
+                      {shipment.pstStatus !== 'N' && (
                         <div className="flex items-center gap-2">
                           <Key className="w-4 h-4 text-gray-400" />
                           <span className="text-gray-600">Ref :</span>

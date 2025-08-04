@@ -45,7 +45,7 @@ export function HistoryView({ onBack }: HistoryViewProps) {
 
   // Filter completed shipments (PSW completed)
   const completedShipments = useMemo(() => {
-    return mockShipments.filter(shipment => shipment.pswNumber && shipment.pswStatus === 'approved');
+    return mockShipments.filter(shipment => shipment.pswNumber && shipment.pswStatus === 'Y');
   }, []);
 
   // Apply filters
