@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Loader2, Package, Users, FileText } from 'lucide-react';
+import { Loader2, Package } from 'lucide-react';
 import { useConsolidatedSuppliers } from '../hooks/useConsolidatedSuppliers';
 import type { ConsolidatedSupplier } from '../api/types';
 
@@ -46,7 +46,6 @@ const ColoadPOsPopoverContent: React.FC<ColoadPOsPopoverContentProps> = ({
     suppliers,
     loading,
     error,
-    totalCount,
     refetch
   } = useConsolidatedSuppliers({
     startDate: shipment.poDate,
@@ -126,7 +125,7 @@ const ColoadPOsPopoverContent: React.FC<ColoadPOsPopoverContentProps> = ({
       {!loading && !error && suppliers.length > 0 && (
         <div className="space-y-3">
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+          {/* <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
             <div className="flex items-center gap-2">
               <Users className="h-3 w-3 text-blue-600" />
               <div>
@@ -141,7 +140,7 @@ const ColoadPOsPopoverContent: React.FC<ColoadPOsPopoverContentProps> = ({
                 <div className="text-sm font-bold text-slate-900">{totalPOsCount}</div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Current Shipment - Use from API if available, otherwise fallback to shipment data */}
           {currentSupplier ? (
@@ -226,7 +225,8 @@ const ColoadPOsPopoverContent: React.FC<ColoadPOsPopoverContentProps> = ({
 
       <div className="pt-2 border-t text-xs text-gray-500 text-center">
         {!loading && !error && suppliers.length > 0 ? (
-          <>Total: {totalPOsCount} purchase orders from {totalCount} suppliers</>
+        //   <>Total: {totalPOsCount} purchase orders from {totalCount} suppliers</>
+          <>Total: {totalPOsCount} purchase orders in this co-load container</>
         ) : (
           <>Expected: {totalSuppliers} purchase orders in this {shipment.poType.toLowerCase()} container</>
         )}

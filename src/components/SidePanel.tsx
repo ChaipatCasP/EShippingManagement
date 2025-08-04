@@ -7,11 +7,10 @@ import {
   Plane,
   Truck,
   Package2,
-  Layers
+  Layers,
+  Flag,
+  Calendar
 } from 'lucide-react';
-import {
-  getActionButtonConfig
-} from '../lib/shipmentUtils';
 import type { Shipment } from '../types/shipment';
 
 // Helper function to format date to yyyy-mm-dd
@@ -51,10 +50,75 @@ export function SidePanel({
 }: SidePanelProps) {
   if (!selectedShipment) return null;
 
-  const actionConfig = getActionButtonConfig(selectedShipment);
+  // Helper function to get action button configuration based on PST/PSW status (same as ShipmentTimeline)
+  const getCustomActionConfig = (shipment: Shipment) => {
+    const { pstStatus, pswStatus } = shipment;
+    
+    // ถ้า pstStatus เป็นว่าง หรือ null ให้แสดงปุ่ม CreatePst
+    if (!pstStatus || pstStatus === '' || pstStatus === null) {
+      return {
+        text: 'Create PST',
+        action: 'create-pst',
+        color: 'bg-blue-600 hover:bg-blue-700 text-white',
+        enabled: true,
+        tooltip: 'Create PST document',
+        icon: <Flag className="w-4 h-4" />
+      };
+    }
+    
+    // ถ้า pstStatus เป็น N ให้แสดงปุ่ม UpdatePst
+    if (pstStatus === 'N') {
+      return {
+        text: 'Update PST',
+        action: 'edit-pst',
+        color: 'bg-yellow-600 hover:bg-yellow-700 text-white',
+        enabled: true,
+        tooltip: 'Update PST document',
+        icon: <Flag className="w-4 h-4" />
+      };
+    }
+    
+    // ถ้า pstStatus เป็น Y และ pswStatus เป็น N or null ให้แสดงปุ่ม CreatePsw
+    if (pstStatus === 'Y' && (!pswStatus || pswStatus === 'N' || pswStatus === '' || pswStatus === null)) {
+      return {
+        text: 'Create PSW',
+        action: 'create-psw',
+        color: 'bg-green-600 hover:bg-green-700 text-white',
+        enabled: true,
+        tooltip: 'Create PSW document',
+        icon: <Calendar className="w-4 h-4" />
+      };
+    }
+    
+    // ถ้า pstStatus และ pswStatus เป็น Y ทั้งคู่ แสดงปุ่ม Completed
+    if (pstStatus === 'Y' && pswStatus === 'Y') {
+      return {
+        text: 'Completed',
+        action: 'completed',
+        color: 'bg-gray-500 text-white cursor-not-allowed',
+        enabled: false,
+        tooltip: 'Process completed',
+        icon: <Flag className="w-4 h-4" />
+      };
+    }
+    
+    // Default fallback
+    return {
+      text: 'No Action',
+      action: 'none',
+      color: 'bg-gray-400 text-white cursor-not-allowed',
+      enabled: false,
+      tooltip: 'No action available',
+      icon: <Flag className="w-4 h-4" />
+    };
+  };
+
+  const actionConfig = getCustomActionConfig(selectedShipment);
   const totalSuppliers = 1 + (selectedShipment.relatedSuppliers?.length || 0);
 
   const handleActionClick = () => {
+    if (!actionConfig.enabled) return;
+    
     switch (actionConfig.action) {
       case 'create-pst':
       case 'edit-pst':
@@ -63,10 +127,9 @@ export function SidePanel({
       case 'create-psw':
         onCreatePSW(selectedShipment.poNumber);
         break;
-      case 'view-psw':
-        alert(`View PSW ${selectedShipment.pswNumber} - This feature will be implemented`);
-        break;
       case 'completed':
+      case 'none':
+        // No action for completed or none
         break;
     }
   };
@@ -329,10 +392,10 @@ export function SidePanel({
                   <span className="text-gray-600">Route:</span>
                   <span className="font-medium text-gray-900">{selectedShipment.originPort} → {selectedShipment.destinationPort}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm mt-1">
+                {/* <div className="flex items-center justify-between text-sm mt-1">
                   <span className="text-gray-600">Weight:</span>
                   <span className="font-medium text-gray-900">{selectedShipment.weight}</span>
-                </div>
+                </div> */}
                 <div className="flex items-center justify-between text-sm mt-1">
                   <span className="text-gray-600">Terms:</span>
                   <span className="font-medium text-gray-900">{selectedShipment.term}</span>

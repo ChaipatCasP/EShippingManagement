@@ -14,7 +14,7 @@ import {
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
-import { Loader2, Package, Users, FileText } from 'lucide-react';
+import { Loader2, Package, FileText } from 'lucide-react';
 import { useConsolidatedSuppliers } from '../hooks/useConsolidatedSuppliers';
 import type { ConsolidatedSupplier } from '../api/types';
 
@@ -45,7 +45,6 @@ const ColoadPopup: React.FC<ColoadPopupProps> = ({
     suppliers,
     loading,
     error,
-    totalCount,
     refetch
   } = useConsolidatedSuppliers({
     startDate,
@@ -56,8 +55,6 @@ const ColoadPopup: React.FC<ColoadPopupProps> = ({
     poNo,
     enabled: isOpen // เรียก API เฉพาะเมื่อ popup เปิด
   });
-
-  const totalPOsCount = suppliers.reduce((total: number, supplier: ConsolidatedSupplier) => total + (supplier.pos?.length || 0), 0);
 
   const handleRetry = () => {
     refetch();
@@ -105,7 +102,7 @@ const ColoadPopup: React.FC<ColoadPopupProps> = ({
 
         <div className="space-y-4">
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+          {/* <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
               <div>
@@ -120,7 +117,7 @@ const ColoadPopup: React.FC<ColoadPopupProps> = ({
                 <div className="text-lg font-bold text-slate-900">{totalPOsCount}</div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Content Area */}
           <ScrollArea className="h-[400px] w-full border rounded-md">

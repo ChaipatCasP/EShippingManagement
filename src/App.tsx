@@ -308,8 +308,13 @@ export default function ShippingDashboard() {
   const handleDateFilterChange = (mode: DateFilterMode) => {
     setIsDataLoading(true);
     setDateFilterMode(mode);
-    // Clear custom dates when switching away from custom mode
-    if (mode !== 'custom') {
+    // When switching to custom mode, set dates to current date
+    if (mode === 'custom') {
+      const currentDate = new Date().toISOString().split('T')[0];
+      setCustomDateStart(currentDate);
+      setCustomDateEnd(currentDate);
+    } else {
+      // Clear custom dates when switching away from custom mode
       setCustomDateStart('');
       setCustomDateEnd('');
     }
