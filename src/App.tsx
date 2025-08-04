@@ -17,6 +17,9 @@ import { Button } from './components/ui/button';
 import { InboxContainer } from './containers/InboxContainer';
 import { mockShipments } from './data/mockData';
 import { useNotifications } from './hooks/useNotifications';
+import { useEShippingPOList } from './hooks/useEShippingPOList';
+import { convertPOListToShipments } from './utils/poListConverter';
+import { formatDateRangeForAPI } from './utils/dateUtils';
 import { 
   statusPriority,
   getDateRange,
@@ -176,7 +179,34 @@ export default function ShippingDashboard() {
   }, [isAuthenticated, needsOTP]);
 
   // Calculate enhanced PO KPIs for compact layout
-  const kpis = useMemo(() => calculateKPIs(mockShipments), []);
+  // Use API data when available, fallback to mock data
+  const dateRange = useMemo(() => {
+    const range = getDateRange(dateFilterMode, customDateStart, customDateEnd);
+    return formatDateRangeForAPI(range);
+  }, [dateFilterMode, customDateStart, customDateEnd]);
+
+  const {
+    data: poListData,
+    loading: isAPILoading,
+    refetch: refetchPOList
+  } = useEShippingPOList({
+    fromDate: dateRange.start,
+    toDate: dateRange.end,
+    transportBy: selectedFreightStatus === 'all' ? undefined : selectedFreightStatus,
+    keyword: ''
+  });
+
+  // Convert API data to Shipment format
+  const shipments = useMemo(() => {
+    if (poListData && poListData.length > 0) {
+      return convertPOListToShipments(poListData);
+    }
+    // Fallback to mock data when API is not available
+    return mockShipments;
+  }, [poListData]);
+
+  // Calculate KPIs from current shipments data
+  const kpis = useMemo(() => calculateKPIs(shipments), [shipments]);
 
   // Generate PST number
   const generatePSTNumber = () => {
@@ -285,9 +315,26 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsDataLoading(false), 300);
   };
 
+  // Refetch API data when essential filters change only (with debounce for custom dates)
+  useEffect(() => {
+    if (!isAuthenticated || !refetchPOList) return;
+    
+    // Debounce custom date changes to prevent excessive API calls
+    if (dateFilterMode === 'custom' && (customDateStart || customDateEnd)) {
+      const debounceTimeout = setTimeout(() => {
+        refetchPOList();
+      }, 500); // รอ 500ms หลังจากหยุดการพิมพ์
+      
+      return () => clearTimeout(debounceTimeout);
+    } else if (dateFilterMode !== 'custom') {
+      // เรียกทันทีสำหรับ predefined filters
+      refetchPOList();
+    }
+  }, [dateFilterMode, customDateStart, customDateEnd, selectedFreightStatus, isAuthenticated, refetchPOList]);
+
   // Enhanced filter and sort shipments with new separated status filters
   const filteredShipments = useMemo(() => {
-    let filtered = mockShipments.filter(shipment => {
+    let filtered = shipments.filter(shipment => {
       // Freight Status filtering
       const matchesFreightStatus = selectedFreightStatus === 'all' || shipment.type === selectedFreightStatus;
       
@@ -371,7 +418,7 @@ export default function ShippingDashboard() {
     }
 
     return filtered;
-  }, [selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, 
+  }, [shipments, selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, 
       dateFilterMode, customDateStart, customDateEnd, 
       activePOTypeTab, searchTerm, sortOption]);
 
@@ -479,7 +526,7 @@ export default function ShippingDashboard() {
   };
 
   const handleNotificationClick = (notification: any) => {
-    const shipment = mockShipments.find(s => s.poNumber === notification.poNumber);
+    const shipment = shipments.find(s => s.poNumber === notification.poNumber);
     if (shipment) {
       setSelectedShipment(shipment);
       setIsPanelOpen(true);
@@ -738,7 +785,7 @@ export default function ShippingDashboard() {
               onCreatePST={handleCreatePST}
               onCreatePSW={handleCreatePSW}
               onSortOptionChange={setSortOption}
-              isLoading={isDataLoading}
+              isLoading={isDataLoading || isAPILoading}
             />
           </div>
         </div>

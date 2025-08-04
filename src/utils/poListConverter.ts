@@ -1,0 +1,155 @@
+import type { POListItem } from '../api/types';
+import type { Shipment } from '../types/shipment';
+import { formatDateForAPI } from './dateUtils';
+
+/**
+ * แปลงวันที่จาก API format เป็น display format ถ้าจำเป็น
+ */
+function formatDateForDisplay(dateString: string): string {
+  if (!dateString) return '';
+  
+  // ถ้าวันที่มาในรูปแบบ ISO (YYYY-MM-DD) ให้แปลงเป็น DD-MMM-YYYY
+  if (dateString.includes('-') && dateString.length === 10) {
+    return formatDateForAPI(dateString);
+  }
+  
+  // ถ้าเป็นรูปแบบ DD-MMM-YYYY อยู่แล้ว ให้ return ตรงๆ
+  return dateString;
+}
+
+/**
+ * แปลงข้อมูล POListItem จาก API เป็น Shipment format สำหรับใช้ใน UI
+ */
+export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
+  if (!poList || !Array.isArray(poList)) {
+    console.warn('Invalid poList data:', poList);
+    return [];
+  }
+
+  return poList.map((item) => {
+    // Validate required item data
+    if (!item || typeof item !== 'object') {
+      console.warn('Invalid item in poList:', item);
+      return null;
+    }
+
+    // กำหนด PO Type ตาม coLoadPOCount
+    const poType = (item.coLoadPOCount || 0) > 0 ? 'Co-load' : 'Single';
+    
+    // แปลง transportBy เป็น type
+    const getTransportType = (transportBy: string): 'Air' | 'Sea' | 'Land' => {
+      if (!transportBy) return 'Land';
+      if (transportBy.toLowerCase().includes('sea')) return 'Sea';
+      if (transportBy.toLowerCase().includes('air')) return 'Air';
+      return 'Land';
+    };
+
+    // สร้าง status แบบสุ่มตาม ETA/ETD
+    const getStatus = (): Shipment['status'] => {
+      const currentDate = new Date();
+      const etaDate = new Date(item.eta || '');
+      const etdDate = new Date(item.etd || '');
+      
+      if (currentDate < etdDate) return 'pending';
+      if (currentDate >= etdDate && currentDate < etaDate) return 'pst-created';
+      if (item.warehouseReceivedDate) return 'completed';
+      return 'pst-approved';
+    };
+
+    // สร้าง PST/PSW status
+    const getPSTStatus = (): 'new-entry' | 'not-started' | 'in-progress' | 'completed' => {
+      if (item.warehouseReceivedDate) return 'completed';
+      return 'in-progress';
+    };
+
+    const shipment: Shipment = {
+      id: `${item.poBook || 'PO'}-${item.poNo || '000'}`,
+      supplierName: item.supName || 'Unknown Supplier',
+      referenceKey: `${item.poBook || 'PO'}${item.poNo || '000'}`,
+      poNumber: `${item.poBook || 'PO'}-${item.poNo || '000'}`,
+      poDate: formatDateForDisplay(item.poDate || ''),
+      invoiceNumber: item.invoiceNo || 'N/A',
+      invoiceDate: formatDateForDisplay(item.invoiceDate || ''),
+      importEntryNo: `IE-${item.supCode || 'SUP'}-${item.poNo || '000'}`,
+      originCountry: getCountryFromPort(item.portOfOrigin || ''),
+      originPort: item.portOfOrigin || 'Unknown Port',
+      destinationPort: item.portOfDestination || 'Unknown Port',
+      dateClear: formatDateForDisplay(item.warehouseReceivedDate || item.eta || ''),
+      type: getTransportType(item.transportBy || ''),
+      poType: poType,
+      term: 'FOB', // Default term, can be enhanced with actual data
+      permitStatus: true,
+      blAwbNumber: item.blNo || 'N/A',
+      qualityContainer: `QC-${item.supCode || 'SUP'}`,
+      taxStatus: true,
+      etd: formatDateForDisplay(item.etd || ''),
+      eta: formatDateForDisplay(item.eta || ''),
+      status: getStatus(),
+      billStatus: 'In Progress',
+      jagotaStatus: 'Under Review',
+      billType: 'Regular',
+      pstStatus: getPSTStatus(),
+      pstNumber: getPSTStatus() === 'completed' ? `PST-${item.poNo || '000'}` : null,
+      pswStatus: item.warehouseReceivedDate ? 'approved' : 'not-started',
+      pswNumber: item.warehouseReceivedDate ? `PSW-${item.poNo || '000'}` : null,
+      // Required fields with default values
+      supplierContact: `${item.supCode || 'SUP'}-contact`,
+      supplierEmail: `${(item.supCode || 'supplier').toLowerCase()}@supplier.com`,
+      supplierAddress: `${item.supName || 'Unknown'} Address`,
+      totalValue: 0, // Would need additional API data
+      weight: '0kg', // Would need additional API data
+      dimensions: '0x0x0', // Would need additional API data
+      assignedAgent: 'Auto Assigned',
+      agentContact: '+66-xxx-xxxx',
+      trackingNumber: item.blNo || 'N/A',
+      customsDeclaration: `CD-${item.poNo || '000'}`,
+      insurance: true,
+      priority: 'Medium',
+      remarks: '',
+      specialInstructions: '',
+      documents: [],
+      relatedSuppliers: (item.coLoadSupplierCount || 0) > 0 ? [
+        { 
+          name: item.supName || 'Unknown', 
+          referenceKey: item.supCode || 'SUP', 
+          poNumber: `${item.poBook || 'PO'}-${item.poNo || '000'}`
+        }
+      ] : []
+    };
+
+    return shipment;
+  }).filter((shipment): shipment is Shipment => shipment !== null);
+}
+
+/**
+ * แปลงชื่อ port เป็นชื่อประเทศ (ตัวอย่าง)
+ */
+function getCountryFromPort(port: string): string {
+  // Handle null/undefined port
+  if (!port || typeof port !== 'string') {
+    return 'Unknown';
+  }
+
+  const portToCountry: Record<string, string> = {
+    'QINGDAO': 'China',
+    'DALIAN': 'China',
+    'SHANGHAI': 'China',
+    'LEAM CHABANG PORT': 'Thailand',
+    'BANGKOK': 'Thailand',
+    'LAEM CHABANG': 'Thailand',
+    'SINGAPORE': 'Singapore',
+    'HONG KONG': 'Hong Kong',
+    'BUSAN': 'South Korea',
+    'YOKOHAMA': 'Japan',
+    'KOBE': 'Japan'
+  };
+
+  const upperPort = port.toUpperCase();
+  for (const [portName, country] of Object.entries(portToCountry)) {
+    if (upperPort.includes(portName)) {
+      return country;
+    }
+  }
+  
+  return 'Unknown';
+}

@@ -7,6 +7,7 @@ import { env } from '../../config/env';
 import type {
   DashboardStats,
   EShippingDashboardResponse,
+  EShippingPOListResponse,
   ShipmentAnalytics,
   Notification,
   NotificationSettings
@@ -36,6 +37,48 @@ export class DashboardService {
       return data;
     } catch (error) {
       console.error('Error fetching E-Shipping dashboard:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงข้อมูล PO List จาก JAGOTA API
+   */
+  static async getEShippingPOList(
+    fromDate: string = '01-Jan-2021',
+    toDate: string = '01-Jan-2026',
+    transportBy: string = '',
+    keyword: string = ''
+  ): Promise<EShippingPOListResponse> {
+    try {
+      // Log parameters for debugging
+      console.log('PO List API Parameters:', { fromDate, toDate, transportBy, keyword });
+      
+      const params = new URLSearchParams();
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+      if (transportBy) params.append('transportBy', transportBy);
+      if (keyword) params.append('keyword', keyword);
+      
+      const apiUrl = `${env.jagotaApi.baseUrl}/v1/es/eshipping/po-list?${params.toString()}`;
+      console.log('API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: EShippingPOListResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching E-Shipping PO list:', error);
       throw error;
     }
   }

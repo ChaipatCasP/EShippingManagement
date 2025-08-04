@@ -195,6 +195,35 @@ export interface EShippingDashboardResponse {
   query: string;
 }
 
+// === E-Shipping PO List API Response ===
+export interface POListItem {
+  supCode: string;
+  supName: string;
+  transType: string;
+  poBook: string;
+  poNo: number;
+  poDate: string;
+  eta: string;
+  etd: string;
+  transportBy: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  portOfOrigin: string;
+  portOfDestination: string;
+  blNo: string;
+  warehouseReceivedDate: string;
+  coLoadPOCount: number;
+  coLoadSupplierCount: number;
+}
+
+export interface EShippingPOListResponse {
+  error: boolean;
+  message: string;
+  data: POListItem[];
+  rowsAffected: number;
+  query: string;
+}
+
 export interface ShipmentAnalytics {
   period: 'daily' | 'weekly' | 'monthly' | 'yearly';
   data: {
