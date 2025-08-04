@@ -3,8 +3,10 @@
  */
 
 import { apiClient, type ApiResponse } from '../apiClient';
+import { env } from '../../config/env';
 import type {
   DashboardStats,
+  EShippingDashboardResponse,
   ShipmentAnalytics,
   Notification,
   NotificationSettings
@@ -12,7 +14,34 @@ import type {
 
 export class DashboardService {
   /**
-   * ดึงสถิติหลักของ Dashboard
+   * ดึงข้อมูล E-Shipping Dashboard จาก JAGOTA API
+   */
+  static async getEShippingDashboard(): Promise<EShippingDashboardResponse> {
+    try {
+      const apiUrl = `${env.jagotaApi.baseUrl}/v1/es/eshipping/dashboard`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: EShippingDashboardResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching E-Shipping dashboard:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงสถิติหลักของ Dashboard (เดิม - สำหรับ fallback)
    */
   static async getDashboardStats(period?: string): Promise<ApiResponse<DashboardStats>> {
     const params = period ? { period } : {};

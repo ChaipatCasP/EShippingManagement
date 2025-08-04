@@ -85,6 +85,14 @@ export default function ShippingDashboard() {
     handleDeleteNotification
   } = useNotifications();
 
+  // Set fixed token for API development (temporary)
+  useEffect(() => {
+    if (!localStorage.getItem('auth_token')) {
+      localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0');
+      console.log('Fixed token set for API development');
+    }
+  }, []);
+
   // Update URL based on authentication state and current view
   useEffect(() => {
     if (!isAuthenticated && !needsOTP) {

@@ -1,6 +1,7 @@
 
 import { Card, CardContent } from './ui/card';
 import { Package, PackageCheck, CalendarDays, TrendingUp, Timer, Activity } from 'lucide-react';
+import { useEShippingDashboard } from '../hooks/useEShippingDashboard';
 
 interface KPIData {
   poToday: number;
@@ -15,20 +16,80 @@ interface KPIData {
 }
 
 interface KPISectionProps {
-  kpis: KPIData;
+  kpis?: KPIData; // Made optional since we'll use API data
 }
 
 export function KPISection({ kpis }: KPISectionProps) {
+  const { data: apiData, loading, error } = useEShippingDashboard();
+
+  // Use API data if available, fallback to props, then to default values
+  const displayData = apiData ? {
+    poToday: apiData.data.poToday,
+    poNext7Days: apiData.data.poNext7Days,
+    pstTotal: apiData.data.pstDone + apiData.data.pstLeft,
+    pstCompleted: apiData.data.pstDone,
+    pstRemaining: apiData.data.pstLeft,
+    pstToday: apiData.data.pstDone, // Using pstDone as today's value
+    pswThisWeek: apiData.data.pswDone + apiData.data.pswLeft,
+    pswCompleted: apiData.data.pswDone,
+    pswRemaining: apiData.data.pswLeft,
+  } : kpis || {
+    poToday: 0,
+    poNext7Days: 0,
+    pstTotal: 0,
+    pstCompleted: 0,
+    pstRemaining: 0,
+    pstToday: 0,
+    pswThisWeek: 0,
+    pswCompleted: 0,
+    pswRemaining: 0,
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Purchase Order Intake</h2>
+            <p className="text-sm text-gray-600">Loading dashboard data...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="border-0 bg-gray-50 animate-pulse">
+              <CardContent className="p-3">
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Purchase Order Intake</h2>
+            <p className="text-sm text-red-600">Error loading data: {error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Purchase Order Intake</h2>
-          <p className="text-sm text-gray-600">Monitor incoming PO volumes</p>
+          <p className="text-sm text-gray-600">Monitor incoming PO volumes {apiData && '(Live Data)'}</p>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Activity className="w-3 h-3" />
-          <span>Updated 2 min ago</span>
+          <span>{apiData ? 'Live Data' : 'Updated 2 min ago'}</span>
         </div>
       </div>
       
@@ -48,7 +109,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">{kpis.poToday + kpis.poNext7Days}</div>
+                <div className="text-lg font-bold text-gray-900">{displayData.poToday + displayData.poNext7Days}</div>
                 <div className="text-xs text-gray-500">Total</div>
               </div>
             </div>
@@ -60,7 +121,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-red-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Today</span>
                 </div>
-                <span className="text-sm font-bold text-red-600">{kpis.poToday}</span>
+                <span className="text-sm font-bold text-red-600">{displayData.poToday}</span>
               </div>
               
               <div className="flex flex-col items-center p-2 bg-white rounded">
@@ -68,7 +129,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-orange-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Next 7d</span>
                 </div>
-                <span className="text-sm font-bold text-orange-600">{kpis.poNext7Days}</span>
+                <span className="text-sm font-bold text-orange-600">{displayData.poNext7Days}</span>
               </div>
             </div>
             
@@ -95,7 +156,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">{kpis.pstTotal}</div>
+                <div className="text-lg font-bold text-gray-900">{displayData.pstTotal}</div>
                 <div className="text-xs text-gray-500">Total</div>
               </div>
             </div>
@@ -106,7 +167,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-red-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Today</span>
                 </div>
-                <span className="text-sm font-bold text-red-600">{kpis.pstToday}</span>
+                <span className="text-sm font-bold text-red-600">{displayData.pstToday}</span>
               </div>
               
               <div className="flex flex-col items-center p-1.5 bg-white rounded">
@@ -114,7 +175,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-green-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Done</span>
                 </div>
-                <span className="text-sm font-bold text-green-600">{kpis.pstCompleted}</span>
+                <span className="text-sm font-bold text-green-600">{displayData.pstCompleted}</span>
               </div>
               
               <div className="flex flex-col items-center p-1.5 bg-white rounded">
@@ -122,7 +183,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Left</span>
                 </div>
-                <span className="text-sm font-bold text-gray-600">{kpis.pstRemaining}</span>
+                <span className="text-sm font-bold text-gray-600">{displayData.pstRemaining}</span>
               </div>
             </div>
             
@@ -133,7 +194,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <span>Progress</span>
                 </div>
                 <div className="text-xs font-medium text-amber-600">
-                  {kpis.pstTotal > 0 ? Math.round((kpis.pstCompleted / kpis.pstTotal) * 100) : 0}%
+                  {displayData.pstTotal > 0 ? Math.round((displayData.pstCompleted / displayData.pstTotal) * 100) : 0}%
                 </div>
               </div>
             </div>
@@ -154,7 +215,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">{kpis.pswThisWeek}</div>
+                <div className="text-lg font-bold text-gray-900">{displayData.pswThisWeek}</div>
                 <div className="text-xs text-gray-500">This Week</div>
               </div>
             </div>
@@ -165,7 +226,7 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-green-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Done</span>
                 </div>
-                <span className="text-sm font-bold text-green-600">{kpis.pswCompleted}</span>
+                <span className="text-sm font-bold text-green-600">{displayData.pswCompleted}</span>
               </div>
               
               <div className="flex flex-col items-center p-2 bg-white rounded">
@@ -173,14 +234,14 @@ export function KPISection({ kpis }: KPISectionProps) {
                   <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
                   <span className="text-xs text-gray-700">Left</span>
                 </div>
-                <span className="text-sm font-bold text-gray-600">{kpis.pswRemaining}</span>
+                <span className="text-sm font-bold text-gray-600">{displayData.pswRemaining}</span>
               </div>
             </div>
             
             <div className="pt-2 border-t border-gray-200">
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <TrendingUp className="w-3 h-3" />
-                <span>+3 vs last week</span>
+                <span>Live API Data</span>
               </div>
             </div>
           </CardContent>

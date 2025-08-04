@@ -36,6 +36,9 @@ interface AppConfig {
     version: string;
     timeout: number;
   };
+  jagotaApi: {
+    baseUrl: string;
+  };
   auth: {
     tokenKey: string;
     refreshTokenKey: string;
@@ -104,6 +107,11 @@ export const env: AppConfig = {
     baseUrl: getOptionalEnv('VITE_API_BASE_URL', 'http://localhost:3001/api'),
     version: getOptionalEnv('VITE_API_VERSION', 'v1'),
     timeout: getNumberEnv('VITE_API_TIMEOUT', 30000),
+  },
+
+  // JAGOTA API Configuration
+  jagotaApi: {
+    baseUrl: getOptionalEnv('VITE_JAGOTA_API_BASE_URL', 'https://jnodeapi-staging.jagota.com'),
   },
 
   // Authentication

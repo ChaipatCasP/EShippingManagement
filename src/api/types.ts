@@ -179,6 +179,22 @@ export interface DashboardStats {
   customerSatisfaction: number;
 }
 
+// === E-Shipping Dashboard API Response ===
+export interface EShippingDashboardResponse {
+  error: boolean;
+  message: string;
+  data: {
+    poToday: number;
+    poNext7Days: number;
+    pstDone: number;
+    pstLeft: number;
+    pswDone: number;
+    pswLeft: number;
+  };
+  rowsAffected: number;
+  query: string;
+}
+
 export interface ShipmentAnalytics {
   period: 'daily' | 'weekly' | 'monthly' | 'yearly';
   data: {
