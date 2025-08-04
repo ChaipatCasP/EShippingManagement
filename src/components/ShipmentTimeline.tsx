@@ -3,12 +3,31 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ArrowRight, Key, FileDigit, MapPin, Package2, Layers, Flag, Users, FileText, Calendar } from 'lucide-react';
+import ColoadPOsPopoverContent from './ColoadPOsPopoverContent';
 import {
   getTypeIcon,
   getJagotaStatusColor,
   getActionButtonConfig
 } from '../lib/shipmentUtils';
 import type { Shipment } from '../types/shipment';
+
+// Helper function to format date to yyyy-mm-dd
+const formatDate = (dateString: string): string => {
+  if (!dateString) return dateString;
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    return dateString;
+  }
+};
 
 interface ShipmentTimelineProps {
   shipments: Shipment[];
@@ -231,7 +250,7 @@ export function ShipmentTimeline({
                       {shipment.pstStatus !== 'new-entry' && (
                         <div className="flex items-center gap-2">
                           <Key className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Ref:</span>
+                          <span className="text-gray-600">Ref :</span>
                           <span className="font-medium text-gray-900">{shipment.referenceKey}</span>
                         </div>
                       )}
@@ -250,49 +269,16 @@ export function ShipmentTimeline({
                               >
                                 <span className="font-medium">{shipment.poNumber}</span>
                                 <span className="text-xs px-1 py-0.5 rounded border border-current">
-                                  {totalSuppliers}
+                                  {shipment.originalPOData?.coLoadPOCount || totalSuppliers}
                                 </span>
                               </button>
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-4" align="start">
-                              <div className="space-y-3">
-                                <div className="flex items-center gap-2 pb-2 border-b">
-                                  {poTypeStyle.icon}
-                                  <span className="font-semibold text-gray-900">
-                                    {shipment.poType} Container - All Purchase Orders
-                                  </span>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                  <div className={`p-3 rounded-lg border ${poTypeStyle.bgColor} ${poTypeStyle.borderColor}`}>
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className={`font-semibold ${poTypeStyle.textColor}`}>
-                                        {shipment.supplierName}
-                                      </div>
-                                      <span className={`text-xs px-2 py-1 rounded border bg-white ${poTypeStyle.textColor} ${poTypeStyle.borderColor}`}>
-                                        Current
-                                      </span>
-                                    </div>
-                                    {/* Only show reference key if PST status is not "new-entry" */}
-                                    {shipment.pstStatus !== 'new-entry' && (
-                                      <div className="text-sm text-gray-600 mb-1">{shipment.referenceKey}</div>
-                                    )}
-                                    <div className="text-sm font-medium text-gray-800">{shipment.poNumber}</div>
-                                  </div>
-                                  
-                                  {shipment.relatedSuppliers && shipment.relatedSuppliers.map((supplier, index) => (
-                                    <div key={index} className="p-3 bg-gray-50 rounded-lg border">
-                                      <div className="font-medium text-gray-800 mb-1">{supplier.name}</div>
-                                      <div className="text-sm text-gray-600 mb-1">{supplier.referenceKey}</div>
-                                      <div className="text-sm font-medium text-gray-800">{supplier.poNumber}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                                
-                                <div className="pt-2 border-t text-sm text-gray-500 text-center">
-                                  Total: {totalSuppliers} purchase orders in this {shipment.poType.toLowerCase()} container
-                                </div>
-                              </div>
+                              <ColoadPOsPopoverContent
+                                shipment={shipment}
+                                poTypeStyle={poTypeStyle}
+                                totalSuppliers={totalSuppliers}
+                              />
                             </PopoverContent>
                           </Popover>
                         )}
@@ -308,21 +294,21 @@ export function ShipmentTimeline({
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           <span className="text-gray-600 text-xs font-medium">ETD</span>
                         </div>
-                        <span className="font-semibold text-gray-900">{shipment.etd}</span>
+                        <span className="font-semibold text-gray-900">{formatDate(shipment.etd)}</span>
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                           <span className="text-gray-600 text-xs font-medium">ETA</span>
                         </div>
-                        <span className="font-semibold text-gray-900">{shipment.eta}</span>
+                        <span className="font-semibold text-gray-900">{formatDate(shipment.eta)}</span>
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           <span className="text-gray-600 text-xs font-medium">Clear</span>
                         </div>
-                        <span className="font-semibold text-gray-900">{shipment.dateClear}</span>
+                        <span className="font-semibold text-gray-900">{formatDate(shipment.dateClear)}</span>
                       </div>
                     </div>
                   </div>
@@ -335,7 +321,7 @@ export function ShipmentTimeline({
                         <FileDigit className="w-3 h-3 text-gray-400" />
                         <span className="text-gray-600">Invoice:</span>
                         <span className="font-medium text-gray-800">{shipment.invoiceNumber}</span>
-                        <span className="text-gray-500">({shipment.invoiceDate})</span>
+                        <span className="text-gray-500">({formatDate(shipment.invoiceDate)})</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <FileText className="w-3 h-3 text-gray-400" />

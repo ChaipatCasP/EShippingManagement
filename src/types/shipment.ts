@@ -1,6 +1,7 @@
 export interface Shipment {
   id: string;
   supplierName: string;
+  supplierCode: string; // Add supplier code for API matching
   referenceKey: string;
   poNumber: string;
   poDate: string;
@@ -44,6 +45,16 @@ export interface Shipment {
   specialInstructions: string;
   documents: string[];
   relatedSuppliers: RelatedSupplier[];
+  
+  // Original PO List data for API calls
+  originalPOData?: {
+    supCode: string;
+    poBook: string;
+    poNo: number;
+    transType: string;
+    coLoadPOCount: number;
+    coLoadSupplierCount: number;
+  };
 }
 
 export interface RelatedSupplier {

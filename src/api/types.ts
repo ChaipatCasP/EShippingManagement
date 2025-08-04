@@ -46,6 +46,26 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+// === Consolidated Suppliers Types ===
+export interface ConsolidatedSupplierPO {
+  poBook: string;
+  poNo: number;
+}
+
+export interface ConsolidatedSupplier {
+  supCode: string;
+  supName: string;
+  pos: ConsolidatedSupplierPO[];
+}
+
+export interface ConsolidatedSuppliersResponse {
+  error: boolean;
+  message: string;
+  data: ConsolidatedSupplier[];
+  rowsAffected: number;
+  query: string;
+}
+
 // === Shipment Types ===
 export interface ShipmentRequest {
   recipientName: string;

@@ -63,9 +63,10 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
     };
 
     const shipment: Shipment = {
-      id: `${item.poBook || 'PO'}-${item.poNo || '000'}`,
+      id: `${item.supCode || 'SUP'}-${item.poNo || '000'}-${Date.now()}`,
       supplierName: item.supName || 'Unknown Supplier',
-      referenceKey: `${item.poBook || 'PO'}${item.poNo || '000'}`,
+      supplierCode: item.supCode || 'UNKNOWN',
+      referenceKey: `${item.supCode || 'SUP'}-${item.poNo || '000'}`,
       poNumber: `${item.poBook || 'PO'}-${item.poNo || '000'}`,
       poDate: formatDateForDisplay(item.poDate || ''),
       invoiceNumber: item.invoiceNo || 'N/A',
@@ -114,7 +115,17 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
           referenceKey: item.supCode || 'SUP', 
           poNumber: `${item.poBook || 'PO'}-${item.poNo || '000'}`
         }
-      ] : []
+      ] : [],
+      
+      // Store original PO data for API calls
+      originalPOData: {
+        supCode: item.supCode || 'UNKNOWN',
+        poBook: item.poBook || 'PO',
+        poNo: item.poNo || 0,
+        transType: item.transType || '',
+        coLoadPOCount: item.coLoadPOCount || 0,
+        coLoadSupplierCount: item.coLoadSupplierCount || 0
+      }
     };
 
     return shipment;

@@ -49,8 +49,8 @@ export default function ShippingDashboard() {
   
   // Date filter state with chip-based approach
   const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>('today');
-  const [customDateStart, setCustomDateStart] = useState<string>('');
-  const [customDateEnd, setCustomDateEnd] = useState<string>('');
+  const [customDateStart, setCustomDateStart] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [customDateEnd, setCustomDateEnd] = useState<string>(new Date().toISOString().split('T')[0]);
   
   const [activePOTypeTab, setActivePOTypeTab] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');

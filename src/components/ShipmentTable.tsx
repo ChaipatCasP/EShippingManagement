@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ArrowUpDown, ArrowUp, ArrowDown, Package2, Layers, Users, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { ColoadAccordion } from './ColoadAccordion';
+import ColoadPopup from './ColoadPopup';
 import { TableSkeleton } from './ui/loading';
 import {
   getTypeIcon,
@@ -38,6 +39,10 @@ export function ShipmentTable({
 }: ShipmentTableProps) {
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
   const [selectedSupplierShipment, setSelectedSupplierShipment] = useState<Shipment | null>(null);
+  
+  // State for Co-load popup
+  const [coloadPopupOpen, setColoadPopupOpen] = useState(false);
+  const [selectedColoadShipment, setSelectedColoadShipment] = useState<Shipment | null>(null);
 
   // Show loading skeleton
   if (isLoading) {
@@ -144,7 +149,21 @@ export function ShipmentTable({
     return { text: 'N/A', color: 'bg-gray-100 text-gray-500 border-gray-200' };
   };
 
-  // Handle supplier dialog
+  // Handle PO number click for Co-load shipments
+  const handlePONumberClick = (shipment: Shipment, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Check if this is a Co-load shipment with multiple POs
+    if (shipment.poType === 'Co-load' && 
+        shipment.originalPOData && 
+        shipment.originalPOData.coLoadPOCount > 1) {
+      
+      setSelectedColoadShipment(shipment);
+      setColoadPopupOpen(true);
+    }
+  };
+
+  // Handle supplier dialog (keep for backward compatibility)
   const handleSupplierClick = (shipment: Shipment, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedSupplierShipment(shipment);
@@ -239,7 +258,22 @@ export function ShipmentTable({
                     <div className="w-4 h-4 bg-blue-50 rounded border border-blue-200 flex items-center justify-center flex-shrink-0">
                       {getTypeIcon(shipment.type)}
                     </div>
-                    <span className="font-medium text-blue-600 text-sm">{shipment.poNumber}</span>
+                    {/* Make PO number clickable for Co-load with multiple POs */}
+                    {shipment.poType === 'Co-load' && 
+                     shipment.originalPOData && 
+                     shipment.originalPOData.coLoadPOCount > 1 ? (
+                      <button
+                        onClick={(e) => handlePONumberClick(shipment, e)}
+                        className="font-medium text-blue-600 text-sm hover:text-blue-800 hover:underline transition-colors"
+                      >
+                        {shipment.poNumber}
+                        <span className="ml-1 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">
+                          {shipment.originalPOData.coLoadPOCount} POs
+                        </span>
+                      </button>
+                    ) : (
+                      <span className="font-medium text-blue-600 text-sm">{shipment.poNumber}</span>
+                    )}
                   </div>
                 </TableCell>
 
@@ -424,6 +458,19 @@ export function ShipmentTable({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Co-load Popup */}
+      {selectedColoadShipment && (
+        <ColoadPopup
+          isOpen={coloadPopupOpen}
+          onClose={() => setColoadPopupOpen(false)}
+          cntrNo={selectedColoadShipment.qualityContainer || selectedColoadShipment.blAwbNumber}
+          poBook={selectedColoadShipment.originalPOData?.poBook}
+          startDate={selectedColoadShipment.poDate || ''}
+          endDate={selectedColoadShipment.dateClear || ''}
+          count={selectedColoadShipment.originalPOData?.coLoadPOCount || 1}
+        />
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import type {
   DashboardStats,
   EShippingDashboardResponse,
   EShippingPOListResponse,
+  ConsolidatedSuppliersResponse,
   ShipmentAnalytics,
   Notification,
   NotificationSettings
@@ -208,5 +209,74 @@ export class DashboardService {
     systemHealth: 'good' | 'warning' | 'critical';
   }>> {
     return apiClient.get('/dashboard/system-usage');
+  }
+
+  /**
+   * ดึงข้อมูล Consolidated Suppliers สำหรับ Co-load Container popup
+   */
+  static async getConsolidatedSuppliers(
+    startDate: string,
+    endDate: string,
+    cntrNo?: string,
+    poBook?: string,
+    transType?: string,
+    poNo?: number
+  ): Promise<ConsolidatedSuppliersResponse> {
+    try {
+      const queryParams = new URLSearchParams({
+        startDate,
+        endDate
+      });
+
+      // เพิ่ม parameters ตามที่มี
+      if (cntrNo?.trim()) {
+        queryParams.append('cntrNo', cntrNo.trim());
+      }
+      if (poBook?.trim()) {
+        queryParams.append('poBook', poBook.trim());
+      }
+      if (transType?.trim()) {
+        queryParams.append('transType', transType.trim());
+      }
+      if (poNo) {
+        queryParams.append('poNo', poNo.toString());
+      }
+
+      const apiUrl = `${env.jagotaApi.baseUrl}/v1/es/eshipping/consolidated-suppliers?${queryParams.toString()}`;
+      
+      console.log('📡 Calling Consolidated Suppliers API:', { 
+        startDate, 
+        endDate, 
+        cntrNo: cntrNo?.trim() || 'not provided',
+        poBook: poBook?.trim() || 'not provided',
+        transType: transType?.trim() || 'not provided',
+        poNo: poNo || 'not provided',
+        apiUrl 
+      });
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ConsolidatedSuppliersResponse = await response.json();
+      console.log('✅ Consolidated Suppliers API Response:', {
+        suppliersCount: data.data?.length || 0,
+        error: data.error,
+        message: data.message
+      });
+
+      return data;
+    } catch (error) {
+      console.error('❌ Error fetching Consolidated Suppliers:', error);
+      throw error;
+    }
   }
 }
