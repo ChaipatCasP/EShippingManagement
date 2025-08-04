@@ -5,8 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ArrowRight, Key, FileDigit, MapPin, Package2, Layers, Flag, Users, FileText, Calendar } from 'lucide-react';
 import ColoadPOsPopoverContent from './ColoadPOsPopoverContent';
 import {
-  getTypeIcon,
-  getActionButtonConfig
+  getTypeIcon
 } from '../lib/shipmentUtils';
 import type { Shipment } from '../types/shipment';
 
@@ -110,8 +109,6 @@ export function ShipmentTimeline({
 
   // Helper function to get PST status display text
   const getPSTStatusText = (pstStatus: string) => {
-
-    console.log('PST Status:', pstStatus);
     switch (pstStatus) {
       case 'N': return 'New Entry';
       case 'Y': return 'Submitted';
@@ -131,18 +128,94 @@ export function ShipmentTimeline({
     }
   };
 
-  // Helper function to get PSW status color
-  const getPSWStatusColor = (shipment: Shipment) => {
-    if (shipment.pswNumber) {
-      return 'bg-blue-50 text-blue-700 border-blue-200';
+  // Helper function to get PSW status display text
+  const getPSWStatusText = (pswStatus: string) => {
+    switch (pswStatus) {
+      case 'N': return 'New Entry';
+      case 'Y': return 'Submitted';
+      case 'Z': return 'Cancelled';
+      case '': return 'No Status';
+      default: return pswStatus || 'No Status';
     }
-    return 'bg-amber-50 text-amber-700 border-amber-200';
+  };
+
+  // Helper function to get PSW status color based on status
+  const getPSWStatusColor = (pswStatus: string) => {
+    switch (pswStatus) {
+      case 'N': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'Y': return 'bg-green-50 text-green-700 border-green-200';
+      case 'Z': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  // Helper function to get action button configuration based on PST/PSW status
+  const getCustomActionConfig = (shipment: Shipment) => {
+    const { pstStatus, pswStatus } = shipment;
+    
+    // ถ้า pstStatus เป็นว่าง หรือ null ให้แสดงปุ่ม CreatePst
+    if (!pstStatus || pstStatus === '' || pstStatus === null) {
+      return {
+        text: 'Create PST',
+        action: 'create-pst',
+        color: 'bg-blue-600 hover:bg-blue-700 text-white',
+        enabled: true,
+        tooltip: 'Create PST document',
+        icon: <Flag className="w-3 h-3" />
+      };
+    }
+    
+    // ถ้า pstStatus เป็น N ให้แสดงปุ่ม UpdatePst
+    if (pstStatus === 'N') {
+      return {
+        text: 'Update PST',
+        action: 'edit-pst',
+        color: 'bg-yellow-600 hover:bg-yellow-700 text-white',
+        enabled: true,
+        tooltip: 'Update PST document',
+        icon: <Flag className="w-3 h-3" />
+      };
+    }
+    
+    // ถ้า pstStatus เป็น Y และ pswStatus เป็น N or null ให้แสดงปุ่ม CreatePsw
+    if (pstStatus === 'Y' && (!pswStatus || pswStatus === 'N' || pswStatus === '' || pswStatus === null)) {
+      return {
+        text: 'Create PSW',
+        action: 'create-psw',
+        color: 'bg-green-600 hover:bg-green-700 text-white',
+        enabled: true,
+        tooltip: 'Create PSW document',
+        icon: <Calendar className="w-3 h-3" />
+      };
+    }
+    
+    // ถ้า pstStatus และ pswStatus เป็น Y ทั้งคู่ แสดงปุ่ม Completed
+    if (pstStatus === 'Y' && pswStatus === 'Y') {
+      return {
+        text: 'Completed',
+        action: 'completed',
+        color: 'bg-gray-500 text-white cursor-not-allowed',
+        enabled: false,
+        tooltip: 'Process completed',
+        icon: <Flag className="w-3 h-3" />
+      };
+    }
+    
+    // Default fallback
+    return {
+      text: 'No Action',
+      action: 'none',
+      color: 'bg-gray-400 text-white cursor-not-allowed',
+      enabled: false,
+      tooltip: 'No action available',
+      icon: <Flag className="w-3 h-3" />
+    };
   };
 
   return (
     <div className="space-y-3">
       {shipments.map((shipment) => {
-        const actionConfig = getActionButtonConfig(shipment);
+        const customActionConfig = getCustomActionConfig(shipment);
         const borderColor = getBorderColor(shipment.billType);
         const totalSuppliers = 1 + (shipment.relatedSuppliers?.length || 0);
         const poTypeStyle = getPOTypeStyle(shipment.poType);
@@ -158,35 +231,35 @@ export function ShipmentTimeline({
             <CardContent className="p-4">
               {/* Status badges positioned at top-right corner */}
               <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
-                {/* PST Status Badge - Always show */}
-                <Badge className={`text-xs ${getPSTStatusColor(shipment.pstStatus || '')}`}>
-                  <div className="flex items-center gap-1">
-                    <Flag className="w-2 h-2" />
-                    <span className="text-xs opacity-75">PST:</span>
-                    <span>{getPSTStatusText(shipment.pstStatus || '')}</span>
-                    {shipment.pstNumber && (
-                      <>
-                        <span className="text-xs opacity-50">-</span>
-                        <span className="text-xs font-medium">{shipment.pstNumber}</span>
-                      </>
-                    )}
-                  </div>
-                </Badge>
+                {/* PST Status Badge - Show only if pstStatus has value */}
+                {(shipment.pstStatus && shipment.pstStatus !== '' && shipment.pstStatus !== null) && (
+                  <Badge className={`text-xs ${getPSTStatusColor(shipment.pstStatus)}`}>
+                    <div className="flex items-center gap-1">
+                      <Flag className="w-2 h-2" />
+                      <span className="text-xs opacity-75">PST:</span>
+                      <span>{getPSTStatusText(shipment.pstStatus)}</span>
+                      {shipment.pstNumber && (
+                        <>
+                          <span className="text-xs opacity-50">-</span>
+                          <span className="text-xs font-medium">{shipment.pstNumber}</span>
+                        </>
+                      )}
+                    </div>
+                  </Badge>
+                )}
 
-                {/* PSW Status Badge - Show if PST is completed */}
-                {shipment.pstNumber && (
-                  <Badge className={`text-xs ${getPSWStatusColor(shipment)}`}>
+                {/* PSW Status Badge - Show only if pswStatus has value */}
+                {(shipment.pswStatus && shipment.pswStatus !== '' && shipment.pswStatus !== null) && (
+                  <Badge className={`text-xs ${getPSWStatusColor(shipment.pswStatus)}`}>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-2 h-2" />
                       <span className="text-xs opacity-75">PSW:</span>
-                      {shipment.pswNumber ? (
+                      <span>{getPSWStatusText(shipment.pswStatus)}</span>
+                      {shipment.pswNumber && (
                         <>
-                          <span>Completed</span>
                           <span className="text-xs opacity-50">-</span>
                           <span className="text-xs font-medium">{shipment.pswNumber}</span>
                         </>
-                      ) : (
-                        <span>Pending</span>
                       )}
                     </div>
                   </Badge>
@@ -328,7 +401,7 @@ export function ShipmentTimeline({
                       <div className="text-left">
                         <div className="flex items-center gap-1 mb-1">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-gray-600 text-xs font-medium">Clear</span>
+                          <span className="text-gray-600 text-xs font-medium">WR Date</span>
                         </div>
                         <span className="font-semibold text-gray-900">{formatDate(shipment.dateClear)}</span>
                       </div>
@@ -367,18 +440,18 @@ export function ShipmentTimeline({
                 <div className="flex items-center">
                   <Button
                     size="sm"
-                    disabled={!actionConfig.enabled}
-                    className={`${actionConfig.color} font-medium px-3 py-1 text-xs shadow-sm transition-all duration-200`}
+                    disabled={!customActionConfig.enabled}
+                    className={`${customActionConfig.color} font-medium px-3 py-1 text-xs shadow-sm transition-all duration-200`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (actionConfig.enabled) {
-                        handleActionClick(shipment, actionConfig.action);
+                      if (customActionConfig.enabled) {
+                        handleActionClick(shipment, customActionConfig.action);
                       }
                     }}
-                    title={actionConfig.tooltip}
+                    title={customActionConfig.tooltip}
                   >
-                    {actionConfig.icon}
-                    <span className="ml-1">{actionConfig.text}</span>
+                    {customActionConfig.icon}
+                    <span className="ml-1">{customActionConfig.text}</span>
                   </Button>
                 </div>
               </div>

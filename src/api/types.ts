@@ -236,6 +236,8 @@ export interface POListItem {
   coLoadSupplierCount: number;
   pstStatus?: string; // PST Status จาก API
   pswStatus?: string; // PSW Status จาก API
+  pstNumber?: string; // PST Number จาก API
+  pswNumber?: string; // PSW Number จาก API
 }
 
 export interface EShippingPOListResponse {

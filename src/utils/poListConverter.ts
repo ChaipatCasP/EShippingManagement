@@ -84,9 +84,9 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       jagotaStatus: 'Under Review',
       billType: 'Regular',
       pstStatus: item.pstStatus || '', // ใช้ pstStatus จาก API
-      pstNumber: item.pstStatus === 'Y' ? `PST-${item.poNo || '000'}` : null, // ถ้า Submitted แล้วจะมี PST Number
+      pstNumber: item.pstNumber || null, // ใช้ pstNumber จาก API โดยตรง
       pswStatus: item.pswStatus || '', // ใช้ pswStatus จาก API  
-      pswNumber: item.pswStatus === 'Y' ? `PSW-${item.poNo || '000'}` : null, // ถ้า Submitted แล้วจะมี PSW Number
+      pswNumber: item.pswNumber || null, // ใช้ pswNumber จาก API โดยตรง
       // Required fields with default values
       supplierContact: `${item.supCode || 'SUP'}-contact`,
       supplierEmail: `${(item.supCode || 'supplier').toLowerCase()}@supplier.com`,

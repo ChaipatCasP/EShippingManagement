@@ -5,7 +5,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '1',
     supplierCode: 'ATS',
-    supplierName: 'Asia Tech Solutions',
+    supplierName: 'Asia Tech Solutions MockUpData',
     referenceKey: 'REF-2025-ATS005',
     poNumber: 'PO-2025-005',
     poDate: '2025-07-10',
@@ -62,7 +62,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '2',
     supplierCode: 'ECA',
-    supplierName: 'Euro Components AG',
+    supplierName: 'Euro Components AG MockUpData',
     referenceKey: 'REF-2025-EC004',
     poNumber: 'PO-2025-004',
     poDate: '2025-06-20',
@@ -120,7 +120,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '3',
     supplierCode: 'PM',
-    supplierName: 'Pacific Manufacturing',
+    supplierName: 'Pacific Manufacturing MockUpData',
     referenceKey: 'REF-2025-PM002',
     poNumber: 'PO-2025-002',
     poDate: '2025-06-28',
@@ -178,7 +178,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '4',
     supplierCode: 'GEC',
-    supplierName: 'Global Electronics Co.',
+    supplierName: 'Global Electronics Co. MockUpData',
     referenceKey: 'REF-2025-GE001',
     poNumber: 'PO-2025-001',
     poDate: '2025-07-01',
@@ -233,7 +233,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '5',
     supplierCode: 'RSL',
-    supplierName: 'Regional Suppliers Ltd.',
+    supplierName: 'Regional Suppliers Ltd. MockUpData',
     referenceKey: 'REF-2025-RS003',
     poNumber: 'PO-2025-003',
     poDate: '2025-06-25',
@@ -291,7 +291,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '6',
     supplierCode: 'VFI',
-    supplierName: 'Vietnam Food Industries',
+    supplierName: 'Vietnam Food Industries MockUpData',
     referenceKey: 'REF-2025-VFI006',
     poNumber: 'PO-2025-006',
     poDate: '2025-07-12',
@@ -345,7 +345,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '7',
     supplierCode: 'JPT',
-    supplierName: 'Japanese Precision Tools',
+    supplierName: 'Japanese Precision Tools MockUpData',
     referenceKey: 'REF-2025-JPT007',
     poNumber: 'PO-2025-011',
     poDate: '2025-07-08',
@@ -402,7 +402,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '8',
     supplierCode: 'KCC',
-    supplierName: 'Korean Chemical Corp',
+    supplierName: 'Korean Chemical Corp MockUpData',
     referenceKey: 'REF-2025-KCC008',
     poNumber: 'PO-2025-012',
     poDate: '2025-06-15',
@@ -456,7 +456,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '9',
     supplierCode: 'ITM',
-    supplierName: 'Indian Textile Mills',
+    supplierName: 'Indian Textile Mills MockUpData',
     referenceKey: 'REF-2025-ITM009',
     poNumber: 'PO-2025-013',
     poDate: '2025-07-20',
@@ -514,7 +514,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '10',
     supplierCode: 'ABE',
-    supplierName: 'Australian Beef Exports',
+    supplierName: 'Australian Beef Exports MockUpData',
     referenceKey: 'REF-2025-ABE010',
     poNumber: 'PO-2025-014',
     poDate: '2025-07-18',
@@ -569,7 +569,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '11',
     supplierCode: 'IFI',
-    supplierName: 'Italian Food Ingredients',
+    supplierName: 'Italian Food Ingredients MockUpData',
     referenceKey: 'REF-2025-IFI011',
     poNumber: 'PO-2025-022',
     poDate: '2025-07-05',
@@ -627,7 +627,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '12',
     supplierCode: 'STH',
-    supplierName: 'Singapore Trading House',
+    supplierName: 'Singapore Trading House MockUpData',
     referenceKey: 'REF-2025-STH012',
     poNumber: 'PO-2025-025',
     poDate: '2025-07-22',
@@ -681,7 +681,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '13',
     supplierCode: 'BCE',
-    supplierName: 'Brazilian Coffee Exporters',
+    supplierName: 'Brazilian Coffee Exporters MockUpData',
     referenceKey: 'REF-2025-BCE013',
     poNumber: 'PO-2025-026',
     poDate: '2025-06-30',
@@ -739,7 +739,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '14',
     supplierCode: 'FWS',
-    supplierName: 'French Wine & Spirits',
+    supplierName: 'French Wine & Spirits MockUpData',
     referenceKey: 'REF-2025-FWS014',
     poNumber: 'PO-2025-029',
     poDate: '2025-07-15',
@@ -794,7 +794,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '15',
     supplierCode: 'IPO',
-    supplierName: 'Indonesian Palm Oil Co.',
+    supplierName: 'Indonesian Palm Oil Co. MockUpData',
     referenceKey: 'REF-2025-IPO015',
     poNumber: 'PO-2025-030',
     poDate: '2025-07-25',
@@ -852,7 +852,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '16',
     supplierCode: 'MVE',
-    supplierName: 'Mexican Vanilla Extracts',
+    supplierName: 'Mexican Vanilla Extracts MockUpData',
     referenceKey: 'REF-2025-MVE016',
     poNumber: 'PO-2025-033',
     poDate: '2025-07-17',
@@ -907,7 +907,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '17',
     supplierCode: 'TSM',
-    supplierName: 'Turkish Spice Merchants',
+    supplierName: 'Turkish Spice Merchants MockUpData',
     referenceKey: 'REF-2025-TSM017',
     poNumber: 'PO-2025-034',
     poDate: '2025-06-28',
@@ -965,7 +965,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '18',
     supplierCode: 'NZD',
-    supplierName: 'New Zealand Dairy Products',
+    supplierName: 'New Zealand Dairy Products MockUpData',
     referenceKey: 'REF-2025-NZD018',
     poNumber: 'PO-2025-037',
     poDate: '2025-07-11',
@@ -1020,7 +1020,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '19',
     supplierCode: 'CMS',
-    supplierName: 'Canadian Maple Syrup Co.',
+    supplierName: 'Canadian Maple Syrup Co. MockUpData',
     referenceKey: 'REF-2025-CMS019',
     poNumber: 'PO-2025-038',
     poDate: '2025-07-03',
@@ -1078,7 +1078,7 @@ export const mockShipments: Shipment[] = [
   {
     id: '20',
     supplierCode: 'PCP',
-    supplierName: 'Philippines Coconut Products',
+    supplierName: 'Philippines Coconut Products MockUpData',
     referenceKey: 'REF-2025-PCP020',
     poNumber: 'PO-2025-041',
     poDate: '2025-07-26',
