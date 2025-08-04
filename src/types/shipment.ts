@@ -27,8 +27,10 @@ export interface Shipment {
   billType: 'Urgent' | 'Regular' | 'Express' | 'Premium' | 'Cold Chain' | 'Bulk';
   pstStatus: 'N' | 'Y' | 'Z' | string;
   pstNumber: string | null;
+  pstJagotaStatus?: 'N' | 'Y' | 'Z' | string;
   pswStatus?: 'N' | 'Y' | 'Z' | string;
   pswNumber: string | null;
+  pswJagotaStatus?: 'N' | 'Y' | 'Z' | string;
   supplierContact: string;
   supplierEmail: string;
   supplierAddress: string;

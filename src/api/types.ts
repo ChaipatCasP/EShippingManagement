@@ -238,6 +238,8 @@ export interface POListItem {
   pswStatus?: string; // PSW Status จาก API
   pstNumber?: string; // PST Number จาก API
   pswNumber?: string; // PSW Number จาก API
+  pstJagotaStatus?: string; // PST Jagota Status จาก API
+  pswJagotaStatus?: string; // PSW Jagota Status จาก API
 }
 
 export interface EShippingPOListResponse {

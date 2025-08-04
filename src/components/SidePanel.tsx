@@ -309,23 +309,24 @@ export function SidePanel({
             <div className="flex items-center justify-center gap-2 pt-2" role="progressbar" aria-label="Shipment workflow progress">
               <div className="flex items-center gap-1 text-xs">
                 <div className={`w-1.5 h-1.5 rounded-full ${
-                  ['pst-created', 'pst-approved', 'psw-waiting-approval', 'completed'].includes(selectedShipment.status) 
-                    ? 'bg-green-500' : 'bg-gray-300'
+                  selectedShipment.pstStatus === 'Y' && selectedShipment.pstJagotaStatus === 'Y' ? 'bg-green-500' : 
+                  selectedShipment.pstStatus === 'Y' || selectedShipment.pstStatus === 'N' ? 'bg-gray-400' : 'bg-gray-300'
                 }`}></div>
                 <span className="text-gray-600 text-xs">PST</span>
               </div>
               <div className="w-6 h-0.5 bg-gray-200"></div>
               <div className="flex items-center gap-1 text-xs">
                 <div className={`w-1.5 h-1.5 rounded-full ${
-                  ['psw-waiting-approval', 'completed'].includes(selectedShipment.status) 
-                    ? 'bg-green-500' : 'bg-gray-300'
+                  selectedShipment.pswStatus === 'Y' && selectedShipment.pswJagotaStatus === 'Y' ? 'bg-green-500' : 
+                  selectedShipment.pswStatus === 'Y' || selectedShipment.pswStatus === 'N' ? 'bg-gray-400' : 'bg-gray-300'
                 }`}></div>
                 <span className="text-gray-600 text-xs">PSW</span>
               </div>
               <div className="w-6 h-0.5 bg-gray-200"></div>
               <div className="flex items-center gap-1 text-xs">
                 <div className={`w-1.5 h-1.5 rounded-full ${
-                  selectedShipment.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'
+                  (selectedShipment.pstStatus === 'Y' && selectedShipment.pstJagotaStatus === 'Y' &&
+                   selectedShipment.pswStatus === 'Y' && selectedShipment.pswJagotaStatus === 'Y') ? 'bg-green-500' : 'bg-gray-300'
                 }`}></div>
                 <span className="text-gray-600 text-xs">Complete</span>
               </div>

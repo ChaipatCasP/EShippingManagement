@@ -87,6 +87,8 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       pstNumber: item.pstNumber || null, // ใช้ pstNumber จาก API โดยตรง
       pswStatus: item.pswStatus || '', // ใช้ pswStatus จาก API  
       pswNumber: item.pswNumber || null, // ใช้ pswNumber จาก API โดยตรง
+      pstJagotaStatus: item.pstJagotaStatus || '', // ใช้ pstJagotaStatus จาก API
+      pswJagotaStatus: item.pswJagotaStatus || '', // ใช้ pswJagotaStatus จาก API
       // Required fields with default values
       supplierContact: `${item.supCode || 'SUP'}-contact`,
       supplierEmail: `${(item.supCode || 'supplier').toLowerCase()}@supplier.com`,
