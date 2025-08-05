@@ -229,7 +229,7 @@ export function FilterBar({
                     </SelectContent>
                   </Select>
 
-                  <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                  {/* <Select value={selectedPriority} onValueChange={setSelectedPriority}>
                     <SelectTrigger className="w-24 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
                       <SelectValue />
                     </SelectTrigger>
@@ -238,13 +238,13 @@ export function FilterBar({
                       <SelectItem value="urgent">Urgent</SelectItem>
                       <SelectItem value="regular">Regular</SelectItem>
                     </SelectContent>
-                  </Select>
+                  </Select> */}
                 </div>
 
                 {/* Date Filters Group */}
                 <div className="flex items-center gap-2">
                   <CalendarDays className="w-4 h-4 text-gray-400" />
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant={dateFilterMode === 'today' ? 'default' : 'outline'}
                       size="sm"
@@ -281,6 +281,28 @@ export function FilterBar({
                     >
                       Custom
                     </Button>
+                    
+                    {/* Custom Date Range - Inline Display */}
+                    {dateFilterMode === 'custom' && (
+                      <>
+                        <div className="w-px h-6 bg-gray-300 mx-2"></div>
+                        <Input
+                          type="date"
+                          value={customDateStart}
+                          onChange={(e) => setCustomDateStart(e.target.value)}
+                          className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
+                          placeholder="Start date"
+                        />
+                        <span className="text-gray-400 text-sm font-medium">to</span>
+                        <Input
+                          type="date"
+                          value={customDateEnd}
+                          onChange={(e) => setCustomDateEnd(e.target.value)}
+                          className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
+                          placeholder="End date"
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -303,31 +325,6 @@ export function FilterBar({
                   </Badge>
                 </div>
               </div>
-
-              {/* Custom Date Range - Conditional Display */}
-              {dateFilterMode === 'custom' && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex justify-center">
-                    <div className="flex items-center gap-3">
-                      <Input
-                        type="date"
-                        value={customDateStart}
-                        onChange={(e) => setCustomDateStart(e.target.value)}
-                        className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
-                        placeholder="Start date"
-                      />
-                      <span className="text-gray-400 text-sm font-medium">to</span>
-                      <Input
-                        type="date"
-                        value={customDateEnd}
-                        onChange={(e) => setCustomDateEnd(e.target.value)}
-                        className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
-                        placeholder="End date"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
