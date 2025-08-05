@@ -323,13 +323,24 @@ export const calculateKPIs = (shipments: Shipment[]) => {
   
   return { 
     poToday, 
-    poNext7Days, 
+    poNext7Days,
+    poLast7Days: poNext7Days, // Use same value for backward compatibility
     pstTotal,
     pstCompleted, 
     pstRemaining,
     pstToday,
+    pstNewEntry: shipments.filter(s => s.pstStatus === 'N').length,
+    pstUnderReview: shipments.filter(s => s.pstStatus === 'Y' && s.pstJagotaStatus === 'P').length,
+    pstTotalPending: pstTotal,
+    pstTodayPending: pstToday,
+    pstTodayCompleted: pstCompleted,
     pswThisWeek,
     pswCompleted,
-    pswRemaining
+    pswRemaining,
+    pswPending: shipments.filter(s => s.pswStatus === 'N').length,
+    pswUnderReview: shipments.filter(s => s.pswStatus === 'Y' && s.pswJagotaStatus === 'P').length,
+    pswLast7DaysPending: pswThisWeek,
+    pswTotalPending: pswThisWeek,
+    rebelPending: 0 // Default value for new field
   };
 };

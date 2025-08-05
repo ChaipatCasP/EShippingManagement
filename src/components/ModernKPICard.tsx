@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { 
   Package, 
@@ -131,20 +130,17 @@ export function ModernKPICard({
                         </div>
                       </div>
                       
-                      {/* Tertiary and quaternary metrics */}
-                      {(customDisplay.metrics.tertiary || customDisplay.metrics.quaternary) && (
+                      {/* Tertiary metrics */}
+                      {customDisplay.metrics.tertiary && (
                         <div className="pt-2 border-t border-gray-100 space-y-2">
-                          {customDisplay.metrics.tertiary && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">
-                                {customDisplay.metrics.tertiary.label}
-                              </span>
-                              <span className="text-sm font-medium text-gray-700 tabular-nums">
-                                {customDisplay.metrics.tertiary.value}
-                              </span>
-                            </div>
-                          )}
-
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">
+                              {customDisplay.metrics.tertiary.label}
+                            </span>
+                            <span className="text-sm font-medium text-gray-700 tabular-nums">
+                              {customDisplay.metrics.tertiary.value}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
