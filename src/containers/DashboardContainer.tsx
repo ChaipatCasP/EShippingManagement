@@ -30,7 +30,7 @@ export function DashboardContainer({
   const navigate = useNavigate();
 
   // Filter state
-  const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
+  const [selectedTransportType, setSelectedTransportType] = useState<string>('all');
   const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('');
   const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
@@ -65,7 +65,19 @@ export function DashboardContainer({
   // Filter and sort shipments
   const filteredShipments = useMemo(() => {
     let filtered = mockShipments.filter(shipment => {
-      const matchesFreightStatus = selectedFreightStatus === 'all' || shipment.type === selectedFreightStatus;
+      // Transport Type filtering (API-based)
+      let matchesTransportType = true;
+      if (selectedTransportType !== 'all') {
+        // Map API transport type to shipment type
+        const transportTypeMap: { [key: string]: string } = {
+          'Sea Freight': 'Sea',
+          'Air Freight': 'Air', 
+          'Land Freight': 'Land'
+        };
+        const mappedType = transportTypeMap[selectedTransportType] || selectedTransportType;
+        matchesTransportType = shipment.type === mappedType;
+      }
+      
       const matchesTabPOType = activePOTypeTab === 'all' || shipment.poType === activePOTypeTab;
       
       let matchesPSTStatus = true;
@@ -102,7 +114,7 @@ export function DashboardContainer({
         matchesDateRange = shipment.etd <= end;
       }
       
-      return matchesFreightStatus && matchesTabPOType && matchesPSTStatus && 
+      return matchesTransportType && matchesTabPOType && matchesPSTStatus && 
              matchesPSWStatus && matchesSearch && matchesDateRange;
     });
 
@@ -126,7 +138,7 @@ export function DashboardContainer({
     }
 
     return filtered;
-  }, [selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, 
+  }, [selectedTransportType, selectedPSTStatus, selectedPSWStatus, 
       dateFilterMode, customDateStart, customDateEnd, 
       activePOTypeTab, searchTerm, sortOption]);
 
@@ -190,8 +202,8 @@ export function DashboardContainer({
         <FilterBar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          selectedFreightStatus={selectedFreightStatus}
-          setSelectedFreightStatus={setSelectedFreightStatus}
+          selectedTransportType={selectedTransportType}
+          setSelectedTransportType={setSelectedTransportType}
           selectedPSTStatus={selectedPSTStatus}
           setSelectedPSTStatus={setSelectedPSTStatus}
           selectedPSWStatus={selectedPSWStatus}

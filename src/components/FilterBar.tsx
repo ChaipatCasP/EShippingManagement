@@ -6,13 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { Search, CalendarDays, Package, Layers, LayoutGrid, List, Filter, X } from 'lucide-react';
+import { useTransportTypes } from '../hooks/useTransportTypes';
 import type { Shipment, DateFilterMode } from '../types/shipment';
 
 interface FilterBarProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  selectedFreightStatus: string;
-  setSelectedFreightStatus: (status: string) => void;
+  selectedTransportType: string;
+  setSelectedTransportType: (type: string) => void;
   selectedPSTStatus: string;
   setSelectedPSTStatus: (status: string) => void;
   selectedPSWStatus: string;
@@ -35,8 +36,8 @@ interface FilterBarProps {
 export function FilterBar({
   searchTerm,
   setSearchTerm,
-  selectedFreightStatus,
-  setSelectedFreightStatus,
+  selectedTransportType,
+  setSelectedTransportType,
   selectedPSTStatus,
   setSelectedPSTStatus,
   selectedPSWStatus,
@@ -56,9 +57,12 @@ export function FilterBar({
   setViewMode
 }: FilterBarProps) {
   
+  // Fetch transport types from API
+  const { transportTypes, isLoading: isLoadingTransportTypes } = useTransportTypes();
+  
   // Helper function to check if any filters are active
   const hasActiveFilters = () => {
-    return selectedFreightStatus !== 'all' || 
+    return selectedTransportType !== 'all' ||
            selectedPSTStatus !== '' || 
            selectedPSWStatus !== '' || 
            selectedPriority !== 'all' ||
@@ -71,7 +75,7 @@ export function FilterBar({
   // Helper function to clear all filters
   const clearAllFilters = () => {
     setSearchTerm('');
-    setSelectedFreightStatus('all');
+    setSelectedTransportType('all');
     setSelectedPSTStatus('');
     setSelectedPSWStatus('');
     setSelectedPriority('all');
@@ -183,15 +187,21 @@ export function FilterBar({
                     Filters:
                   </div>
                   
-                  <Select value={selectedFreightStatus} onValueChange={setSelectedFreightStatus}>
-                    <SelectTrigger className="w-28 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                  <Select value={selectedTransportType} onValueChange={setSelectedTransportType}>
+                    <SelectTrigger className="w-32 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Freight</SelectItem>
-                      <SelectItem value="Sea">Sea</SelectItem>
-                      <SelectItem value="Air">Air</SelectItem>
-                      <SelectItem value="Land">Land</SelectItem>
+                      <SelectItem value="all">All Transport</SelectItem>
+                      {isLoadingTransportTypes ? (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      ) : (
+                        transportTypes.map((type) => (
+                          <SelectItem key={type.TRANSPORT_BY} value={type.TRANSPORT_BY}>
+                            {type.TRANSPORT_BY}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
 

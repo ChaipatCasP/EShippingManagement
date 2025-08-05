@@ -46,6 +46,19 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+// === Transport Type API Types ===
+export interface TransportTypeResponse {
+  error: boolean;
+  message: string;
+  data: TransportType[];
+  rowsAffected: number;
+  query: string;
+}
+
+export interface TransportType {
+  TRANSPORT_BY: string;
+}
+
 // === Consolidated Suppliers Types ===
 export interface ConsolidatedSupplierPO {
   poBook: string;

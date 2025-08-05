@@ -42,7 +42,7 @@ export default function ShippingDashboard() {
   const [user, setUser] = useState<{ email: string; name: string } | null>(null);
 
   // Filter state
-  const [selectedFreightStatus, setSelectedFreightStatus] = useState<string>('all');
+  const [selectedTransportType, setSelectedTransportType] = useState<string>('all');
   const [selectedPSTStatus, setSelectedPSTStatus] = useState<string>('');
   const [selectedPSWStatus, setSelectedPSWStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
@@ -192,7 +192,7 @@ export default function ShippingDashboard() {
   } = useEShippingPOList({
     fromDate: dateRange.start,
     toDate: dateRange.end,
-    transportBy: selectedFreightStatus === 'all' ? undefined : selectedFreightStatus,
+    transportBy: selectedTransportType === 'all' ? undefined : selectedTransportType,
     keyword: '',
     pstStatus: selectedPSTStatus === 'all' ? '' : selectedPSTStatus,
     pswStatus: selectedPSWStatus === 'all' ? '' : selectedPSWStatus
@@ -337,13 +337,23 @@ export default function ShippingDashboard() {
       // เรียกทันทีสำหรับ predefined filters
       refetchPOList();
     }
-  }, [dateFilterMode, customDateStart, customDateEnd, selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, isAuthenticated, refetchPOList]);
+  }, [dateFilterMode, customDateStart, customDateEnd, selectedTransportType, selectedPSTStatus, selectedPSWStatus, isAuthenticated, refetchPOList]);
 
   // Enhanced filter and sort shipments with new separated status filters
   const filteredShipments = useMemo(() => {
     let filtered = shipments.filter(shipment => {
-      // Freight Status filtering
-      const matchesFreightStatus = selectedFreightStatus === 'all' || shipment.type === selectedFreightStatus;
+      // Transport Type filtering (new API-based filter)
+      let matchesTransportType = true;
+      if (selectedTransportType !== 'all') {
+        // Map API transport type to shipment type
+        const transportTypeMap: { [key: string]: string } = {
+          'Sea Freight': 'Sea',
+          'Air Freight': 'Air', 
+          'Land Freight': 'Land'
+        };
+        const mappedType = transportTypeMap[selectedTransportType] || selectedTransportType;
+        matchesTransportType = shipment.type === mappedType;
+      }
       
       // PO Type filtering
       const matchesTabPOType = activePOTypeTab === 'all' || shipment.poType === activePOTypeTab;
@@ -392,7 +402,7 @@ export default function ShippingDashboard() {
         matchesDateRange = shipment.etd <= end;
       }
       
-      return matchesFreightStatus && matchesTabPOType && matchesPSTStatus && 
+      return matchesTransportType && matchesTabPOType && matchesPSTStatus && 
              matchesPSWStatus && matchesSearch && matchesDateRange;
     });
 
@@ -416,7 +426,7 @@ export default function ShippingDashboard() {
     }
 
     return filtered;
-  }, [shipments, selectedFreightStatus, selectedPSTStatus, selectedPSWStatus, 
+  }, [shipments, selectedTransportType, selectedPSTStatus, selectedPSWStatus, 
       dateFilterMode, customDateStart, customDateEnd, 
       activePOTypeTab, searchTerm, sortOption]);
 
@@ -748,8 +758,8 @@ export default function ShippingDashboard() {
           <FilterBar
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            selectedFreightStatus={selectedFreightStatus}
-            setSelectedFreightStatus={setSelectedFreightStatus}
+            selectedTransportType={selectedTransportType}
+            setSelectedTransportType={setSelectedTransportType}
             selectedPSTStatus={selectedPSTStatus}
             setSelectedPSTStatus={setSelectedPSTStatus}
             selectedPSWStatus={selectedPSWStatus}
