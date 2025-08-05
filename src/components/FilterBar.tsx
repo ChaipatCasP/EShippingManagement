@@ -188,10 +188,10 @@ export function FilterBar({
                   </div>
                   
                   <Select value={selectedTransportType} onValueChange={setSelectedTransportType}>
-                    <SelectTrigger className="w-32 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                    <SelectTrigger className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       <SelectItem value="all">All Transport</SelectItem>
                       {isLoadingTransportTypes ? (
                         <SelectItem value="loading" disabled>Loading...</SelectItem>
@@ -206,11 +206,11 @@ export function FilterBar({
                   </Select>
 
                   <Select value={selectedPSTStatus} onValueChange={setSelectedPSTStatus}>
-                    <SelectTrigger className="w-24 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
-                      <SelectValue />
+                    <SelectTrigger className="w-28 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                      <SelectValue placeholder="PST" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All</SelectItem>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="">All PST</SelectItem>
                       <SelectItem value="N">New Entry</SelectItem>
                       <SelectItem value="Y">Submitted</SelectItem>
                       <SelectItem value="Z">Cancelled</SelectItem>
@@ -218,11 +218,11 @@ export function FilterBar({
                   </Select>
 
                   <Select value={selectedPSWStatus} onValueChange={setSelectedPSWStatus}>
-                    <SelectTrigger className="w-24 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
-                      <SelectValue />
+                    <SelectTrigger className="w-28 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                      <SelectValue placeholder="PSW" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All</SelectItem>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="">All PSW</SelectItem>
                       <SelectItem value="N">New Entry</SelectItem>
                       <SelectItem value="Y">Submitted</SelectItem>
                       <SelectItem value="Z">Cancelled</SelectItem>
