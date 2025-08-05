@@ -9,9 +9,15 @@ import {
   Package2,
   Layers,
   Flag,
-  Calendar
+  Calendar,
+  Package,
+  Loader2,
+  Users,
+  FileText
 } from 'lucide-react';
+import { useConsolidatedSuppliers } from '../hooks/useConsolidatedSuppliers';
 import type { Shipment } from '../types/shipment';
+import type { ConsolidatedSupplier } from '../api/types';
 
 // Helper function to format date to yyyy-mm-dd
 const formatDate = (dateString: string): string => {
@@ -48,6 +54,38 @@ export function SidePanel({
   onCreatePSW, 
   onViewDocs 
 }: SidePanelProps) {
+  // Use consolidated suppliers API for co-load data
+  const {
+    suppliers,
+    loading: suppliersLoading,
+    error: suppliersError,
+    refetch: refetchSuppliers
+  } = useConsolidatedSuppliers({
+    startDate: selectedShipment?.poDate || '',
+    endDate: selectedShipment?.dateClear || '',
+    poBook: selectedShipment?.originalPOData?.poBook,
+    transType: selectedShipment?.originalPOData?.transType,
+    poNo: selectedShipment?.originalPOData?.poNo,
+    enabled: selectedShipment?.poType === 'Co-load'
+  });
+
+  // Helper function to check if supplier is current
+  const isCurrentSupplier = (supplier: ConsolidatedSupplier) => {
+    if (!selectedShipment) return false;
+    
+    const currentSupCode = selectedShipment.originalPOData?.supCode || selectedShipment.supplierCode;
+    
+    if (currentSupCode && supplier.supCode === currentSupCode) {
+      if (selectedShipment.originalPOData && supplier.pos) {
+        return supplier.pos.some(po => 
+          po.poBook === selectedShipment.originalPOData?.poBook && 
+          po.poNo === selectedShipment.originalPOData?.poNo
+        );
+      }
+      return true;
+    }
+    return false;
+  };
   if (!selectedShipment) return null;
 
   // Helper function to get action button configuration based on PST/PSW status (same as ShipmentTimeline)
@@ -114,7 +152,7 @@ export function SidePanel({
   };
 
   const actionConfig = getCustomActionConfig(selectedShipment);
-  const totalSuppliers = 1 + (selectedShipment.relatedSuppliers?.length || 0);
+  const totalSuppliers = suppliers.length;
 
   const handleActionClick = () => {
     if (!actionConfig.enabled) return;
@@ -430,31 +468,166 @@ export function SidePanel({
           </div>
 
           {/* Co-load Suppliers Section - Only if applicable */}
-          {selectedShipment.poType === 'Co-load' && selectedShipment.relatedSuppliers && selectedShipment.relatedSuppliers.length > 0 && (
+          {selectedShipment.poType === 'Co-load' && (
             <>
               <Separator />
               <div className="space-y-4">
                 <div className="text-sm font-medium text-gray-900">
-                  {selectedShipment.poType} Container ({totalSuppliers} suppliers)
+                  {selectedShipment.poType} Container
                 </div>
                 
-                <div className="space-y-3">
-                  {/* Current supplier - simplified */}
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="font-medium text-blue-900">{selectedShipment.supplierName}</div>
-                      <span className="text-xs px-2 py-1 rounded bg-blue-200 text-blue-800">Current</span>
-                    </div>
-                    <div className="text-sm text-blue-700">{selectedShipment.referenceKey} • {selectedShipment.poNumber}</div>
+                {suppliersLoading && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <span className="ml-2 text-sm text-slate-600">Loading suppliers...</span>
                   </div>
-                  
-                  {/* Related suppliers - simplified */}
-                  {selectedShipment.relatedSuppliers.map((supplier, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg border">
-                      <div className="font-medium text-gray-800 mb-1">{supplier.name}</div>
-                      <div className="text-sm text-gray-600">{supplier.referenceKey} • {supplier.poNumber}</div>
+                )}
+
+                {suppliersError && (
+                  <div className="text-center py-4">
+                    <div className="text-red-600 text-sm mb-2">❌ Error loading data</div>
+                    <div className="text-xs text-slate-600 mb-2">{suppliersError}</div>
+                    <button
+                      onClick={refetchSuppliers}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {!suppliersLoading && !suppliersError && suppliers.length === 0 && (
+                  <div className="text-center py-4 text-slate-500 text-sm">
+                    No suppliers found
+                  </div>
+                )}
+
+                {!suppliersLoading && !suppliersError && suppliers.length > 0 && (
+                  <div className="space-y-3">
+                    {/* Summary Stats */}
+                    <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-3 w-3 text-blue-600" />
+                        <div>
+                          <div className="text-xs font-medium text-slate-700">Suppliers</div>
+                          <div className="text-sm font-bold text-slate-900">{suppliers.length}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-3 w-3 text-green-600" />
+                        <div>
+                          <div className="text-xs font-medium text-slate-700">Total POs</div>
+                          <div className="text-sm font-bold text-slate-900">
+                            {suppliers.reduce((total: number, supplier: ConsolidatedSupplier) => 
+                              total + (supplier.pos?.length || 0), 0
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  ))}
+
+                    {/* Current Supplier */}
+                    {(() => {
+                      const currentSupplier = suppliers.find(supplier => isCurrentSupplier(supplier));
+                      
+                      if (currentSupplier) {
+                        return (
+                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="font-semibold text-sm text-blue-900">
+                                {currentSupplier.supName}
+                              </div>
+                              <span className="text-xs px-2 py-1 rounded border bg-white text-blue-900 border-blue-200">
+                                Current
+                              </span>
+                            </div>
+                            <div className="text-xs text-blue-600 mb-1">Code: {currentSupplier.supCode}</div>
+                            
+                            {/* Show POs from current supplier */}
+                            {currentSupplier.pos && currentSupplier.pos.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {currentSupplier.pos.map((po: any, poIndex: number) => (
+                                  <div
+                                    key={`current-${po.poBook}-${po.poNo}-${poIndex}`}
+                                    className="flex items-center gap-2 text-xs p-2 rounded bg-blue-50"
+                                  >
+                                    <Package className="h-2 w-2 text-blue-500" />
+                                    <span className="font-mono font-medium">{po.poBook}-{po.poNo}</span>
+                                    {/* Mark the matching PO */}
+                                    {po.poBook === selectedShipment.originalPOData?.poBook && 
+                                     po.poNo === selectedShipment.originalPOData?.poNo && (
+                                      <span className="text-xs bg-green-100 text-green-600 px-1 rounded">Active</span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      } else {
+                        // Fallback to original shipment data if not found in API
+                        return (
+                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="font-semibold text-sm text-blue-900">
+                                {selectedShipment.supplierName}
+                              </div>
+                              <span className="text-xs px-2 py-1 rounded border bg-white text-blue-900 border-blue-200">
+                                Current
+                              </span>
+                            </div>
+                            {selectedShipment.pstStatus !== 'N' && (
+                              <div className="text-xs text-blue-600 mb-1">{selectedShipment.referenceKey}</div>
+                            )}
+                            <div className="text-sm font-medium text-blue-800">{selectedShipment.poNumber}</div>
+                          </div>
+                        );
+                      }
+                    })()}
+                    
+                    {/* Other Suppliers from API */}
+                    {suppliers.filter(supplier => !isCurrentSupplier(supplier)).map((supplier: ConsolidatedSupplier, index: number) => (
+                      <div key={`other-${supplier.supCode}-${index}`} className="p-3 bg-gray-50 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium text-gray-800 text-sm">{supplier.supName}</div>
+                          <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded">
+                            {supplier.pos?.length || 0} PO{(supplier.pos?.length || 0) !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600 mb-1">Code: {supplier.supCode}</div>
+                        
+                        {/* Show POs */}
+                        {supplier.pos && supplier.pos.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {supplier.pos.map((po: any, poIndex: number) => (
+                              <div
+                                key={`${supplier.supCode}-${po.poBook}-${po.poNo}-${poIndex}`}
+                                className="flex items-center gap-2 text-xs text-slate-700"
+                              >
+                                <Package className="h-2 w-2 text-slate-500" />
+                                <span className="font-mono">{po.poBook}-{po.poNo}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Summary Footer */}
+                <div className="pt-2 border-t text-xs text-gray-500 text-center">
+                  {!suppliersLoading && !suppliersError && suppliers.length > 0 ? (
+                    <>
+                      Total: {suppliers.reduce((total: number, supplier: ConsolidatedSupplier) => 
+                        total + (supplier.pos?.length || 0), 0
+                      )} purchase orders in this co-load container
+                    </>
+                  ) : selectedShipment.relatedSuppliers && selectedShipment.relatedSuppliers.length > 0 ? (
+                    <>Expected: {selectedShipment.relatedSuppliers.length + 1} purchase orders in this {selectedShipment.poType.toLowerCase()} container</>
+                  ) : (
+                    <>Co-load container data</>
+                  )}
                 </div>
               </div>
             </>
