@@ -32,9 +32,12 @@ export function useAuth() {
   const checkAuthStatus = async () => {
     try {
       setIsLoading(true);
-      const response = await AuthService.getCurrentUser();
-      if (response.success) {
-        setUser(response.data);
+      // สำหรับ JAGOTA ตรวจสอบจาก localStorage 
+      const savedUser = localStorage.getItem('user_data');
+      if (savedUser && AuthService.getToken()) {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
       }
     } catch (err) {
       console.error('Auth check failed:', err);
@@ -49,8 +52,8 @@ export function useAuth() {
       setIsLoading(true);
       setError(null);
       const response = await AuthService.login(credentials);
-      if (response.success) {
-        setUser(response.data.user);
+      if (response.data.status === 'success') {
+        // สำหรับ JAGOTA login จะได้เฉพาะ token ต้องรอ OTP validation
         return { success: true, data: response.data };
       }
     } catch (err) {

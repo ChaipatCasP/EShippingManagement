@@ -1,92 +1,140 @@
 /**
- * Authentication API Services
+ * Authentication API Services for JAGOTA
  */
 
-import { apiClient, type ApiResponse } from '../apiClient';
+import { env } from '../../config/env';
 import type {
   LoginRequest,
-  LoginResponse,
-  User,
-  ChangePasswordRequest,
-  ForgotPasswordRequest,
-  ResetPasswordRequest
+  JagotaLoginResponse,
+  OTPValidationRequest,
+  JagotaOTPValidationResponse
 } from '../types';
 
 export class AuthService {
   /**
-   * เข้าสู่ระบบ
+   * เข้าสู่ระบบด้วย JAGOTA API
    */
-  static async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-    
-    // บันทึก token ใน API client
-    if (response.success && response.data.token) {
-      apiClient.setAuthToken(response.data.token);
-    }
-    
-    return response;
-  }
-
-  /**
-   * ออกจากระบบ
-   */
-  static async logout(): Promise<ApiResponse<void>> {
+  static async login(credentials: LoginRequest): Promise<JagotaLoginResponse> {
     try {
-      const response = await apiClient.post<void>('/auth/logout');
-      apiClient.setAuthToken(null);
-      return response;
+      const apiUrl = `${env.jagotaApi.baseUrl}/auth/web-user-login`;
+      
+      console.log('Login attempt:', {
+        url: apiUrl,
+        username: credentials.username
+      });
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password,
+          moduleName: 'SHIPPING'
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Login HTTP error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: JagotaLoginResponse = await response.json();
+      console.log('Login response:', data);
+
+      return data;
     } catch (error) {
-      // ล้าง token แม้ logout ไม่สำเร็จ
-      apiClient.setAuthToken(null);
+      console.error('Login error:', error);
       throw error;
     }
   }
 
   /**
-   * ดึงข้อมูลผู้ใช้ปัจจุบัน
+   * ยืนยัน OTP ด้วย JAGOTA API
    */
-  static async getCurrentUser(): Promise<ApiResponse<User>> {
-    return apiClient.get<User>('/auth/me');
-  }
+  static async validateOTP(request: OTPValidationRequest): Promise<JagotaOTPValidationResponse> {
+    try {
+      const apiUrl = `${env.jagotaApi.baseUrl}/auth/web-user-otp-validate`;
+      
+      console.log('Validating OTP:', {
+        url: apiUrl,
+        payload: {
+          username: request.username,
+          moduleName: request.moduleName,
+          token: request.token.substring(0, 10) + '...', // แสดงเฉพาะส่วนต้น token เพื่อความปลอดภัย
+          otp: '***' // ซ่อน OTP เพื่อความปลอดภัย
+        }
+      });
 
-  /**
-   * รีเฟรช token
-   */
-  static async refreshToken(): Promise<ApiResponse<{ token: string; expiresIn: number }>> {
-    const response = await apiClient.post<{ token: string; expiresIn: number }>('/auth/refresh');
-    
-    if (response.success && response.data.token) {
-      apiClient.setAuthToken(response.data.token);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          username: request.username,
+          moduleName: request.moduleName,
+          token: request.token,
+          otp: request.otp
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OTP validation HTTP error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: JagotaOTPValidationResponse = await response.json();
+      console.log('OTP validation response:', data);
+
+      return data;
+    } catch (error) {
+      console.error('OTP validation error:', error);
+      throw error;
     }
-    
-    return response;
   }
 
   /**
-   * เปลี่ยนรหัสผ่าน
+   * บันทึก access token
    */
-  static async changePassword(data: ChangePasswordRequest): Promise<ApiResponse<void>> {
-    return apiClient.post<void>('/auth/change-password', data);
+  static setToken(token: string): void {
+    localStorage.setItem('auth_token', token);
   }
 
   /**
-   * ลืมรหัสผ่าน
+   * ตรวจสอบสถานะการ login
    */
-  static async forgotPassword(data: ForgotPasswordRequest): Promise<ApiResponse<void>> {
-    return apiClient.post<void>('/auth/forgot-password', data);
+  static isAuthenticated(): boolean {
+    const token = localStorage.getItem('auth_token');
+    return !!token;
   }
 
   /**
-   * รีเซ็ตรหัสผ่าน
+   * ดึง token ปัจจุบัน
    */
-  static async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<void>> {
-    return apiClient.post<void>('/auth/reset-password', data);
+  static getToken(): string | null {
+    return localStorage.getItem('auth_token');
   }
 
   /**
-   * ตรวจสอบความถูกต้องของ token
+   * ออกจากระบบ
    */
-  static async verifyToken(): Promise<ApiResponse<{ valid: boolean; expiresAt: string }>> {
-    return apiClient.get<{ valid: boolean; expiresAt: string }>('/auth/verify');
+  static logout(): void {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('jagota_remember_credentials');
   }
 }

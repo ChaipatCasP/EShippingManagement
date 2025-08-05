@@ -26,7 +26,7 @@ interface LoginScreenProps {
 }
 
 interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
   rememberMe: boolean;
 }
@@ -35,7 +35,7 @@ const REMEMBER_ME_KEY = 'jagota_remember_credentials';
 
 export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreenProps) {
   const [credentials, setCredentials] = useState<LoginCredentials>({
-    email: '',
+    username: '',
     password: '',
     rememberMe: false
   });
@@ -61,7 +61,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
         } else {
           setCredentials(prev => ({
             ...prev,
-            email: parsed.email || '',
+            username: parsed.username || '',
             password: parsed.password || '',
             rememberMe: true
           }));
@@ -94,10 +94,10 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!credentials.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(credentials.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!credentials.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (credentials.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
     }
     
     if (!credentials.password.trim()) {
@@ -123,7 +123,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
       // Save credentials if remember me is checked
       if (credentials.rememberMe) {
         localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({
-          email: credentials.email,
+          username: credentials.username,
           password: credentials.password,
           timestamp: Date.now()
         }));
@@ -132,7 +132,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
         localStorage.removeItem(REMEMBER_ME_KEY);
       }
     } catch (error) {
-      setErrors({ general: 'Invalid email or password. Please try again.' });
+      setErrors({ general: 'Invalid username or password. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -229,23 +229,23 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                     </div>
                   )}
 
-                  {/* Email Field */}
+                  {/* Username Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="username">Username</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={credentials.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                        id="username"
+                        type="text"
+                        placeholder="Enter your username"
+                        value={credentials.username}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
+                        className={`pl-10 ${errors.username ? 'border-red-500' : ''}`}
                         disabled={isLoading}
                       />
                     </div>
-                    {errors.email && (
-                      <p className="text-sm text-red-600">{errors.email}</p>
+                    {errors.username && (
+                      <p className="text-sm text-red-600">{errors.username}</p>
                     )}
                   </div>
 
@@ -292,7 +292,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                       type="button"
                       variant="link"
                       className="px-0 text-sm"
-                      onClick={() => onForgotPassword(credentials.email)}
+                      onClick={() => onForgotPassword(credentials.username)}
                       disabled={isLoading}
                     >
                       Forgot password?

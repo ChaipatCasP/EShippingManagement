@@ -20,6 +20,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { useEShippingPOList } from './hooks/useEShippingPOList';
 import { convertPOListToShipments } from './utils/poListConverter';
 import { formatDateRangeForAPI } from './utils/dateUtils';
+import { AuthService } from './api/services/authService';
 import { 
   statusPriority,
   getDateRange,
@@ -29,7 +30,7 @@ import { CheckCircle, FileText, Calendar, Building, ArrowRight } from 'lucide-re
 import type { Shipment, SortOption, CurrentView, DateFilterMode } from './types/shipment';
 
 interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
   rememberMe?: boolean;
 }
@@ -39,7 +40,10 @@ export default function ShippingDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [needsOTP, setNeedsOTP] = useState(false);
   const [otpEmail, setOtpEmail] = useState('');
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
+  const [loginToken, setLoginToken] = useState('');
+  const [loginRefno, setLoginRefno] = useState('');
+  const [loginCredentials, setLoginCredentials] = useState<LoginCredentials | null>(null);
+  const [user, setUser] = useState<{ email: string; name: string; company?: string; supCode?: string } | null>(null);
 
   // Filter state
   const [selectedTransportType, setSelectedTransportType] = useState<string>('all');
@@ -88,11 +92,32 @@ export default function ShippingDashboard() {
     handleDeleteNotification
   } = useNotifications();
 
-  // Set fixed token for API development (temporary)
+  // ตรวจสอบสถานะการ login เมื่อ component โหลด
   useEffect(() => {
-    if (!localStorage.getItem('auth_token')) {
-      localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0');
-      console.log('Fixed token set for API development');
+    const token = AuthService.getToken();
+    if (token) {
+      // ตรวจสอบว่ามีข้อมูลผู้ใช้ที่ถูกต้อง
+      const savedUser = localStorage.getItem('user_data');
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser);
+          // ตรวจสอบว่าข้อมูลผู้ใช้มีครบถ้วน
+          if (userData.name && userData.email) {
+            setUser(userData);
+            setIsAuthenticated(true);
+          } else {
+            // ข้อมูลผู้ใช้ไม่ครบถ้วน ให้ logout
+            AuthService.logout();
+          }
+        } catch (error) {
+          // ข้อมูลผู้ใช้ผิดรูปแบบ ให้ logout
+          console.error('Invalid user data in localStorage:', error);
+          AuthService.logout();
+        }
+      } else {
+        // มี token แต่ไม่มีข้อมูลผู้ใช้ ให้ logout
+        AuthService.logout();
+      }
     }
   }, []);
 
@@ -223,30 +248,112 @@ export default function ShippingDashboard() {
   };
 
   const handleLogin = async (credentials: LoginCredentials) => {
-    // Handle remember me functionality
-    if (credentials.rememberMe) {
-      localStorage.setItem('jagota_remember_credentials', JSON.stringify({
-        email: credentials.email,
-        rememberMe: true
-      }));
-    } else {
-      localStorage.removeItem('jagota_remember_credentials');
+    try {
+      console.log('Attempting login with credentials:', { username: credentials.username });
+      
+      // เรียกใช้ AuthService.login เพื่อส่งข้อมูลไปยัง JAGOTA API
+      const loginResponse = await AuthService.login({
+        username: credentials.username,
+        password: credentials.password
+      });
+      
+      console.log('Login response:', loginResponse);
+      
+      if (loginResponse.data.status === 'success' && loginResponse.data.token) {
+        // Handle remember me functionality
+        if (credentials.rememberMe) {
+          localStorage.setItem('jagota_remember_credentials', JSON.stringify({
+            username: credentials.username,
+            rememberMe: true
+          }));
+        } else {
+          localStorage.removeItem('jagota_remember_credentials');
+        }
+        
+        // เก็บ login token และข้อมูลการ login
+        setLoginToken(loginResponse.data.token);
+        setLoginRefno(loginResponse.data.refno);
+        setLoginCredentials(credentials);
+        
+        // ตั้งค่าข้อมูลผู้ใช้เบื้องต้น
+        setUser({
+          name: credentials.username,
+          email: credentials.username,
+          company: 'JB',
+          supCode: ''
+        });
+        
+        // เปลี่ยนไปหน้า OTP
+        setOtpEmail(credentials.username); // ใช้ username แทน email
+        setNeedsOTP(true);
+        
+        console.log('Login successful, redirecting to OTP verification');
+      } else {
+        console.error('Login failed: Invalid response structure');
+        alert('เข้าสู่ระบบไม่สำเร็จ: ไม่สามารถเข้าสู่ระบบได้');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + (error.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'));
     }
-
-    // Simulate authentication - send OTP
-    setOtpEmail(credentials.email);
-    setNeedsOTP(true);
   };
 
-  const handleOTPVerification = () => {
-    // OTP verified successfully
-    setIsAuthenticated(true);
-    setUser({
-      email: otpEmail,
-      name: otpEmail.split('@')[0].charAt(0).toUpperCase() + otpEmail.split('@')[0].slice(1)
-    });
-    setNeedsOTP(false);
-    setOtpEmail('');
+  const handleOTPVerification = async (otpCode: string) => {
+    try {
+      if (!loginToken || !loginCredentials) {
+        alert('ไม่พบข้อมูลการ login กรุณาเข้าสู่ระบบใหม่');
+        setNeedsOTP(false);
+        return;
+      }
+
+      console.log('Verifying OTP with token:', loginToken);
+      
+      // เรียกใช้ AuthService.validateOTP
+      const otpResponse = await AuthService.validateOTP({
+        username: loginCredentials.username,
+        moduleName: 'SHIPPING',
+        token: loginToken,
+        otp: otpCode
+      });
+
+      console.log('OTP validation response:', otpResponse);
+
+      if (!otpResponse.error && otpResponse.accessToken) {
+        // บันทึก access token
+        localStorage.setItem('auth_token', otpResponse.accessToken);
+        
+        // อัปเดตข้อมูลผู้ใช้จาก OTP response
+        setUser({
+          name: otpResponse.data.contactPerson || loginCredentials.username,
+          email: loginCredentials.username,
+          company: otpResponse.data.company,
+          supCode: otpResponse.data.supCode
+        });
+
+        // บันทึกข้อมูลผู้ใช้ใน localStorage
+        localStorage.setItem('user_data', JSON.stringify({
+          name: otpResponse.data.contactPerson || loginCredentials.username,
+          email: loginCredentials.username,
+          company: otpResponse.data.company,
+          supCode: otpResponse.data.supCode
+        }));
+
+        // เข้าสู่ระบบสำเร็จ
+        setIsAuthenticated(true);
+        setNeedsOTP(false);
+        setOtpEmail('');
+        setLoginToken('');
+        setLoginCredentials(null);
+
+        console.log('OTP verification successful, user authenticated');
+      } else {
+        console.error('OTP validation failed:', otpResponse.message);
+        alert('รหัส OTP ไม่ถูกต้อง: ' + (otpResponse.message || 'กรุณาลองใหม่อีกครั้ง'));
+      }
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+      alert('เกิดข้อผิดพลาดในการยืนยัน OTP: ' + (error.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'));
+    }
   };
 
   const handleBackToLogin = () => {
@@ -260,13 +367,16 @@ export default function ShippingDashboard() {
   };
 
   const handleLogout = () => {
-    // Clear saved credentials when logging out
-    localStorage.removeItem('jagota_remember_credentials');
+    // เรียก AuthService.logout() เพื่อเคลียร์ token และข้อมูลทั้งหมด
+    AuthService.logout();
     
     setIsAuthenticated(false);
     setUser(null);
     setNeedsOTP(false);
     setOtpEmail('');
+    setLoginToken('');
+    setLoginRefno('');
+    setLoginCredentials(null);
     setCurrentView('dashboard');
     // Reset other state as needed
     setSelectedShipment(null);
@@ -558,6 +668,7 @@ export default function ShippingDashboard() {
     return (
       <OTPVerification
         email={otpEmail}
+        refno={loginRefno}
         onVerifySuccess={handleOTPVerification}
         onBackToLogin={handleBackToLogin}
         onResendOTP={handleResendOTP}

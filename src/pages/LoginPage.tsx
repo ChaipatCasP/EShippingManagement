@@ -2,8 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { LoginScreen } from '../components/LoginScreen';
 
 interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
+  rememberMe: boolean;
 }
 
 export default function LoginPage() {
@@ -16,8 +17,8 @@ export default function LoginPage() {
     navigate('/otp', { replace: true });
   };
 
-  const handleForgotPassword = async (email: string) => {
-    console.log('Forgot password for:', email);
+  const handleForgotPassword = async (username: string) => {
+    console.log('Forgot password for:', username);
     // Implement forgot password logic
   };
 

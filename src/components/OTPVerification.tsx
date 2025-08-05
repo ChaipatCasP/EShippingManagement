@@ -8,7 +8,8 @@ import { ArrowLeft, Shield, Mail, RefreshCw, CheckCircle2 } from 'lucide-react';
 
 interface OTPVerificationProps {
   email: string;
-  onVerifySuccess: () => void;
+  refno?: string;
+  onVerifySuccess: (otpCode: string) => void;
   onBackToLogin: () => void;
   onResendOTP?: () => Promise<void>;
 }
@@ -126,6 +127,7 @@ const OTPInput = ({ length, onComplete, disabled, error }: OTPInputProps) => {
 
 export function OTPVerification({ 
   email, 
+  refno,
   onVerifySuccess, 
   onBackToLogin,
   onResendOTP 
@@ -133,7 +135,7 @@ export function OTPVerification({
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState(false);
+  const [success] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const maxAttempts = 3;
@@ -159,29 +161,21 @@ export function OTPVerification({
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // เรียก onVerifySuccess ซึ่งจะไปเรียก AuthService.validateOTP ใน App.tsx
+      await onVerifySuccess(otp);
       
-      // Simulate verification logic
-      const isValid = otp === '123456' || otp === '000000'; // Demo OTPs
+      // หาก success จะถูกจัดการใน App.tsx แล้ว
+      // OTP component นี้จะถูกซ่อนเมื่อ authentication สำเร็จ
       
-      if (isValid) {
-        setSuccess(true);
-        setTimeout(() => {
-          onVerifySuccess();
-        }, 1000);
+    } catch (error: any) {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      
+      if (newAttempts >= maxAttempts) {
+        setError(`Invalid OTP. Maximum attempts (${maxAttempts}) reached. Please try again later.`);
       } else {
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
-        
-        if (newAttempts >= maxAttempts) {
-          setError(`Invalid OTP. Maximum attempts (${maxAttempts}) reached. Please try again later.`);
-        } else {
-          setError(`Invalid OTP. ${maxAttempts - newAttempts} attempts remaining.`);
-        }
+        setError(error.message || `Invalid OTP. ${maxAttempts - newAttempts} attempts remaining.`);
       }
-    } catch (err) {
-      setError('Verification failed. Please try again.');
     } finally {
       setIsVerifying(false);
     }
@@ -237,6 +231,11 @@ export function OTPVerification({
               We sent a code to
             </div>
             <div className="font-medium text-gray-900">{maskEmail(email)}</div>
+            {refno && (
+              <div className="text-xs text-gray-500 text-center">
+                Reference: <span className="font-mono font-medium">{refno}</span>
+              </div>
+            )}
           </div>
         </CardHeader>
 

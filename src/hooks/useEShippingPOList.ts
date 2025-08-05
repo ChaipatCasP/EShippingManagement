@@ -43,9 +43,9 @@ export function useEShippingPOList({
       setError(null);
       
       // ตั้งค่า token ใน localStorage ถ้ายังไม่มี
-      if (!localStorage.getItem('auth_token')) {
-        localStorage.setItem('auth_token', '1234567890');
-      }
+      // if (!localStorage.getItem('auth_token')) {
+      //   localStorage.setItem('auth_token', '1234567890');
+      // }
       
       const finalParams = {
         fromDate: params?.fromDate || fromDate,

@@ -51,9 +51,10 @@ export function ApiProvider({ children, baseURL }: ApiProviderProps) {
     }
 
     try {
-      const response = await AuthService.getCurrentUser();
-      if (response.success) {
-        setUser(response.data);
+      // สำหรับ JAGOTA ตรวจสอบจาก localStorage 
+      const savedUser = localStorage.getItem('user_data');
+      if (savedUser && AuthService.getToken()) {
+        setUser(JSON.parse(savedUser));
       } else {
         // Token หมดอายุหรือไม่ถูกต้อง
         apiClient.setAuthToken(null);
@@ -68,12 +69,12 @@ export function ApiProvider({ children, baseURL }: ApiProviderProps) {
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const response = await AuthService.login({ email, password });
-      if (response.success) {
-        setUser(response.data.user);
+      const response = await AuthService.login({ username, password });
+      if (response.data.status === 'success') {
+        // สำหรับ JAGOTA login ยังไม่มีข้อมูลผู้ใช้เต็ม ต้องรอ OTP validation
         return true;
       }
       return false;
@@ -102,8 +103,9 @@ export function ApiProvider({ children, baseURL }: ApiProviderProps) {
 
   const refreshToken = async (): Promise<boolean> => {
     try {
-      const response = await AuthService.refreshToken();
-      return response.success;
+      // JAGOTA ไม่มี refresh token API ใช้ logout แทน
+      await logout();
+      return false;
     } catch (error) {
       console.error('Token refresh failed:', error);
       await logout();

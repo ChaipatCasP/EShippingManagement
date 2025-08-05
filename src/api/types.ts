@@ -4,9 +4,41 @@
 
 // === Authentication Types ===
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
-  rememberMe?: boolean;
+  moduleName?: string;
+}
+
+export interface JagotaLoginResponse {
+  error: boolean;
+  message: string;
+  data: {
+    status: string;
+    token: string;
+    refno: string;
+  };
+  rowsAffected: number;
+}
+
+export interface OTPValidationRequest {
+  username: string;
+  moduleName: string;
+  token: string;
+  otp: string;
+}
+
+export interface JagotaOTPValidationResponse {
+  error: boolean;
+  message: string;
+  data: {
+    company: string;
+    supCode: string;
+    supName: string;
+    contactPerson: string;
+    mobile: string;
+    lastLogin: string | null;
+  };
+  accessToken: string;
 }
 
 export interface LoginResponse {

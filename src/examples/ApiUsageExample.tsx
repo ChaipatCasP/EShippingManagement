@@ -21,7 +21,7 @@ function LoginExample() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await login({ email, password });
+    const result = await login({ username: email, password });
     if (result?.success) {
       console.log('Login successful!');
     }
