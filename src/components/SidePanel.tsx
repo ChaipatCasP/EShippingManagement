@@ -344,19 +344,32 @@ export function SidePanel({
             </div>
 
             {/* Simple Progress Indicator */}
+
+<div>
+  <label style={{color: 'red'}}>*****For Test *****</label>
+  <br></br>
+  pstStatus :{selectedShipment.pstStatus} <br></br>
+  pstJagotaStatus :{selectedShipment.pstJagotaStatus}<br></br>
+  pswStatus :{selectedShipment.pswStatus}<br></br>
+  pswJagotaStatus :{selectedShipment.pswJagotaStatus}<br></br>
+  <label style={{color: 'red'}}>*****For Test *****</label>
+</div>
+
             <div className="flex items-center justify-center gap-2 pt-2" role="progressbar" aria-label="Shipment workflow progress">
               <div className="flex items-center gap-1 text-xs">
                 <div className={`w-1.5 h-1.5 rounded-full ${
-                  selectedShipment.pstStatus === 'Y' && selectedShipment.pstJagotaStatus === 'Y' ? 'bg-green-500' : 
-                  selectedShipment.pstStatus === 'Y' || selectedShipment.pstStatus === 'N' ? 'bg-gray-400' : 'bg-gray-300'
+                  selectedShipment.pstStatus === 'Y' ? 'bg-green-500' : 
+                  selectedShipment.pstStatus === 'N' ? 'bg-orange-500' : 
+                  selectedShipment.pstStatus === 'Z' ? 'bg-red-500' : 'bg-gray-300'
                 }`}></div>
                 <span className="text-gray-600 text-xs">PST</span>
               </div>
               <div className="w-6 h-0.5 bg-gray-200"></div>
               <div className="flex items-center gap-1 text-xs">
                 <div className={`w-1.5 h-1.5 rounded-full ${
-                  selectedShipment.pswStatus === 'Y' && selectedShipment.pswJagotaStatus === 'Y' ? 'bg-green-500' : 
-                  selectedShipment.pswStatus === 'Y' || selectedShipment.pswStatus === 'N' ? 'bg-gray-400' : 'bg-gray-300'
+                  selectedShipment.pstStatus === 'Y' && selectedShipment.pswStatus === 'Y' && selectedShipment.pstJagotaStatus === 'Y' ? 'bg-green-500' : 
+                  selectedShipment.pstStatus === 'Y' && selectedShipment.pswStatus === 'N' && selectedShipment.pstJagotaStatus === 'Y' ? 'bg-orange-500' : 
+                  selectedShipment.pstStatus === 'Y' && selectedShipment.pswStatus === 'Z' ? 'bg-red-500' : 'bg-gray-300'
                 }`}></div>
                 <span className="text-gray-600 text-xs">PSW</span>
               </div>
