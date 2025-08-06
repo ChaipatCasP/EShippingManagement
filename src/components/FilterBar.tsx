@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
-import { Search, CalendarDays, Package, Layers, LayoutGrid, List, Filter, X, Eye } from 'lucide-react';
+import { Search, CalendarDays, Package, Layers, LayoutGrid, List, Filter, X } from 'lucide-react';
 import { useTransportTypes } from '../hooks/useTransportTypes';
 import type { Shipment, DateFilterMode } from '../types/shipment';
 
