@@ -81,11 +81,11 @@ export function KPISection({ kpis }: KPISectionProps) {
   // Loading state
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-gray-900">Dashboard Overview</h2>
-            <div className="flex items-center gap-3 text-sm">
+          <div className="space-y-0.5">
+            <h2 className="text-base font-semibold text-gray-900">Dashboard Overview</h2>
+            <div className="flex items-center gap-2 text-xs">
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <Activity className="w-3 h-3 animate-spin" />
                 <span>Loading dashboard data...</span>
@@ -93,7 +93,7 @@ export function KPISection({ kpis }: KPISectionProps) {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 bg-gray-100 animate-pulse rounded-lg"></div>
           ))}
@@ -105,13 +105,13 @@ export function KPISection({ kpis }: KPISectionProps) {
   // Error state
   if (error) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-gray-900">Dashboard Overview</h2>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center gap-1.5 text-red-600">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+          <div className="space-y-0.5">
+            <h2 className="text-base font-semibold text-gray-900">Dashboard Overview</h2>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1 text-red-600">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
                 <span className="font-medium">Error loading data: {error}</span>
               </div>
             </div>
@@ -126,22 +126,22 @@ export function KPISection({ kpis }: KPISectionProps) {
   const totalPendingTasks = displayData.pstTotalPending + displayData.pswTotalPending;
 
   return (
-    <div className="space-y-4">
-      {/* Enhanced header with quick status overview */}
+    <div className="space-y-3">
+      {/* Compact header with quick status overview */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="space-y-0.5">
+          <h2 className="text-base font-semibold text-gray-900">
             Dashboard Overview
           </h2>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-2 text-xs">
             {hasUrgentTasks ? (
-              <div className="flex items-center gap-1.5 text-amber-600">
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <div className="flex items-center gap-1 text-amber-600">
+                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
                 <span className="font-medium">{totalPendingTasks} task{totalPendingTasks !== 1 ? 's' : ''} pending</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-green-600">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="flex items-center gap-1 text-green-600">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 <span className="font-medium">All tasks up to date</span>
               </div>
             )}
@@ -154,14 +154,14 @@ export function KPISection({ kpis }: KPISectionProps) {
         
         {/* Quick action hint */}
         {hasUrgentTasks && (
-          <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
             👆 Click cards for details
           </div>
         )}
       </div>
 
-      {/* KPI Cards - Using ModernKPICard with split layouts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Compact KPI Cards - Responsive horizontal layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {/* PO Volumes Card */}
         <ModernKPICard
           title="PO Volumes"
@@ -208,9 +208,21 @@ export function KPISection({ kpis }: KPISectionProps) {
             mainText: "",
             metrics: {
               primary: {
-                label: "PENDING TASKS",
-                value: displayData.pstTotalPending,
-                color: displayData.pstTotalPending > 0 ? "text-orange-600" : "text-green-600"
+                label: "Total Tasks",
+                value: displayData.pstTotalPending + displayData.pstTodayCompleted,
+                color: "text-orange-600"
+              },
+              split: {
+                left: {
+                  label: "PENDING TASKS",
+                  value: displayData.pstTotalPending,
+                  color: displayData.pstTotalPending > 0 ? "text-orange-600" : "text-green-600"
+                },
+                right: {
+                  label: "",
+                  value: "",
+                  color: ""
+                }
               },
               tertiary: {
                 label: "Requires Action",
