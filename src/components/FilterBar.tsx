@@ -92,10 +92,10 @@ export function FilterBar({
             <CardContent className="p-4">
               
               {/* Primary Section: Search + PO Type + View Mode */}
-              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center mb-4">
+              <div className="flex flex-col md:flex-row gap-3 items-start md:items-center mb-3">
                 
                 {/* Search - Primary importance */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 w-full md:w-auto">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
@@ -115,212 +115,200 @@ export function FilterBar({
                   </div>
                 </div>
 
-                {/* PO Type Tabs - Secondary importance */}
-                <div className="flex-shrink-0">
-                  <Tabs value={activePOTypeTab} onValueChange={setActivePOTypeTab}>
-                    <TabsList className="grid grid-cols-3 bg-gray-100 p-1 h-10">
-                      <TabsTrigger 
-                        value="all" 
-                        className="flex items-center gap-1.5 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                      >
-                        <Package className="w-3.5 h-3.5" />
-                        All
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="Single" 
-                        className="flex items-center gap-1.5 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                      >
-                        <Package className="w-3.5 h-3.5" />
-                        Single
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="Co-load" 
-                        className="flex items-center gap-1.5 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                      >
-                        <Layers className="w-3.5 h-3.5" />
-                        Co-load
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
+                {/* PO Type Tabs + View Mode - Combined on mobile */}
+                <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                  <div className="flex-shrink-0">
+                    <Tabs value={activePOTypeTab} onValueChange={setActivePOTypeTab}>
+                      <TabsList className="grid grid-cols-3 bg-gray-100 p-1 h-9">
+                        <TabsTrigger 
+                          value="all" 
+                          className="flex items-center gap-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                        >
+                          <Package className="w-3 h-3" />
+                          All
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="Single" 
+                          className="flex items-center gap-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                        >
+                          <Package className="w-3 h-3" />
+                          Single
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="Co-load" 
+                          className="flex items-center gap-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                        >
+                          <Layers className="w-3 h-3" />
+                          Co-load
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
 
-                {/* View Mode Toggle - Secondary importance */}
-                <div className="flex items-center bg-gray-100 p-1 rounded-lg h-10">
-                  <Button
-                    variant={viewMode === 'timeline' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('timeline')}
-                    className={`flex items-center gap-1.5 h-8 px-3 text-sm transition-all duration-200 ${
-                      viewMode === 'timeline' 
-                        ? 'bg-white shadow-sm text-blue-600' 
-                        : 'hover:bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    Timeline
-                  </Button>
-                  <Button
-                    variant={viewMode === 'table' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('table')}
-                    className={`flex items-center gap-1.5 h-8 px-3 text-sm transition-all duration-200 ${
-                      viewMode === 'table' 
-                        ? 'bg-white shadow-sm text-blue-600' 
-                        : 'hover:bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    <List className="w-3.5 h-3.5" />
-                    Table
-                  </Button>
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center bg-gray-100 p-1 rounded-lg h-9">
+                    <Button
+                      variant={viewMode === 'timeline' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('timeline')}
+                      className={`flex items-center gap-1 h-7 px-2 text-xs transition-all duration-200 ${
+                        viewMode === 'timeline' 
+                          ? 'bg-white shadow-sm text-blue-600' 
+                          : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      <LayoutGrid className="w-3 h-3" />
+                      Timeline
+                    </Button>
+                    <Button
+                      variant={viewMode === 'table' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('table')}
+                      className={`flex items-center gap-1 h-7 px-2 text-xs transition-all duration-200 ${
+                        viewMode === 'table' 
+                          ? 'bg-white shadow-sm text-blue-600' 
+                          : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      <List className="w-3 h-3" />
+                      Table
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               <Separator className="bg-gray-200" />
 
-              {/* Secondary Section: Status Filters + Date Filters + Results */}
-              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center mt-4">
+              {/* Secondary Section: All Filters in One Row - Responsive */}
+              <div className="flex flex-wrap items-center gap-2 mt-3">
                 
-                {/* Status Filters Group */}
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center gap-1 text-xs text-gray-500 mr-2">
-                    <Filter className="w-3 h-3" />
-                    Filters:
-                  </div>
-                  
-                  <Select value={selectedTransportType} onValueChange={setSelectedTransportType}>
-                    <SelectTrigger className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="all">All Transport</SelectItem>
-                      {isLoadingTransportTypes ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      ) : (
-                        transportTypes.map((type) => (
-                          <SelectItem key={type.TRANSPORT_BY} value={type.TRANSPORT_BY}>
-                            {type.TRANSPORT_BY}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedPSTStatus} onValueChange={setSelectedPSTStatus}>
-                    <SelectTrigger className="w-28 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
-                      <SelectValue placeholder="PST" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="">All PST</SelectItem>
-                      <SelectItem value="N">New Entry</SelectItem>
-                      <SelectItem value="Y">Submitted</SelectItem>
-                      <SelectItem value="Z">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedPSWStatus} onValueChange={setSelectedPSWStatus}>
-                    <SelectTrigger className="w-28 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
-                      <SelectValue placeholder="PSW" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="">All PSW</SelectItem>
-                      <SelectItem value="N">New Entry</SelectItem>
-                      <SelectItem value="Y">Submitted</SelectItem>
-                      <SelectItem value="Z">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                    <SelectTrigger className="w-24 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Priority</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                      <SelectItem value="regular">Regular</SelectItem>
-                    </SelectContent>
-                  </Select> */}
+                {/* Filter Label */}
+                <div className="flex items-center gap-1 text-xs text-gray-500 mr-1">
+                  <Filter className="w-3 h-3" />
+                  Filters:
                 </div>
-
-                {/* Date Filters Group */}
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant={dateFilterMode === 'today' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleDateFilterChange('today')}
-                      className={`text-xs px-2 py-1 h-8 transition-all duration-200 ${
-                        dateFilterMode === 'today' 
-                          ? 'bg-black text-white hover:bg-gray-800' 
-                          : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      Today
-                    </Button>
-                    <Button
-                      variant={dateFilterMode === 'last7days' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleDateFilterChange('last7days')}
-                      className={`text-xs px-2 py-1 h-8 transition-all duration-200 ${
-                        dateFilterMode === 'last7days' 
-                          ? 'bg-black text-white hover:bg-gray-800' 
-                          : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      7 days
-                    </Button>
-                    <Button
-                      variant={dateFilterMode === 'custom' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleDateFilterChange('custom')}
-                      className={`text-xs px-2 py-1 h-8 transition-all duration-200 ${
-                        dateFilterMode === 'custom' 
-                          ? 'bg-black text-white hover:bg-gray-800' 
-                          : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      Custom
-                    </Button>
-                    
-                    {/* Custom Date Range - Inline Display */}
-                    {dateFilterMode === 'custom' && (
-                      <>
-                        <div className="w-px h-6 bg-gray-300 mx-2"></div>
-                        <Input
-                          type="date"
-                          value={customDateStart}
-                          onChange={(e) => setCustomDateStart(e.target.value)}
-                          className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
-                          placeholder="Start date"
-                        />
-                        <span className="text-gray-400 text-sm font-medium">to</span>
-                        <Input
-                          type="date"
-                          value={customDateEnd}
-                          onChange={(e) => setCustomDateEnd(e.target.value)}
-                          className="w-36 h-8 text-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
-                          placeholder="End date"
-                        />
-                      </>
+                
+                {/* Status Filters - Compact */}
+                <Select value={selectedTransportType} onValueChange={setSelectedTransportType}>
+                  <SelectTrigger className="w-32 h-8 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Transport</SelectItem>
+                    {isLoadingTransportTypes ? (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    ) : (
+                      transportTypes.map((type) => (
+                        <SelectItem key={type.TRANSPORT_BY} value={type.TRANSPORT_BY}>
+                          {type.TRANSPORT_BY}
+                        </SelectItem>
+                      ))
                     )}
-                  </div>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedPSTStatus} onValueChange={setSelectedPSTStatus}>
+                  <SelectTrigger className="w-24 h-8 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                    <SelectValue placeholder="PST" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="">All PST</SelectItem>
+                    <SelectItem value="N">New Entry</SelectItem>
+                    <SelectItem value="Y">Submitted</SelectItem>
+                    <SelectItem value="Z">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedPSWStatus} onValueChange={setSelectedPSWStatus}>
+                  <SelectTrigger className="w-24 h-8 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200">
+                    <SelectValue placeholder="PSW" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="">All PSW</SelectItem>
+                    <SelectItem value="N">New Entry</SelectItem>
+                    <SelectItem value="Y">Submitted</SelectItem>
+                    <SelectItem value="Z">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Date Filters - Inline */}
+                <div className="flex items-center gap-1 ml-2">
+                  <CalendarDays className="w-3 h-3 text-gray-400" />
+                  <Button
+                    variant={dateFilterMode === 'today' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleDateFilterChange('today')}
+                    className={`text-xs px-2 py-1 h-7 transition-all duration-200 ${
+                      dateFilterMode === 'today' 
+                        ? 'bg-black text-white hover:bg-gray-800' 
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    variant={dateFilterMode === 'last7days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleDateFilterChange('last7days')}
+                    className={`text-xs px-2 py-1 h-7 transition-all duration-200 ${
+                      dateFilterMode === 'last7days' 
+                        ? 'bg-black text-white hover:bg-gray-800' 
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    7 days
+                  </Button>
+                  <Button
+                    variant={dateFilterMode === 'custom' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleDateFilterChange('custom')}
+                    className={`text-xs px-2 py-1 h-7 transition-all duration-200 ${
+                      dateFilterMode === 'custom' 
+                        ? 'bg-black text-white hover:bg-gray-800' 
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    Custom
+                  </Button>
                 </div>
 
-                {/* Results and Clear Filters */}
-                <div className="flex items-center gap-3 ml-auto">
+                {/* Custom Date Range - Inline */}
+                {dateFilterMode === 'custom' && (
+                  <div className="flex items-center gap-1">
+                    <div className="w-px h-4 bg-gray-300"></div>
+                    <Input
+                      type="date"
+                      value={customDateStart}
+                      onChange={(e) => setCustomDateStart(e.target.value)}
+                      className="w-32 h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
+                      placeholder="Start date"
+                    />
+                    <span className="text-gray-400 text-xs">to</span>
+                    <Input
+                      type="date"
+                      value={customDateEnd}
+                      onChange={(e) => setCustomDateEnd(e.target.value)}
+                      className="w-32 h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
+                      placeholder="End date"
+                    />
+                  </div>
+                )}
+
+                {/* Results and Clear Filters - Right Side */}
+                <div className="flex items-center gap-2 ml-auto">
                   {hasActiveFilters() && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={clearAllFilters}
-                      className="text-xs px-2 py-1 h-8 text-gray-500 hover:text-gray-700 transition-colors"
+                      className="text-xs px-2 py-1 h-7 text-gray-500 hover:text-gray-700 transition-colors"
                     >
                       <X className="w-3 h-3 mr-1" />
-                      Clear all
+                      Clear
                     </Button>
                   )}
                   
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 text-sm px-3 py-1">
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 text-xs px-2 py-1">
                     {filteredShipments.length} result{filteredShipments.length !== 1 ? 's' : ''}
                   </Badge>
                 </div>
