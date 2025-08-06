@@ -251,6 +251,48 @@ export default function ShippingDashboard() {
     try {
       console.log('Attempting login with credentials:', { username: credentials.username });
       
+      // === BYPASS LOGIN FOR TESTING ===
+      // TODO: Remove this bypass when testing is complete
+      if (credentials.username === 'demo@jagota.com' && credentials.password === 'demo123') {
+        console.log('🔓 BYPASS: Using demo credentials for testing');
+        
+        // Handle remember me functionality
+        if (credentials.rememberMe) {
+          localStorage.setItem('jagota_remember_credentials', JSON.stringify({
+            username: credentials.username,
+            rememberMe: true
+          }));
+        } else {
+          localStorage.removeItem('jagota_remember_credentials');
+        }
+        
+        // Set demo token directly
+        const demoToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDM5NjA3NSwiZXhwIjoxNzg1OTMyMDc1fQ.s0fWAs3QcjhnubfykkYqX9b5-FlqM0ostoL2ilR-mhI";
+        localStorage.setItem('auth_token', demoToken);
+        
+        // Set user data for demo
+        const demoUserData = {
+          name: 'Demo User',
+          email: 'demo@jagota.com',
+          company: 'JB',
+          supCode: '6232'
+        };
+        
+        setUser(demoUserData);
+        localStorage.setItem('user_data', JSON.stringify(demoUserData));
+        
+        // Skip OTP and go directly to authenticated state
+        setIsAuthenticated(true);
+        setNeedsOTP(false);
+        setOtpEmail('');
+        setLoginToken('');
+        setLoginCredentials(null);
+        
+        console.log('🔓 BYPASS: Demo login successful, user authenticated');
+        return;
+      }
+      // === END BYPASS LOGIN ===
+      
       // เรียกใช้ AuthService.login เพื่อส่งข้อมูลไปยัง JAGOTA API
       const loginResponse = await AuthService.login({
         username: credentials.username,
@@ -307,6 +349,38 @@ export default function ShippingDashboard() {
       }
 
       console.log('Verifying OTP with token:', loginToken);
+      
+      // === BYPASS OTP FOR TESTING ===
+      // TODO: Remove this bypass when testing is complete
+      if (loginCredentials.username === 'demo@jagota.com' && otpCode === '000000') {
+        console.log('🔓 BYPASS: Using demo OTP for testing');
+        
+        // Set demo token directly
+        const demoToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDM5NjA3NSwiZXhwIjoxNzg1OTMyMDc1fQ.s0fWAs3QcjhnubfykkYqX9b5-FlqM0ostoL2ilR-mhI";
+        localStorage.setItem('auth_token', demoToken);
+        
+        // Set demo user data
+        const demoUserData = {
+          name: 'Demo User',
+          email: 'demo@jagota.com',
+          company: 'JB',
+          supCode: '6232'
+        };
+        
+        setUser(demoUserData);
+        localStorage.setItem('user_data', JSON.stringify(demoUserData));
+        
+        // Complete authentication
+        setIsAuthenticated(true);
+        setNeedsOTP(false);
+        setOtpEmail('');
+        setLoginToken('');
+        setLoginCredentials(null);
+        
+        console.log('🔓 BYPASS: Demo OTP verification successful');
+        return;
+      }
+      // === END BYPASS OTP ===
       
       // เรียกใช้ AuthService.validateOTP
       const otpResponse = await AuthService.validateOTP({

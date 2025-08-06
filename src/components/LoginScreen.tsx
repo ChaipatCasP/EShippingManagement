@@ -337,7 +337,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
             </Card>
 
             {/* Demo Credentials */}
-            {/* <Card className="mt-4 bg-blue-50 border-blue-200">
+            <Card className="mt-4 bg-blue-50 border-blue-200">
               <CardContent className="pt-4">
                 <div className="text-center">
                   <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
@@ -352,7 +352,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                   </div>
                 </div>
               </CardContent>
-            </Card> */}
+            </Card>
           </div>
         </div>
       </div>
