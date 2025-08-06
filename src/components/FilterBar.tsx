@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -5,7 +6,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
-import { Search, CalendarDays, Package, Layers, LayoutGrid, List, Filter, X } from 'lucide-react';
+import { Search, CalendarDays, Package, Layers, LayoutGrid, List, Filter, X, Eye } from 'lucide-react';
 import { useTransportTypes } from '../hooks/useTransportTypes';
 import type { Shipment, DateFilterMode } from '../types/shipment';
 
@@ -59,6 +60,10 @@ export function FilterBar({
   
   // Fetch transport types from API
   const { transportTypes, isLoading: isLoadingTransportTypes } = useTransportTypes();
+  
+  // Refs for date inputs
+  const startDateRef = React.useRef<HTMLInputElement>(null);
+  const endDateRef = React.useRef<HTMLInputElement>(null);
   
   // Helper function to check if any filters are active
   const hasActiveFilters = () => {
@@ -234,63 +239,109 @@ export function FilterBar({
                 {/* Date Filters - Inline */}
                 <div className="flex items-center gap-1 ml-2">
                   <CalendarDays className="w-3 h-3 text-gray-400" />
-                  <Button
-                    variant={dateFilterMode === 'today' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleDateFilterChange('today')}
-                    className={`text-xs px-2 py-1 h-7 transition-all duration-200 ${
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDateFilterChange('today');
+                    }}
+                    className={`text-xs px-3 py-1 h-7 rounded-md border transition-all duration-200 cursor-pointer ${
                       dateFilterMode === 'today' 
-                        ? 'bg-black text-white hover:bg-gray-800' 
-                        : 'border-gray-200 hover:bg-gray-50'
+                        ? 'bg-black text-white border-black hover:bg-gray-800' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     Today
-                  </Button>
-                  <Button
-                    variant={dateFilterMode === 'last7days' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleDateFilterChange('last7days')}
-                    className={`text-xs px-2 py-1 h-7 transition-all duration-200 ${
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDateFilterChange('last7days');
+                    }}
+                    className={`text-xs px-3 py-1 h-7 rounded-md border transition-all duration-200 cursor-pointer ${
                       dateFilterMode === 'last7days' 
-                        ? 'bg-black text-white hover:bg-gray-800' 
-                        : 'border-gray-200 hover:bg-gray-50'
+                        ? 'bg-black text-white border-black hover:bg-gray-800' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     7 days
-                  </Button>
-                  <Button
-                    variant={dateFilterMode === 'custom' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleDateFilterChange('custom')}
-                    className={`text-xs px-2 py-1 h-7 transition-all duration-200 ${
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDateFilterChange('custom');
+                    }}
+                    className={`text-xs px-3 py-1 h-7 rounded-md border transition-all duration-200 cursor-pointer ${
                       dateFilterMode === 'custom' 
-                        ? 'bg-black text-white hover:bg-gray-800' 
-                        : 'border-gray-200 hover:bg-gray-50'
+                        ? 'bg-black text-white border-black hover:bg-gray-800' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     Custom
-                  </Button>
+                  </button>
                 </div>
 
-                {/* Custom Date Range - Inline */}
+                {/* Custom Date Range - Inline with Calendar Buttons */}
                 {dateFilterMode === 'custom' && (
                   <div className="flex items-center gap-1">
                     <div className="w-px h-4 bg-gray-300"></div>
-                    <Input
-                      type="date"
-                      value={customDateStart}
-                      onChange={(e) => setCustomDateStart(e.target.value)}
-                      className="w-32 h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
-                      placeholder="Start date"
-                    />
+                    
+                    {/* Start Date Input with Calendar Button */}
+                    <div className="flex items-center gap-1">
+                      <Input
+                        style={{ textAlign: 'center' }}
+                        ref={startDateRef}
+                        type="date"
+                        value={customDateStart}
+                        onChange={(e) => setCustomDateStart(e.target.value)}
+                        className="w-32 h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200 cursor-pointer"
+                        placeholder="Start date"
+                        title="Select start date"
+                        onClick={() => startDateRef.current?.showPicker()}
+
+                      />
+                      {/* <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 w-7 p-0 border-gray-200 hover:border-blue-500 transition-colors duration-200"
+                        title="Open date picker"
+                        onClick={() => startDateRef.current?.showPicker()}
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button> */}
+                    </div>
+
                     <span className="text-gray-400 text-xs">to</span>
-                    <Input
-                      type="date"
-                      value={customDateEnd}
-                      onChange={(e) => setCustomDateEnd(e.target.value)}
-                      className="w-32 h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200"
-                      placeholder="End date"
-                    />
+
+                    {/* End Date Input with Calendar Button */}
+                    <div className="flex items-center gap-1">
+                      <Input
+                        style={{ textAlign: 'center' }}
+                        ref={endDateRef}
+                        type="date"
+                        value={customDateEnd}
+                        onChange={(e) => setCustomDateEnd(e.target.value)}
+                        className="w-32 h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-colors duration-200 cursor-pointer"
+                        placeholder="End date"
+                        title="Select end date"
+                        onClick={() => endDateRef.current?.showPicker()}
+
+                      />
+                      {/* <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 w-7 p-0 border-gray-200 hover:border-blue-500 transition-colors duration-200"
+                        title="Open date picker"
+                        onClick={() => endDateRef.current?.showPicker()}
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button> */}
+                    </div>
                   </div>
                 )}
 
