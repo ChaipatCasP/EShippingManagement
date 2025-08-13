@@ -15,7 +15,6 @@ import { Badge } from './components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './components/ui/alert-dialog';
 import { Button } from './components/ui/button';
 import { InboxContainer } from './containers/InboxContainer';
-import { mockShipments } from './data/mockData';
 import { useNotifications } from './hooks/useNotifications';
 import { useEShippingPOList } from './hooks/useEShippingPOList';
 import { convertPOListToShipments } from './utils/poListConverter';
@@ -78,6 +77,7 @@ export default function ShippingDashboard() {
   // PST and PSW tracking state
   const [createdPSTNumber, setCreatedPSTNumber] = useState<string | null>(null);
   const [createdPSWNumber, setCreatedPSWNumber] = useState<string | null>(null);
+  const [pstWebSeqId, setPstWebSeqId] = useState<number | null>(null); // For Update PST functionality
 
   // Confirmation dialog state
   const [showPSTConfirmDialog, setShowPSTConfirmDialog] = useState(false);
@@ -228,8 +228,8 @@ export default function ShippingDashboard() {
     if (poListData && poListData.length > 0) {
       return convertPOListToShipments(poListData);
     }
-    // Fallback to mock data when API is not available
-    return mockShipments;
+    // Return empty array when no API data
+    return [];
   }, [poListData]);
 
   // Calculate KPIs from current shipments data
@@ -630,6 +630,67 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
+  const handleUpdatePST = (pstWebSeqId: number, shipment: Shipment) => {
+    console.log('App.tsx - handleUpdatePST called:', { pstWebSeqId, shipment: shipment.poNumber });
+    setIsTransitioning(true);
+    setSelectedShipment(shipment);
+    setSelectedPOForPST(shipment.poNumber);
+    setCurrentView('create-pst');
+    // Store pstWebSeqId for Update mode
+    setPstWebSeqId(pstWebSeqId);
+    console.log('App.tsx - Setting pstWebSeqId to:', pstWebSeqId);
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleCreatePSTWithConfirmation = async (poNumber: string, shipment: Shipment) => {
+    try {
+      setIsDataLoading(true);
+      
+      // Import the pstService
+      const { pstService } = await import('./api/services/pstService');
+      
+      // Step 1: Create PST with proper request format
+      const createRequest = {
+        transType: shipment.originalPOData?.transType || 'default',
+        poBook: shipment.originalPOData?.poBook || 'BOOK',
+        poNo: shipment.originalPOData?.poNo || parseInt(poNumber) || 1
+      };
+      
+      const createResponse = await pstService.createPST(createRequest);
+      
+      if (!createResponse.error && createResponse.data?.length > 0) {
+        const webSeqID = createResponse.data[0].webSeqID;
+        
+        // Step 2: Get PST details
+        const detailsResponse = await pstService.getPSTDetails(webSeqID);
+        
+        if (!detailsResponse.error && detailsResponse.data) {
+          // Navigate to Create PST Form with pre-populated data, skip Step 1
+          setIsTransitioning(true);
+          setSelectedPOForPST(poNumber);
+          setCreatedPSTNumber(webSeqID.toString());
+          setCurrentView('create-pst');
+          setPstCompleted(false);
+          
+          console.log('PST created successfully:', { webSeqID, details: detailsResponse.data });
+        } else {
+          console.error('Failed to get PST details:', detailsResponse.message);
+          alert('Failed to retrieve PST details. Please try again.');
+        }
+      } else {
+        console.error('Failed to create PST:', createResponse.message);
+        alert('Failed to create PST. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error in PST creation workflow:', error);
+      alert('An error occurred while creating PST. Please try again.');
+    } finally {
+      setIsDataLoading(false);
+      setTimeout(() => setIsTransitioning(false), 400);
+    }
+  };
+
   const handleCreatePSW = (poNumber?: string) => {
     setIsTransitioning(true);
     setSelectedPOForPSW(poNumber || null);
@@ -642,6 +703,7 @@ export default function ShippingDashboard() {
     setIsTransitioning(true);
     setCurrentView('dashboard');
     setSelectedPOForPST(null);
+    setPstWebSeqId(null); // Reset update mode
     // Keep PST completed status and number for dashboard display
     // Don't reset these when just closing the form
     setTimeout(() => setIsTransitioning(false), 400);
@@ -756,6 +818,7 @@ export default function ShippingDashboard() {
       <>
         <CreatePSTForm
           createdPSTNumber={createdPSTNumber}
+          pstWebSeqId={pstWebSeqId ?? undefined}
           onClose={handleClosePSTForm}
           onSubmit={handlePSTSubmit}
         />
@@ -977,6 +1040,8 @@ export default function ShippingDashboard() {
               onShipmentClick={handleShipmentClick}
               onCreatePST={handleCreatePST}
               onCreatePSW={handleCreatePSW}
+              onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
+              onUpdatePST={handleUpdatePST}
               onSortOptionChange={setSortOption}
               isLoading={isDataLoading || isAPILoading}
             />

@@ -32,6 +32,7 @@ interface ShipmentTimelineProps {
   selectedShipment: Shipment | null;
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
+  onUpdatePST: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
   isLoading?: boolean;
 }
@@ -41,8 +42,12 @@ export function ShipmentTimeline({
   selectedShipment, 
   onShipmentClick, 
   onCreatePST, 
+  onUpdatePST,
   onCreatePSW 
 }: ShipmentTimelineProps) {
+  console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
+  console.log('onUpdatePST function available:', !!onUpdatePST);
+  
   if (shipments.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -52,10 +57,19 @@ export function ShipmentTimeline({
   }
 
   const handleActionClick = (shipment: Shipment, action: string) => {
+    console.log('ShipmentTimeline - handleActionClick:', { action, shipment: shipment.poNumber, pstWebSeqId: shipment.pstWebSeqId });
+    
     switch (action) {
       case 'create-pst':
-      case 'edit-pst':
         onCreatePST(shipment.poNumber);
+        break;
+      case 'edit-pst':
+        console.log('Calling onUpdatePST with pstWebSeqId:', shipment.pstWebSeqId);
+        if (shipment.pstWebSeqId) {
+          onUpdatePST(shipment.pstWebSeqId);
+        } else {
+          console.error('No pstWebSeqId found for shipment:', shipment);
+        }
         break;
       case 'create-psw':
         onCreatePSW(shipment.poNumber);
@@ -152,6 +166,7 @@ export function ShipmentTimeline({
   // Helper function to get action button configuration based on PST/PSW status
   const getCustomActionConfig = (shipment: Shipment) => {
     const { pstStatus, pswStatus } = shipment;
+    console.log('getCustomActionConfig for shipment:', shipment.poNumber, { pstStatus, pswStatus, pstWebSeqId: shipment.pstWebSeqId });
     
     // ถ้า pstStatus เป็นว่าง หรือ null ให้แสดงปุ่ม CreatePst
     if (!pstStatus || pstStatus === '' || pstStatus === null) {
@@ -167,6 +182,7 @@ export function ShipmentTimeline({
     
     // ถ้า pstStatus เป็น N ให้แสดงปุ่ม UpdatePst
     if (pstStatus === 'N') {
+      console.log('Should show Update PST button for:', shipment.poNumber);
       return {
         text: 'Update PST',
         action: 'edit-pst',
@@ -216,6 +232,7 @@ export function ShipmentTimeline({
     <div className="space-y-3">
       {shipments.map((shipment) => {
         const customActionConfig = getCustomActionConfig(shipment);
+        console.log('Rendering shipment:', shipment.poNumber, 'with action config:', customActionConfig);
         const borderColor = getBorderColor(shipment.billType);
         const totalSuppliers = 1 + (shipment.relatedSuppliers?.length || 0);
         const poTypeStyle = getPOTypeStyle(shipment.poType);
@@ -311,7 +328,14 @@ export function ShipmentTimeline({
                                       Current
                                     </span>
                                   </div>
-                                  <div className="text-sm text-gray-600 mb-1">{shipment.referenceKey}</div>
+                                  <div className="text-sm text-gray-600 mb-1">
+                                    {shipment.pstNo 
+                                      ? (shipment.pstBook && shipment.pstNo 
+                                          ? `${shipment.pstBook}-${shipment.pstNo}` 
+                                          : shipment.pstNo.toString())
+                                      : shipment.referenceKey
+                                    }
+                                  </div>
                                   <div className="text-sm font-medium text-gray-800">{shipment.poNumber}</div>
                                 </div>
                                 
@@ -341,14 +365,7 @@ export function ShipmentTimeline({
                     
                     {/* Consolidated Reference & PO Info */}
                     <div className="flex items-center gap-6 text-sm">
-                      {/* Only show Ref Key if PST status is not "N" (New Entry) */}
-                      {shipment.pstStatus !== 'N' && (
-                        <div className="flex items-center gap-2">
-                          <Key className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Ref :</span>
-                          <span className="font-medium text-gray-900">{shipment.referenceKey}</span>
-                        </div>
-                      )}
+                   
                       
                       <div className="flex items-center gap-2">
                         <Package2 className="w-4 h-4 text-gray-400" />
@@ -378,6 +395,20 @@ export function ShipmentTimeline({
                           </Popover>
                         )}
                       </div>
+
+                         {shipment.pstNo && (
+                        <div className="flex items-center gap-2">
+                          <Key className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-600">Ref :</span>
+                          <span className="font-medium text-gray-900">
+                            {shipment.pstBook && shipment.pstNo 
+                              ? `${shipment.pstBook}-${shipment.pstNo}` 
+                              : shipment.referenceKey
+                            }
+                          </span>
+                          <span>( chaipat test ){shipment.pstStatus}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -443,9 +474,17 @@ export function ShipmentTimeline({
                     disabled={!customActionConfig.enabled}
                     className={`${customActionConfig.color} font-medium px-3 py-1 text-xs shadow-sm transition-all duration-200`}
                     onClick={(e) => {
+                      console.log('Button clicked!', { 
+                        action: customActionConfig.action, 
+                        enabled: customActionConfig.enabled,
+                        shipment: shipment.poNumber,
+                        pstWebSeqId: shipment.pstWebSeqId 
+                      });
                       e.stopPropagation();
                       if (customActionConfig.enabled) {
                         handleActionClick(shipment, customActionConfig.action);
+                      } else {
+                        console.log('Button is disabled!');
                       }
                     }}
                     title={customActionConfig.tooltip}

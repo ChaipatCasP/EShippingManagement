@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ColoadAccordion } from './ColoadAccordion';
 import ColoadPopup from './ColoadPopup';
 import { TableSkeleton } from './ui/loading';
+import { CreatePSTConfirmation } from './CreatePSTConfirmation';
 import {
   getTypeIcon,
   getActionButtonConfig
@@ -21,6 +22,8 @@ interface ShipmentTableProps {
   sortOption: SortOption;
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
+  onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
+  onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
   onCreatePSW: (poNumber: string) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
@@ -33,6 +36,8 @@ export function ShipmentTable({
   sortOption, 
   onShipmentClick, 
   onCreatePST, 
+  onCreatePSTWithConfirmation,
+  onUpdatePST,
   onCreatePSW, 
   onSortOptionChange,
   isLoading = false
@@ -43,6 +48,16 @@ export function ShipmentTable({
   // State for Co-load popup
   const [coloadPopupOpen, setColoadPopupOpen] = useState(false);
   const [selectedColoadShipment, setSelectedColoadShipment] = useState<Shipment | null>(null);
+
+  // State for PST confirmation
+  const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
+  const [selectedPstShipment, setSelectedPstShipment] = useState<Shipment | null>(null);
+
+  // Handler for PST creation with confirmation
+  const handleCreatePSTWithConfirmation = (shipment: Shipment) => {
+    setSelectedPstShipment(shipment);
+    setPstConfirmationOpen(true);
+  };
 
   // Show loading skeleton
   if (isLoading) {
@@ -77,22 +92,49 @@ export function ShipmentTable({
     );
   }
 
-  // Helper function to handle action clicks
+    // Helper function to handle action clicks
   const handleActionClick = (shipment: Shipment, action: string, e: React.MouseEvent) => {
     e.stopPropagation();
     switch (action) {
-      case 'create-pst':
-      case 'edit-pst':
-        onCreatePST(shipment.poNumber);
+      case 'create_pst':
+        if (onCreatePSTWithConfirmation) {
+          // Use conditional create PST with confirmation dialog
+          handleCreatePSTWithConfirmation(shipment);
+        } else {
+          onCreatePST(shipment.poNumber);
+        }
         break;
-      case 'create-psw':
+      case 'create_psw':
         onCreatePSW(shipment.poNumber);
         break;
-      case 'view-psw':
-        alert(`View PSW ${shipment.pswNumber} - This feature will be implemented`);
+      case 'update_pst':
+        if (onUpdatePST && shipment.pstWebSeqId) {
+          onUpdatePST(shipment.pstWebSeqId, shipment);
+        }
         break;
-      case 'completed':
-        break;
+      default:
+        if (onCreatePSTWithConfirmation) {
+          handleCreatePSTWithConfirmation(shipment);
+        } else {
+          onCreatePST(shipment.poNumber);
+        }
+    }
+  };
+
+  // Handler for PST confirmation
+  const handleConfirmCreatePST = async () => {
+    if (!selectedPstShipment || !onCreatePSTWithConfirmation) return;
+    
+    try {
+      // Call the onCreatePSTWithConfirmation prop with poNumber and shipment
+      await onCreatePSTWithConfirmation(selectedPstShipment.poNumber, selectedPstShipment);
+      
+      // Close the confirmation dialog
+      setPstConfirmationOpen(false);
+      setSelectedPstShipment(null);
+    } catch (error) {
+      console.error('Error creating PST:', error);
+      // Error handling will be managed by the parent component
     }
   };
 
@@ -389,7 +431,14 @@ export function ShipmentTable({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Reference Key:</span>
-                    <span className="font-medium text-gray-900">{selectedSupplierShipment.referenceKey}</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedSupplierShipment.pstNo 
+                        ? (selectedSupplierShipment.pstBook && selectedSupplierShipment.pstNo 
+                            ? `${selectedSupplierShipment.pstBook}-${selectedSupplierShipment.pstNo}` 
+                            : selectedSupplierShipment.pstNo.toString())
+                        : selectedSupplierShipment.referenceKey
+                      }
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Invoice Number:</span>
@@ -469,6 +518,16 @@ export function ShipmentTable({
           startDate={selectedColoadShipment.poDate || ''}
           endDate={selectedColoadShipment.dateClear || ''}
           count={selectedColoadShipment.originalPOData?.coLoadPOCount || 1}
+        />
+      )}
+
+      {/* PST Confirmation Dialog */}
+      {selectedPstShipment && (
+        <CreatePSTConfirmation
+          isOpen={pstConfirmationOpen}
+          onClose={() => setPstConfirmationOpen(false)}
+          onConfirm={handleConfirmCreatePST}
+          poNumber={selectedPstShipment.poNumber}
         />
       )}
     </div>

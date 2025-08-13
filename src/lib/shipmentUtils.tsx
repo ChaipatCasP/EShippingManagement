@@ -164,7 +164,7 @@ export const getPSTStatusBadge = (_shipment: Shipment) => {
 export interface ActionButtonConfig {
   text: string;
   icon: React.ReactNode;
-  action: 'create-pst' | 'edit-pst' | 'create-psw' | 'view-psw' | 'completed';
+  action: 'create_pst' | 'edit_pst' | 'update_pst' | 'create_psw' | 'view_psw' | 'completed';
   enabled: boolean;
   variant: 'default' | 'outline' | 'secondary';
   color: string;
@@ -172,12 +172,15 @@ export interface ActionButtonConfig {
 }
 
 export const getActionButtonConfig = (shipment: Shipment): ActionButtonConfig => {
+  // Check if PST already exists (has pstNo or pstWebSeqId)
+  const hasPST = shipment.pstNo || shipment.pstWebSeqId;
+  
   switch (shipment.status) {
     case 'pending':
       return {
         text: 'Create PST',
         icon: <FileCheck className="w-4 h-4" />,
-        action: 'create-pst',
+        action: 'create_pst',
         enabled: true,
         variant: 'default',
         color: 'bg-gray-900 hover:bg-gray-800 text-white',
@@ -185,21 +188,33 @@ export const getActionButtonConfig = (shipment: Shipment): ActionButtonConfig =>
       };
       
     case 'pst-created':
-      return {
-        text: 'Edit PST',
-        icon: <Edit className="w-4 h-4" />,
-        action: 'edit-pst',
-        enabled: true,
-        variant: 'default',
-        color: 'bg-gray-900 hover:bg-gray-800 text-white',
-        tooltip: 'Edit PST - Modify before business approval'
-      };
+      if (hasPST) {
+        return {
+          text: 'Update PST',
+          icon: <Edit className="w-4 h-4" />,
+          action: 'update_pst',
+          enabled: true,
+          variant: 'default',
+          color: 'bg-blue-600 hover:bg-blue-700 text-white',
+          tooltip: 'Update PST - Modify PST details with existing data'
+        };
+      } else {
+        return {
+          text: 'Edit PST',
+          icon: <Edit className="w-4 h-4" />,
+          action: 'edit_pst',
+          enabled: true,
+          variant: 'default',
+          color: 'bg-gray-900 hover:bg-gray-800 text-white',
+          tooltip: 'Edit PST - Modify before business approval'
+        };
+      }
       
     case 'pst-approved':
       return {
         text: 'Create PSW',
         icon: <CalendarDays className="w-4 h-4" />,
-        action: 'create-psw',
+        action: 'create_psw',
         enabled: true,
         variant: 'default',
         color: 'bg-gray-900 hover:bg-gray-800 text-white',
@@ -210,7 +225,7 @@ export const getActionButtonConfig = (shipment: Shipment): ActionButtonConfig =>
       return {
         text: 'View PSW',
         icon: <Eye className="w-4 h-4" />,
-        action: 'view-psw',
+        action: 'view_psw',
         enabled: false,
         variant: 'outline',
         color: 'bg-amber-50 text-amber-700 border-amber-200 cursor-not-allowed',
@@ -232,7 +247,7 @@ export const getActionButtonConfig = (shipment: Shipment): ActionButtonConfig =>
       return {
         text: 'Unknown',
         icon: <AlertCircle className="w-4 h-4" />,
-        action: 'create-pst',
+        action: 'create_pst',
         enabled: false,
         variant: 'outline',
         color: 'bg-gray-100 text-gray-400 cursor-not-allowed',

@@ -75,7 +75,9 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       term: 'FOB', // Default term, can be enhanced with actual data
       permitStatus: true,
       blAwbNumber: item.blNo || 'N/A',
-      qualityContainer: `QC-${item.supCode || 'SUP'}`,
+  qualityContainer: `QC-${item.supCode || 'SUP'}`,
+  // Map PST web seq id from API for Update PST
+  pstWebSeqId: item.pstWebSeqId,
       taxStatus: true,
       etd: formatDateForDisplay(item.etd || ''),
       eta: formatDateForDisplay(item.eta || ''),
@@ -85,6 +87,8 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       billType: 'Regular',
       pstStatus: item.pstStatus || '', // ใช้ pstStatus จาก API
       pstNumber: item.pstNumber || null, // ใช้ pstNumber จาก API โดยตรง
+      pstBook: item.pstBook || null, // ใช้ pstBook จาก API
+      pstNo: item.pstNo || null, // ใช้ pstNo จาก API
       pswStatus: item.pswStatus || '', // ใช้ pswStatus จาก API  
       pswNumber: item.pswNumber || null, // ใช้ pswNumber จาก API โดยตรง
       pstJagotaStatus: item.pstJagotaStatus || '', // ใช้ pstJagotaStatus จาก API

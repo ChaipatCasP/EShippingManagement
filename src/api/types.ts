@@ -279,6 +279,11 @@ export interface POListItem {
   warehouseReceivedDate: string;
   coLoadPOCount: number;
   coLoadSupplierCount: number;
+  // Added from API response
+  pstWebSeqId?: number; // PST web sequence id
+  pswWebSeqId?: number; // PSW web sequence id
+  pstBook?: string | null; // PST Book จาก API
+  pstNo?: number | null; // PST Number จาก API
   pstStatus?: string; // PST Status จาก API
   pswStatus?: string; // PSW Status จาก API
   pstNumber?: string; // PST Number จาก API

@@ -1,6 +1,61 @@
 import { Shipment, Comment, Notification } from '../types/shipment';
 
 export const mockShipments: Shipment[] = [
+  // Real API data - BARRY CALLEBAUT with pstWebSeqId
+  {
+    id: 'barry-callebaut-7276-3661',
+    supplierCode: '7276',
+    supplierName: 'BARRY CALLEBAUT CHOCOLATE ASIA PACIFIC PTE. LTD.',
+    referenceKey: '7276-3661',
+    poNumber: 'PE66-3661',
+    poDate: '2023-11-07',
+    invoiceNumber: 'INV',
+    invoiceDate: '2023-11-15',
+    importEntryNo: 'IE-2023-7276',
+    originCountry: 'Belgium',
+    originPort: 'ANTWERP',
+    destinationPort: 'LEAM CHABANG PORT',
+    dateClear: '2024-01-18',
+    type: 'Sea',
+    poType: 'Single',
+    term: 'FOB',
+    permitStatus: true,
+    blAwbNumber: 'ONEYANRD28582600',
+    qualityContainer: 'CONT-7276',
+    pstWebSeqId: 152039978, // From real API data
+    taxStatus: true,
+    etd: '2023-12-11',
+    eta: '2024-01-16',
+    status: 'pst-created',
+    billStatus: 'New Entry',
+    jagotaStatus: 'Under Review',
+    billType: 'Regular',
+    pstStatus: 'N', // New Entry - ready for Update PST
+    pstNumber: 'PST-21976',
+    pstBook: 'PST',
+    pstNo: 21976,
+    pstJagotaStatus: 'N',
+    pswStatus: undefined,
+    pswNumber: null,
+    pswJagotaStatus: undefined,
+    supplierContact: '+32-2-123-4567',
+    supplierEmail: 'orders@barry-callebaut.com',
+    supplierAddress: 'Wieze, Belgium',
+    totalValue: 450000,
+    weight: '25,000 kg',
+    dimensions: '40ft Container',
+    assignedAgent: 'Maria Santos',
+    agentContact: '+1-555-0789',
+    trackingNumber: 'BC152039978',
+    customsDeclaration: 'CD-2023-7276',
+    insurance: true,
+    priority: 'High',
+    remarks: 'Chocolate products - temperature controlled shipping required',
+    specialInstructions: 'Handle with care, maintain cool temperature',
+    documents: ['PST-21976', 'INV', 'BL-ONEYANRD28582600'],
+    relatedSuppliers: []
+  },
+  
   // Status: pending - ต้องสร้าง PST
   {
     id: '1',
@@ -57,7 +112,17 @@ export const mockShipments: Shipment[] = [
       'FCC Certification',
       'Anti-Static Packaging Certificate'
     ],
-    relatedSuppliers: []
+    relatedSuppliers: [],
+    
+    // Original PO List data for API calls
+    originalPOData: {
+      supCode: 'ATS',
+      poBook: 'POB',
+      poNo: 2025005,
+      transType: 'Air',
+      coLoadPOCount: 1,
+      coLoadSupplierCount: 1
+    }
   },
 
   // Status: pst-created - สามารถแก้ไข PST ได้
@@ -88,8 +153,11 @@ export const mockShipments: Shipment[] = [
     billStatus: 'In Progress',
     jagotaStatus: 'On Hold',
     billType: 'Urgent',
-    pstStatus: 'Y',
+    pstStatus: 'N', // Changed from 'Y' to 'N' for Update PST testing
     pstNumber: 'PST-2025-0123',
+    pstBook: 'PE67',
+    pstNo: 1832,
+    pstWebSeqId: 43821688, // Add for Update PST functionality
     pswStatus: 'N',
     pswNumber: null,
     pstJagotaStatus: 'Y',
@@ -117,7 +185,17 @@ export const mockShipments: Shipment[] = [
     relatedSuppliers: [
       { name: 'German Engineering GmbH', referenceKey: 'REF-2025-GE027', poNumber: 'PO-2025-009' },
       { name: 'Bavaria Manufacturing', referenceKey: 'REF-2025-BM028', poNumber: 'PO-2025-010' }
-    ]
+    ],
+    
+    // Original PO List data for API calls
+    originalPOData: {
+      supCode: 'ECA',
+      poBook: 'ECB',
+      poNo: 2025004,
+      transType: 'Sea',
+      coLoadPOCount: 3,
+      coLoadSupplierCount: 3
+    }
   },
 
   // Status: pst-approved - สามารถสร้าง PSW ได้
@@ -150,6 +228,8 @@ export const mockShipments: Shipment[] = [
     billType: 'Regular',
     pstStatus: 'Y',
     pstNumber: 'PST-2025-0089',
+    pstBook: 'PM24',
+    pstNo: 1045,
     pswStatus: 'N',
     pswNumber: null,
     pstJagotaStatus: 'Y',
@@ -177,7 +257,17 @@ export const mockShipments: Shipment[] = [
     relatedSuppliers: [
       { name: 'Shanghai Electronics Co.', referenceKey: 'REF-2025-SEC023', poNumber: 'PO-2025-007' },
       { name: 'Guangzhou Components Ltd.', referenceKey: 'REF-2025-GCL024', poNumber: 'PO-2025-008' }
-    ]
+    ],
+    
+    // Original PO List data for API calls
+    originalPOData: {
+      supCode: 'PM',
+      poBook: 'PMB',
+      poNo: 2025002,
+      transType: 'Sea',
+      coLoadPOCount: 3,
+      coLoadSupplierCount: 3
+    }
   },
 
   // Status: psw-waiting-approval - รอ PSW approve
@@ -210,6 +300,8 @@ export const mockShipments: Shipment[] = [
     billType: 'Urgent',
     pstStatus: 'Y',
     pstNumber: 'PST-2025-0078',
+    pstBook: 'TZ68',
+    pstNo: 2156,
     pswStatus: 'waiting-approval',
     pswNumber: 'PSW-2025-0078',
     pswJagotaStatus: 'Y',
@@ -379,8 +471,9 @@ export const mockShipments: Shipment[] = [
     billStatus: 'In Progress',
     jagotaStatus: 'Processing',
     billType: 'Express',
-    pstStatus: 'Y',
+    pstStatus: 'N', // Changed from 'Y' to 'N' for Update PST testing
     pstNumber: 'PST-2025-0156',
+    pstWebSeqId: 43825634, // Add for Update PST functionality
     pswStatus: 'N',
     pswNumber: null,
     pstJagotaStatus: 'Y',

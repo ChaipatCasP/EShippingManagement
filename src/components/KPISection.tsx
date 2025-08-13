@@ -33,30 +33,8 @@ interface KPISectionProps {
 export function KPISection({ kpis }: KPISectionProps) {
   const { data: apiData, loading, error } = useEShippingDashboard();
 
-  // Use API data if available, fallback to props, then to default values
-  const displayData = apiData ? {
-    poToday: apiData.data.poToday,
-    poLast7Days: apiData.data.poNext7Days, // Map to poNext7Days from API
-    pstTotalPending: apiData.data.pstLeft,
-    pstTodayPending: apiData.data.pstLeft, // Use same value for today pending
-    pswTotalPending: apiData.data.pswLeft,
-    pswCompleted: apiData.data.pswDone,
-    // Other fields with fallback values
-    pstNewEntry: 0,
-    pstUnderReview: 0,
-    pstTodayCompleted: apiData.data.pstDone,
-    pswPending: apiData.data.pswLeft,
-    pswUnderReview: 0,
-    pswLast7DaysPending: 0,
-    rebelPending: 0,
-    // Legacy fields
-    poNext7Days: apiData.data.poNext7Days,
-    pstTotal: apiData.data.pstDone + apiData.data.pstLeft,
-    pstCompleted: apiData.data.pstDone,
-    pstRemaining: apiData.data.pstLeft,
-    pswThisWeek: apiData.data.pswDone + apiData.data.pswLeft,
-    pswRemaining: apiData.data.pswLeft,
-  } : kpis || {
+  // Default KPI values to prevent null/undefined errors
+  const defaultKPIs: KPIData = {
     poToday: 0,
     poLast7Days: 0,
     pstNewEntry: 0,
@@ -77,6 +55,31 @@ export function KPISection({ kpis }: KPISectionProps) {
     pswCompleted: 0,
     pswRemaining: 0,
   };
+
+  // Use API data if available, fallback to props, then to default values
+  const displayData = apiData?.data ? {
+    poToday: apiData.data.poToday || 0,
+    poLast7Days: apiData.data.poNext7Days || 0, // Map to poNext7Days from API
+    pstTotalPending: apiData.data.pstLeft || 0,
+    pstTodayPending: apiData.data.pstLeft || 0, // Use same value for today pending
+    pswTotalPending: apiData.data.pswLeft || 0,
+    pswCompleted: apiData.data.pswDone || 0,
+    // Other fields with fallback values
+    pstNewEntry: 0,
+    pstUnderReview: 0,
+    pstTodayCompleted: apiData.data.pstDone || 0,
+    pswPending: apiData.data.pswLeft || 0,
+    pswUnderReview: 0,
+    pswLast7DaysPending: 0,
+    rebelPending: 0,
+    // Legacy fields
+    poNext7Days: apiData.data.poNext7Days || 0,
+    pstTotal: (apiData.data.pstDone || 0) + (apiData.data.pstLeft || 0),
+    pstCompleted: apiData.data.pstDone || 0,
+    pstRemaining: apiData.data.pstLeft || 0,
+    pswThisWeek: (apiData.data.pswDone || 0) + (apiData.data.pswLeft || 0),
+    pswRemaining: apiData.data.pswLeft || 0,
+  } : kpis || defaultKPIs;
 
   // Loading state
   if (loading) {

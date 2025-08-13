@@ -299,11 +299,16 @@ export function SidePanel({
 
             {/* Row 4: Ref Key (conditional) + PO Number */}
             <div className="flex items-center gap-4 text-sm">
-              {/* Only show Ref Key if PST status is not "N" (New Entry) */}
-              {selectedShipment.pstStatus !== 'N' && (
+              {/* Only show Ref Key if pstNo has value */}
+              {selectedShipment.pstNo && (
                 <div className="flex items-center gap-1">
                   <span className="text-gray-500">Ref:</span>
-                  <span className="font-medium text-gray-900">{selectedShipment.referenceKey}</span>
+                  <span className="font-medium text-gray-900">
+                    {selectedShipment.pstBook && selectedShipment.pstNo 
+                      ? `${selectedShipment.pstBook}-${selectedShipment.pstNo}` 
+                      : selectedShipment.pstNo.toString()
+                    }
+                  </span>
                 </div>
               )}
               <div className="flex items-center gap-1">
@@ -589,8 +594,13 @@ export function SidePanel({
                                 Current
                               </span>
                             </div>
-                            {selectedShipment.pstStatus !== 'N' && (
-                              <div className="text-xs text-blue-600 mb-1">{selectedShipment.referenceKey}</div>
+                            {selectedShipment.pstNo && (
+                              <div className="text-xs text-blue-600 mb-1">
+                                {selectedShipment.pstBook && selectedShipment.pstNo 
+                                  ? `${selectedShipment.pstBook}-${selectedShipment.pstNo}` 
+                                  : selectedShipment.pstNo.toString()
+                                }
+                              </div>
                             )}
                             <div className="text-sm font-medium text-blue-800">{selectedShipment.poNumber}</div>
                           </div>

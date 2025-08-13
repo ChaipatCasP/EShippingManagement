@@ -18,6 +18,7 @@ export interface Shipment {
   permitStatus: boolean;
   blAwbNumber: string;
   qualityContainer: string;
+  pstWebSeqId?: number; // Add for Update PST functionality
   taxStatus: boolean;
   etd: string;
   eta: string;
@@ -27,6 +28,8 @@ export interface Shipment {
   billType: 'Urgent' | 'Regular' | 'Express' | 'Premium' | 'Cold Chain' | 'Bulk';
   pstStatus: 'N' | 'Y' | 'Z' | string;
   pstNumber: string | null;
+  pstBook?: string | null; // PST Book จาก po-list API
+  pstNo?: number | null;   // PST Number จาก po-list API
   pstJagotaStatus?: 'N' | 'Y' | 'Z' | string;
   pswStatus?: 'N' | 'Y' | 'Z' | string;
   pswNumber: string | null;

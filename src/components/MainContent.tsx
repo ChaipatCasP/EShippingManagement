@@ -15,6 +15,8 @@ interface MainContentProps {
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
   onCreatePSW: (poNumber: string) => void;
+  onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
+  onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
 }
@@ -28,9 +30,12 @@ export function MainContent({
   onShipmentClick,
   onCreatePST,
   onCreatePSW,
+  onCreatePSTWithConfirmation,
+  onUpdatePST,
   onSortOptionChange,
   isLoading = false
 }: MainContentProps) {
+  console.log('MainContent rendered with viewMode:', viewMode, 'shipments count:', filteredShipments.length);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Handle view mode transitions with micro animations
@@ -49,6 +54,17 @@ export function MainContent({
             selectedShipment={selectedShipment}
             onShipmentClick={onShipmentClick}
             onCreatePST={onCreatePST}
+            onUpdatePST={(pstWebSeqId) => {
+              console.log('MainContent - onUpdatePST called with:', pstWebSeqId);
+              const shipment = filteredShipments.find(s => s.pstWebSeqId === pstWebSeqId);
+              console.log('Found shipment:', shipment);
+              if (shipment && onUpdatePST) {
+                console.log('Calling parent onUpdatePST');
+                onUpdatePST(pstWebSeqId, shipment);
+              } else {
+                console.log('No shipment found or onUpdatePST not available', { shipment, onUpdatePST: !!onUpdatePST });
+              }
+            }}
             onCreatePSW={onCreatePSW}
             isLoading={isLoading}
           />
@@ -99,6 +115,8 @@ export function MainContent({
               onShipmentClick={onShipmentClick}
               onCreatePST={onCreatePST}
               onCreatePSW={onCreatePSW}
+              onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}
+              onUpdatePST={onUpdatePST}
               onSortOptionChange={onSortOptionChange}
               isLoading={isLoading}
             />
