@@ -1,11 +1,23 @@
 import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
+  event.respondWith(handleRequest(event.request, event));
 });
 
-async function handleRequest(request) {
+async function handleRequest(request, event) {
   try {
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
     // Serve static assets from the dist directory
     const response = await getAssetFromKV(event, {
       mapRequestToAsset: req => {
@@ -34,7 +46,13 @@ async function handleRequest(request) {
       const response = await getAssetFromKV(event, {
         mapRequestToAsset: () => new Request(new URL('/index.html', request.url), request),
       });
-      return response;
+      
+      const newResponse = new Response(response.body, response);
+      newResponse.headers.set('Access-Control-Allow-Origin', '*');
+      newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      newResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      
+      return newResponse;
     } catch (e) {
       return new Response('Not found', { status: 404 });
     }

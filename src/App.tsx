@@ -644,47 +644,92 @@ export default function ShippingDashboard() {
   };
 
   const handleCreatePSTWithConfirmation = async (poNumber: string, shipment: Shipment) => {
+    console.log('🚀 handleCreatePSTWithConfirmation called with:', { poNumber, shipment: shipment.poNumber });
+    
     try {
       setIsDataLoading(true);
       
       // Import the pstService
+      console.log('📦 Importing pstService...');
       const { pstService } = await import('./api/services/pstService');
+      console.log('✅ pstService imported successfully');
+      
+      // Debug: Show current environment config
+      const { env } = await import('./config/env');
+      console.log('🔧 API Configuration:', {
+        baseUrl: env.api.baseUrl,
+        jagotaApiUrl: env.jagotaApi.baseUrl,
+        authToken: localStorage.getItem('auth_token') ? 'Present' : 'Missing'
+      });
       
       // Step 1: Create PST with proper request format
       const createRequest = {
-        transType: shipment.originalPOData?.transType || 'default',
-        poBook: shipment.originalPOData?.poBook || 'BOOK',
-        poNo: shipment.originalPOData?.poNo || parseInt(poNumber) || 1
+        transType: "PE",
+        poBook: shipment.originalPOData?.poBook || shipment.pstBook || "",
+        poNo: shipment.originalPOData?.poNo || parseInt(poNumber.replace(/[^0-9]/g, '')) || 0
       };
+
+      console.log('🚀 Creating PST with request:', createRequest);
       
+      // Validate request data
+      if (!createRequest.poBook) {
+        throw new Error('PO Book is required but missing');
+      }
+      if (!createRequest.poNo) {
+        throw new Error('PO Number is required but missing');
+      }
+      
+      console.log('📡 Calling pstService.createPST...');
       const createResponse = await pstService.createPST(createRequest);
+      console.log('📬 PST API Response:', createResponse);
       
       if (!createResponse.error && createResponse.data?.length > 0) {
         const webSeqID = createResponse.data[0].webSeqID;
+        console.log('✅ PST created successfully with webSeqID:', webSeqID);
         
-        // Step 2: Get PST details
-        const detailsResponse = await pstService.getPSTDetails(webSeqID);
+        // Navigate to Create PST Form with webSeqID and shipment data
+        setIsTransitioning(true);
+        setSelectedShipment(shipment); // Set the shipment data for header
+        setSelectedPOForPST(poNumber);
+        setCurrentView('create-pst');
+        setPstWebSeqId(webSeqID); // Set the webSeqID for Update mode
+        setPstCompleted(false);
         
-        if (!detailsResponse.error && detailsResponse.data) {
-          // Navigate to Create PST Form with pre-populated data, skip Step 1
-          setIsTransitioning(true);
-          setSelectedPOForPST(poNumber);
-          setCreatedPSTNumber(webSeqID.toString());
-          setCurrentView('create-pst');
-          setPstCompleted(false);
-          
-          console.log('PST created successfully:', { webSeqID, details: detailsResponse.data });
-        } else {
-          console.error('Failed to get PST details:', detailsResponse.message);
-          alert('Failed to retrieve PST details. Please try again.');
-        }
+        console.log('🎯 Navigating to create-pst with:', { 
+          webSeqID, 
+          poNumber, 
+          supplierName: shipment.supplierName 
+        });
       } else {
-        console.error('Failed to create PST:', createResponse.message);
-        alert('Failed to create PST. Please try again.');
+        const errorMessage = createResponse.message || 'Unknown error occurred';
+        console.error('❌ Failed to create PST:', errorMessage);
+        alert(`Failed to create PST: ${errorMessage}`);
       }
-    } catch (error) {
-      console.error('Error in PST creation workflow:', error);
-      alert('An error occurred while creating PST. Please try again.');
+    } catch (error: any) {
+      console.error('❌ Error in PST creation workflow:', error);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error name:', error.name);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      
+      // For demo purposes, let's skip the API call and just navigate
+      if (error.message && error.message.includes('Failed to fetch')) {
+        console.log('🔄 API not available, simulating success for demo...');
+        alert('Demo Mode: API not available. Simulating PST creation...');
+        
+        // Navigate directly to form without API call
+        setIsTransitioning(true);
+        setSelectedShipment(shipment);
+        setSelectedPOForPST(poNumber);
+        setCurrentView('create-pst');
+        setPstWebSeqId(12345); // Demo webSeqID
+        setPstCompleted(false);
+        
+        console.log('🎯 Demo navigation to create-pst');
+      } else {
+        const errorMessage = error.message || error.toString() || 'Unknown error occurred';
+        alert(`An error occurred while creating PST: ${errorMessage}`);
+      }
     } finally {
       setIsDataLoading(false);
       setTimeout(() => setIsTransitioning(false), 400);

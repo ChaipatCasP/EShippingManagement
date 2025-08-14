@@ -1,13 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from './ui/dialog';
 import { Button } from './ui/button';
-import { FileText, AlertCircle } from 'lucide-react';
+import { FileText, AlertCircle, X } from 'lucide-react';
 
 interface CreatePSTConfirmationProps {
   isOpen: boolean;
@@ -37,22 +29,31 @@ export function CreatePSTConfirmation({
     shipmentNo, 
     portOfDestination 
   });
+
+  if (!isOpen) return null;
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <FileText className="w-5 h-5 text-green-600" />
-            </div>
-            <DialogTitle className="text-lg font-semibold">
-              Create PST
-            </DialogTitle>
-          </div>
-        </DialogHeader>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 relative">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          disabled={isLoading}
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-        <DialogDescription className="text-sm text-gray-600 space-y-3">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <FileText className="w-5 h-5 text-green-600" />
+          </div>
+          <h2 className="text-lg font-semibold">Create PST</h2>
+        </div>
+
+        {/* Content */}
+        <div className="text-sm text-gray-600 space-y-3 mb-6">
           <div className="space-y-2">
             <p>You are about to create a PST for shipment:</p>
             <div className="bg-gray-50 p-3 rounded-lg">
@@ -76,9 +77,10 @@ export function CreatePSTConfirmation({
               <span className="text-xs">This action cannot be undone.</span>
             </div>
           </div>
-        </DialogDescription>
+        </div>
 
-        <DialogFooter className="gap-2">
+        {/* Footer */}
+        <div className="flex gap-2">
           <Button
             type="button"
             variant="outline"
@@ -103,8 +105,8 @@ export function CreatePSTConfirmation({
               'Create PST'
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }

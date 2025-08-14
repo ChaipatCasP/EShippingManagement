@@ -66,6 +66,7 @@ export function MainContent({
               }
             }}
             onCreatePSW={onCreatePSW}
+            onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}
             isLoading={isLoading}
           />
         </div>

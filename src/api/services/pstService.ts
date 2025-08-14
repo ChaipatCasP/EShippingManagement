@@ -1,4 +1,3 @@
-import { apiClient } from '../apiClient';
 import { env } from '../../config/env';
 
 export interface CreatePSTRequest {
@@ -144,8 +143,54 @@ export const pstService = {
    * Create a new PST
    */
   async createPST(request: CreatePSTRequest): Promise<CreatePSTResponse> {
-    const response = await apiClient.post<CreatePSTResponse>('/v1/es/eshipping/pst', request);
-    return response.data;
+    console.log('🚀 pstService.createPST called with:', request);
+    
+    // Get auth token
+    const authToken = localStorage.getItem('auth_token');
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+    
+    // Use JAGOTA API directly
+    const url = `${env.jagotaApi.baseUrl}/v1/es/eshipping/pst`;
+    console.log('📡 Calling API:', url);
+    
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", `Bearer ${authToken}`);
+
+    const raw = JSON.stringify({
+      "transType": request.transType,
+      "poBook": request.poBook,
+      "poNo": request.poNo
+    });
+
+    console.log('📦 Request body:', raw);
+
+    const requestOptions: RequestInit = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    try {
+      const response = await fetch(url, requestOptions);
+      console.log('📬 Response status:', response.status);
+      console.log('📬 Response ok:', response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('📬 Response data:', result);
+      
+      return result as CreatePSTResponse;
+    } catch (error) {
+      console.error('❌ API call failed:', error);
+      throw error;
+    }
   },
 
   /**

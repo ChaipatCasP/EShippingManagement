@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ColoadAccordion } from './ColoadAccordion';
 import ColoadPopup from './ColoadPopup';
 import { TableSkeleton } from './ui/loading';
-import { CreatePSTConfirmation } from './CreatePSTConfirmation';
+import { CreatePSTConfirmation } from './CreatePSTConfirmationModal';
 import {
   getTypeIcon,
   getActionButtonConfig
@@ -52,11 +52,21 @@ export function ShipmentTable({
   // State for PST confirmation
   const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
   const [selectedPstShipment, setSelectedPstShipment] = useState<Shipment | null>(null);
+  const [isPstCreating, setIsPstCreating] = useState(false);
+
+  // Debug logging for state changes
+  console.log('🎯 ShipmentTable render state:', { 
+    pstConfirmationOpen, 
+    selectedPstShipment: selectedPstShipment?.poNumber || null,
+    isPstCreating 
+  });
 
   // Handler for PST creation with confirmation
   const handleCreatePSTWithConfirmation = (shipment: Shipment) => {
+    console.log('🚀 handleCreatePSTWithConfirmation called with:', shipment.poNumber);
     setSelectedPstShipment(shipment);
     setPstConfirmationOpen(true);
+    console.log('📝 Popup state set to true');
   };
 
   // Show loading skeleton
@@ -95,14 +105,13 @@ export function ShipmentTable({
     // Helper function to handle action clicks
   const handleActionClick = (shipment: Shipment, action: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('🎯 Action clicked:', { action, shipment: shipment.poNumber, hasConfirmationProp: !!onCreatePSTWithConfirmation });
+    
     switch (action) {
       case 'create_pst':
-        if (onCreatePSTWithConfirmation) {
-          // Use conditional create PST with confirmation dialog
-          handleCreatePSTWithConfirmation(shipment);
-        } else {
-          onCreatePST(shipment.poNumber);
-        }
+        console.log('✅ Always using confirmation dialog for PST creation');
+        // Always use confirmation dialog for PST creation
+        handleCreatePSTWithConfirmation(shipment);
         break;
       case 'create_psw':
         onCreatePSW(shipment.poNumber);
@@ -123,18 +132,36 @@ export function ShipmentTable({
 
   // Handler for PST confirmation
   const handleConfirmCreatePST = async () => {
-    if (!selectedPstShipment || !onCreatePSTWithConfirmation) return;
+    console.log('✅ handleConfirmCreatePST called with:', selectedPstShipment?.poNumber);
+    
+    if (!selectedPstShipment) {
+      console.log('❌ No selectedPstShipment found');
+      return;
+    }
     
     try {
-      // Call the onCreatePSTWithConfirmation prop with poNumber and shipment
-      await onCreatePSTWithConfirmation(selectedPstShipment.poNumber, selectedPstShipment);
+      console.log('🔄 Setting isPstCreating to true');
+      setIsPstCreating(true);
+      
+      if (onCreatePSTWithConfirmation) {
+        // Call the onCreatePSTWithConfirmation prop with poNumber and shipment
+        console.log('🚀 Calling onCreatePSTWithConfirmation with:', selectedPstShipment.poNumber);
+        await onCreatePSTWithConfirmation(selectedPstShipment.poNumber, selectedPstShipment);
+      } else {
+        // Fallback to regular PST creation
+        console.log('⚠️ Fallback to regular PST creation');
+        onCreatePST(selectedPstShipment.poNumber);
+      }
       
       // Close the confirmation dialog
+      console.log('🔄 Closing confirmation dialog');
       setPstConfirmationOpen(false);
       setSelectedPstShipment(null);
     } catch (error) {
-      console.error('Error creating PST:', error);
+      console.error('❌ Error creating PST:', error);
       // Error handling will be managed by the parent component
+    } finally {
+      setIsPstCreating(false);
     }
   };
 
@@ -527,7 +554,11 @@ export function ShipmentTable({
           isOpen={pstConfirmationOpen}
           onClose={() => setPstConfirmationOpen(false)}
           onConfirm={handleConfirmCreatePST}
-          poNumber={selectedPstShipment.poNumber}
+          isLoading={isPstCreating}
+          poNo={selectedPstShipment.poNumber || ''}
+          poBook={selectedPstShipment.originalPOData?.poBook || ''}
+          shipmentNo={selectedPstShipment.blAwbNumber || selectedPstShipment.id || ''}
+          portOfDestination={selectedPstShipment.destinationPort || ''}
         />
       )}
     </div>

@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ArrowRight, Key, FileDigit, MapPin, Package2, Layers, Flag, Users, FileText, Calendar } from 'lucide-react';
 import ColoadPOsPopoverContent from './ColoadPOsPopoverContent';
+import { CreatePSTConfirmation } from './CreatePSTConfirmationModal';
 import {
   getTypeIcon
 } from '../lib/shipmentUtils';
@@ -34,6 +36,7 @@ interface ShipmentTimelineProps {
   onCreatePST: (poNumber: string) => void;
   onUpdatePST: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
+  onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   isLoading?: boolean;
 }
 
@@ -43,10 +46,57 @@ export function ShipmentTimeline({
   onShipmentClick, 
   onCreatePST, 
   onUpdatePST,
-  onCreatePSW 
+  onCreatePSW,
+  onCreatePSTWithConfirmation
 }: ShipmentTimelineProps) {
   console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
   console.log('onUpdatePST function available:', !!onUpdatePST);
+  console.log('onCreatePSTWithConfirmation function available:', !!onCreatePSTWithConfirmation);
+  
+  // State for PST confirmation
+  const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
+  const [selectedPstShipment, setSelectedPstShipment] = useState<Shipment | null>(null);
+  const [isPstCreating, setIsPstCreating] = useState(false);
+
+  // Handler for PST creation with confirmation
+  const handleCreatePSTWithConfirmation = (shipment: Shipment) => {
+    console.log('🚀 Timeline - handleCreatePSTWithConfirmation called with:', shipment.poNumber);
+    setSelectedPstShipment(shipment);
+    setPstConfirmationOpen(true);
+    console.log('📝 Timeline - Popup state set to true');
+  };
+
+  // Handler for PST confirmation
+  const handleConfirmCreatePST = async () => {
+    console.log('✅ Timeline - handleConfirmCreatePST called with:', selectedPstShipment?.poNumber);
+    
+    if (!selectedPstShipment) {
+      console.log('❌ No selectedPstShipment found');
+      return;
+    }
+    
+    try {
+      console.log('🔄 Setting isPstCreating to true');
+      setIsPstCreating(true);
+      
+      if (onCreatePSTWithConfirmation) {
+        console.log('🚀 Calling onCreatePSTWithConfirmation from Timeline');
+        await onCreatePSTWithConfirmation(selectedPstShipment.poNumber, selectedPstShipment);
+      } else {
+        console.log('⚠️ Fallback to regular PST creation');
+        onCreatePST(selectedPstShipment.poNumber);
+      }
+      
+      // Close the confirmation dialog
+      console.log('🔄 Closing confirmation dialog');
+      setPstConfirmationOpen(false);
+      setSelectedPstShipment(null);
+    } catch (error) {
+      console.error('❌ Error creating PST:', error);
+    } finally {
+      setIsPstCreating(false);
+    }
+  };
   
   if (shipments.length === 0) {
     return (
@@ -61,7 +111,8 @@ export function ShipmentTimeline({
     
     switch (action) {
       case 'create-pst':
-        onCreatePST(shipment.poNumber);
+        console.log('✅ Timeline - Using confirmation dialog for PST creation');
+        handleCreatePSTWithConfirmation(shipment);
         break;
       case 'edit-pst':
         console.log('Calling onUpdatePST with pstWebSeqId:', shipment.pstWebSeqId);
@@ -498,6 +549,20 @@ export function ShipmentTimeline({
           </Card>
         );
       })}
+      
+      {/* PST Confirmation Dialog */}
+      {selectedPstShipment && (
+        <CreatePSTConfirmation
+          isOpen={pstConfirmationOpen}
+          onClose={() => setPstConfirmationOpen(false)}
+          onConfirm={handleConfirmCreatePST}
+          isLoading={isPstCreating}
+          poNo={selectedPstShipment.poNumber || ''}
+          poBook={selectedPstShipment.originalPOData?.poBook || ''}
+          shipmentNo={selectedPstShipment.blAwbNumber || selectedPstShipment.id || ''}
+          portOfDestination={selectedPstShipment.destinationPort || ''}
+        />
+      )}
     </div>
   );
 }
