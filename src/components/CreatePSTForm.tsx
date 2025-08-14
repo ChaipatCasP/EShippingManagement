@@ -56,6 +56,7 @@ import {
   MapPin,
   ArrowRight,
   FileDigit,
+  Truck,
 } from "lucide-react";
 import {
   pstService,
@@ -1254,9 +1255,7 @@ export function CreatePSTForm({
                       <CardTitle className="flex items-center gap-2">
                         <Key className="w-5 h-5 text-amber-600" />
                         PST Details
-                        <Badge className="ml-2 bg-amber-50 text-amber-700 border-amber-200">
-                          Complete Form
-                        </Badge>
+                      
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-2">
                         Fill in the Ref Key, request payment date, and expense
@@ -1266,7 +1265,7 @@ export function CreatePSTForm({
                     <CardContent className="space-y-8">
                       {/* Enhanced Ref Key and Payment Date Grid */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                        <div className="space-y-2">
+                        <div className="space-y-2" style={{display:'none',}}>
                           <Label
                             htmlFor="refKey"
                             className="text-sm font-medium text-gray-700"
@@ -2309,45 +2308,154 @@ export function CreatePSTForm({
               {/* Enhanced Sidebar - Optimized for better information display */}
               <div className="xl:col-span-1 space-y-6">
                 {/* Bill Information Card */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Building className="w-5 h-5 text-blue-600" />
-                      Bill Info
+                <Card className="shadow-sm border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Building className="w-4 h-4 text-blue-600" />
+                      Bill Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Invoice No.
-                      </p>
-                      <p className="text-sm text-gray-900">
-                        {step1Data.invoiceNo}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Supplier
-                      </p>
-                      <p className="text-sm text-gray-900">
+                  <CardContent className="space-y-3">
+                    {/* Supplier */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Building className="w-3 h-3 text-gray-400" />
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                          Supplier
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 pl-4">
                         {headerData.supplierName || step1Data.supplierName}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Transport
+
+                    {/* PO Information */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Package2 className="w-3 h-3 text-gray-400" />
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                          Purchase Order
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 pl-4">
+                        {headerData.poBook}-{headerData.poNo}
                       </p>
-                      <p className="text-sm text-gray-900">
-                        {step1Data.transportMode}
+                      <p className="text-xs text-gray-500 pl-4">
+                        Date: {headerData.poDate}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Due Date
+
+                    {/* Invoice Information */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <FileText className="w-3 h-3 text-gray-400" />
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                          Invoice
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 pl-4">
+                        {headerData.invoiceNo || step1Data.invoiceNo}
                       </p>
-                      <p className="text-sm text-gray-900">
-                        {step1Data.dueDate}
+                      <p className="text-xs text-gray-500 pl-4">
+                        Date: {headerData.invoiceDate}
                       </p>
+                    </div>
+
+                    {/* PST Information */}
+                    {(headerData.pstBook || headerData.pstNo) && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <FileDigit className="w-3 h-3 text-gray-400" />
+                          <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            PST Reference
+                          </p>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900 pl-4">
+                          {headerData.pstBook}-{headerData.pstNo}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Transport Information */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Truck className="w-3 h-3 text-gray-400" />
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                          Transport
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 pl-4">
+                        {step1Data.transportMode}
+                      </p>
+                      <p className="text-xs text-gray-500 pl-4">
+                        AWB: {headerData.awbNo}
+                      </p>
+                    </div>
+
+                    {/* Timeline Information */}
+                    <div className="space-y-2 pt-2 border-t border-gray-100">
+                      <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
+                        Timeline
+                      </p>
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                            <span className="text-xs text-gray-600">ETD</span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">
+                            {headerData.etd || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
+                            <span className="text-xs text-gray-600">ETA</span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">
+                            {headerData.eta || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-gray-600">WR Date</span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">
+                            {headerData.wrDate || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Route Information */}
+                    <div className="space-y-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-gray-400" />
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                          Route
+                        </p>
+                      </div>
+                      <div className="space-y-1 pl-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                            <span className="text-xs text-gray-600">From</span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">
+                            {headerData.portOfOrigin || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-gray-600">To</span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">
+                            {headerData.portOfDestination || "N/A"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
