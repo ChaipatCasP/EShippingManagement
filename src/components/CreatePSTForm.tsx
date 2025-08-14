@@ -1,18 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Textarea } from './ui/textarea';
-import { Separator } from './ui/separator';
-import { Badge } from './ui/badge';
-import { LoadingSpinner, ProgressBar } from './ui/loading';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from './ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { X, ArrowLeft, Building, FileText, CheckCircle, Plus, Trash2, Calculator, MessageSquare, Key, Check, ChevronsUpDown } from 'lucide-react';
-import { pstService, type ExpenseListItem, type ServiceProviderItem } from '../api/services/pstService';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Textarea } from "./ui/textarea";
+import { Separator } from "./ui/separator";
+import { Badge } from "./ui/badge";
+import { LoadingSpinner, ProgressBar } from "./ui/loading";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "./ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import {
+  X,
+  ArrowLeft,
+  Building,
+  FileText,
+  CheckCircle,
+  Plus,
+  Trash2,
+  Calculator,
+  MessageSquare,
+  Key,
+  Check,
+  ChevronsUpDown,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import {
+  pstService,
+  type ExpenseListItem,
+  type ServiceProviderItem,
+} from "../api/services/pstService";
 
 interface ExpenseItem {
   id: string;
@@ -51,14 +96,17 @@ interface CreatePSTFormProps {
   onSubmit: (data: any) => Promise<void>;
 }
 
-export function CreatePSTForm({ 
+export function CreatePSTForm({
   createdPSTNumber,
   pstWebSeqId,
-  onClose, 
-  onSubmit 
+  onClose,
+  onSubmit,
 }: CreatePSTFormProps) {
-  console.log('🚀 CreatePSTForm initialized with props:', { createdPSTNumber, pstWebSeqId });
-  
+  console.log("🚀 CreatePSTForm initialized with props:", {
+    createdPSTNumber,
+    pstWebSeqId,
+  });
+
   // No step management - single form only
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
@@ -66,44 +114,44 @@ export function CreatePSTForm({
 
   // Form state for PST Details
   const [formData, setFormData] = useState({
-    refKey: '',
-    requestPaymentDate: '',
-    message: '',
+    refKey: "",
+    requestPaymentDate: "",
+    message: "",
     messageSaved: false,
-    messageEditMode: false
+    messageEditMode: false,
   });
 
   // Step 1 data from parent component (pre-filled)
   const [step1Data, setStep1Data] = useState({
-    invoiceNo: 'INV-TH-2024-1205-0001',
-    contactPerson: 'วรัญญา มิติปัญญา',
-    supplierName: 'Global Foods Ltd.',
-    transportMode: 'Sea Freight',
-    importEntryNo: 'IET-24-001205-0001',
-    currency: 'THB',
-    dueDate: '2024-12-20',
-    creditTerm: '30'
+    invoiceNo: "INV-TH-2024-1205-0001",
+    contactPerson: "วรัญญา มิติปัญญา",
+    supplierName: "Global Foods Ltd.",
+    transportMode: "Sea Freight",
+    importEntryNo: "IET-24-001205-0001",
+    currency: "THB",
+    dueDate: "2024-12-20",
+    creditTerm: "30",
   });
 
   // Expense items state
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
     {
-      id: '1',
-      expenseCode: 'FREIGHT',
-      serviceProvider: 'Ocean Logistics Co., Ltd.',
+      id: "1",
+      expenseCode: "FREIGHT",
+      serviceProvider: "Ocean Logistics Co., Ltd.",
       qty: 1,
       rate: 25000,
-      documentNo: 'BL-001205-2024',
-      documentDate: '2024-12-05',
+      documentNo: "BL-001205-2024",
+      documentDate: "2024-12-05",
       subTotal: 25000,
       vatBaseAmount: 25000,
-      remarks: 'Sea freight charges',
+      remarks: "Sea freight charges",
       vatPercent: 7,
       vatAmount: 1750,
       exciseVatAmount: 0,
       interiorVat: 0,
-      total: 26750
-    }
+      total: 26750,
+    },
   ]);
 
   // Invoice items state
@@ -113,34 +161,57 @@ export function CreatePSTForm({
   const [expenseList, setExpenseList] = useState<ExpenseListItem[]>([]);
 
   // Service provider list from API
-  const [serviceProviders, setServiceProviders] = useState<ServiceProviderItem[]>([]);
-  
+  const [serviceProviders, setServiceProviders] = useState<
+    ServiceProviderItem[]
+  >([]);
+
   // State for delete confirmation
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{open: boolean; itemId: string | null}>({
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    open: boolean;
+    itemId: string | null;
+  }>({
     open: false,
-    itemId: null
+    itemId: null,
   });
 
   // Expense Item Form State
   const [expenseItemForm, setExpenseItemForm] = useState({
-    expenseCode: '',
-    expenseName: '',
-    serviceProvider: '',
-    qty: '',
-    rate: '',
+    expenseCode: "",
+    expenseName: "",
+    serviceProvider: "",
+    qty: "",
+    rate: "",
     subTotal: 0,
     vatBase: 0,
     vatPercent: 0,
     vatAmount: 0,
-    exciseVat: '',
-    interiorVat: '',
+    exciseVat: "",
+    interiorVat: "",
     total: 0,
-    documentNo: '',
-    documentDate: '',
-    remarks: ''
+    documentNo: "",
+    documentDate: "",
+    remarks: "",
   });
   const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [editingExpenseIndex, setEditingExpenseIndex] = useState<number | null>(null);
+  const [editingExpenseIndex, setEditingExpenseIndex] = useState<number | null>(
+    null
+  );
+
+  // State for controlling collapse/expand of each expense item
+  const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
+
+  // Toggle collapse state for an expense item
+  const toggleItemCollapse = (itemId: string) => {
+    setCollapsedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
 
   // Load expense list on component mount
   useEffect(() => {
@@ -149,40 +220,51 @@ export function CreatePSTForm({
   }, []);
 
   const loadExpenseList = async () => {
-    console.log('🔄 Loading expense list from API...');
+    console.log("🔄 Loading expense list from API...");
     try {
-      const response = await pstService.getExpenseList('Y');
-      console.log('📥 Expense list API response:', response);
+      const response = await pstService.getExpenseList("Y");
+      console.log("📥 Expense list API response:", response);
       if (!response.error && response.data) {
         setExpenseList(response.data);
-        console.log('✅ Expense list loaded successfully:', response.data.length, 'items');
+        console.log(
+          "✅ Expense list loaded successfully:",
+          response.data.length,
+          "items"
+        );
       } else {
-        console.error('❌ Expense list API returned error:', response);
+        console.error("❌ Expense list API returned error:", response);
       }
     } catch (error) {
-      console.error('❌ Error loading expense list:', error);
+      console.error("❌ Error loading expense list:", error);
     }
   };
 
   const loadServiceProviders = async () => {
-    console.log('🔄 Loading service providers from API...');
+    console.log("🔄 Loading service providers from API...");
     try {
       const response = await pstService.getServiceProviders();
-      console.log('📥 Service providers API response:', response);
+      console.log("📥 Service providers API response:", response);
       if (!response.error && response.data) {
         setServiceProviders(response.data);
-        console.log('✅ Service providers loaded successfully:', response.data.length, 'items');
+        console.log(
+          "✅ Service providers loaded successfully:",
+          response.data.length,
+          "items"
+        );
       } else {
-        console.error('❌ Service providers API returned error:', response);
+        console.error("❌ Service providers API returned error:", response);
       }
     } catch (error) {
-      console.error('❌ Error loading service providers:', error);
+      console.error("❌ Error loading service providers:", error);
     }
   };
 
   // Load PST details if pstWebSeqId is provided (Update mode)
   useEffect(() => {
-    console.log('🎯 CreatePSTForm useEffect triggered with pstWebSeqId:', pstWebSeqId);
+    console.log(
+      "🎯 CreatePSTForm useEffect triggered with pstWebSeqId:",
+      pstWebSeqId
+    );
     if (pstWebSeqId) {
       loadPSTDetails();
     }
@@ -190,90 +272,95 @@ export function CreatePSTForm({
 
   const loadPSTDetails = async () => {
     if (!pstWebSeqId) {
-      console.log('❌ No pstWebSeqId provided');
+      console.log("❌ No pstWebSeqId provided");
       return;
     }
-    
-    console.log('🔄 Loading PST details for webSeqId:', pstWebSeqId);
+
+    console.log("🔄 Loading PST details for webSeqId:", pstWebSeqId);
     setIsSubmitting(true);
     try {
-      console.log('📞 Calling pstService.getPSTDetails...');
+      console.log("📞 Calling pstService.getPSTDetails...");
       const response = await pstService.getPSTDetails(pstWebSeqId);
-      console.log('📥 API Response received:', response);
-      
+      console.log("📥 API Response received:", response);
+
       if (!response.error && response.data) {
         const data = response.data;
-        console.log('📋 Processing data - webSeqID:', data.webSeqID);
-        
+        console.log("📋 Processing data - webSeqID:", data.webSeqID);
+
         // Update step1Data with API response
         setStep1Data({
-          invoiceNo: data.invoiceNo || 'No Invoice',
+          invoiceNo: data.invoiceNo || "No Invoice",
           contactPerson: data.contactPerson,
-          supplierName: data.invoiceList[0]?.supplierName || '',
+          supplierName: data.invoiceList[0]?.supplierName || "",
           transportMode: data.awbType,
-          importEntryNo: data.importEntryNo || '',
+          importEntryNo: data.importEntryNo || "",
           currency: data.currency,
-          dueDate: data.poDate.split('T')[0],
-          creditTerm: data.creditDays?.toString() || ''
+          dueDate: data.poDate.split("T")[0],
+          creditTerm: data.creditDays?.toString() || "",
         });
 
         // Convert expenseList to ExpenseItem format
-        const convertedExpenses: ExpenseItem[] = data.expenseList.map((expense, index) => ({
-          id: expense.rowId || (index + 1).toString(),
-          rowId: expense.rowId, // Store API rowId for delete operation
-          expenseCode: expense.expenseCode,
-          expenseName: expense.expenseName,
-          serviceProvider: expense.serviceProvider,
-          qty: expense.qty,
-          rate: expense.rate,
-          documentNo: expense.documentNo || '',
-          documentDate: expense.documentDate || '',
-          subTotal: expense.subTotal,
-          vatBaseAmount: expense.vatBase,
-          remarks: expense.remarks || '',
-          vatPercent: expense.vatPercent,
-          vatAmount: expense.vatAmount,
-          exciseVatAmount: expense.exciseVat,
-          interiorVat: expense.interiorVat,
-          total: expense.totalAmount,
-          isFromAPI: true // Mark as coming from API
-        }));
+        const convertedExpenses: ExpenseItem[] = data.expenseList.map(
+          (expense, index) => ({
+            id: expense.rowId || (index + 1).toString(),
+            rowId: expense.rowId, // Store API rowId for delete operation
+            expenseCode: expense.expenseCode,
+            expenseName: expense.expenseName,
+            serviceProvider: expense.serviceProvider,
+            qty: expense.qty,
+            rate: expense.rate,
+            documentNo: expense.documentNo || "",
+            documentDate: expense.documentDate || "",
+            subTotal: expense.subTotal,
+            vatBaseAmount: expense.vatBase,
+            remarks: expense.remarks || "",
+            vatPercent: expense.vatPercent,
+            vatAmount: expense.vatAmount,
+            exciseVatAmount: expense.exciseVat,
+            interiorVat: expense.interiorVat,
+            total: expense.totalAmount,
+            isFromAPI: true, // Mark as coming from API
+          })
+        );
 
         // Convert invoiceList to InvoiceItem format
-        const convertedInvoices: InvoiceItem[] = data.invoiceList.map((invoice, index) => ({
-          id: (index + 1).toString(),
-          supplierCode: invoice.supplierCode,
-          supplierName: invoice.supplierName,
-          invoiceNo: invoice.invoiceNo,
-          referenceNo: invoice.referenceNo,
-          transportBy: invoice.transportBy
-        }));
+        const convertedInvoices: InvoiceItem[] = data.invoiceList.map(
+          (invoice, index) => ({
+            id: (index + 1).toString(),
+            supplierCode: invoice.supplierCode,
+            supplierName: invoice.supplierName,
+            invoiceNo: invoice.invoiceNo,
+            referenceNo: invoice.referenceNo,
+            transportBy: invoice.transportBy,
+          })
+        );
 
         setExpenseItems(convertedExpenses);
         setInvoiceItems(convertedInvoices);
-        
+
         // Set form data with webSeqID as Ref Key
-        console.log('🔑 About to set Ref Key to:', data.webSeqID);
-        setFormData(prev => {
+        console.log("🔑 About to set Ref Key to:", data.webSeqID);
+        setFormData((prev) => {
           const newFormData = {
             ...prev,
             refKey: data.webSeqID.toString(), // Set Ref Key from webSeqID
-            requestPaymentDate: data.requestPaymentDateTime?.split('T')[0] || ''
+            requestPaymentDate:
+              data.requestPaymentDateTime?.split("T")[0] || "",
           };
-          console.log('📝 New form data:', newFormData);
+          console.log("📝 New form data:", newFormData);
           return newFormData;
         });
-        
-        console.log('✅ PST Details loaded successfully');
-        console.log('🔑 Ref Key set to webSeqID:', data.webSeqID);
+
+        console.log("✅ PST Details loaded successfully");
+        console.log("🔑 Ref Key set to webSeqID:", data.webSeqID);
       } else {
-        console.error('❌ API returned error or no data:', response);
+        console.error("❌ API returned error or no data:", response);
       }
     } catch (error) {
-      console.error('❌ Error loading PST details:', error);
-      console.error('❌ Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
+      console.error("❌ Error loading PST details:", error);
+      console.error("❌ Error details:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : "No stack trace",
       });
     } finally {
       setIsSubmitting(false);
@@ -282,92 +369,109 @@ export function CreatePSTForm({
 
   // Form handlers
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // Expense Item Form handlers
   const handleExpenseFormChange = (field: string, value: string | number) => {
-    setExpenseItemForm(prev => {
+    setExpenseItemForm((prev) => {
       const updated = { ...prev, [field]: value };
-      
+
       // Auto-calculate when qty or rate changes
-      if (field === 'qty' || field === 'rate') {
-        const qty = parseFloat(field === 'qty' ? value.toString() : updated.qty) || 0;
-        const rate = parseFloat(field === 'rate' ? value.toString() : updated.rate) || 0;
+      if (field === "qty" || field === "rate") {
+        const qty =
+          parseFloat(field === "qty" ? value.toString() : updated.qty) || 0;
+        const rate =
+          parseFloat(field === "rate" ? value.toString() : updated.rate) || 0;
         const subTotal = qty * rate;
-        
+
         updated.subTotal = subTotal;
         updated.vatBase = subTotal;
         updated.vatAmount = subTotal * (updated.vatPercent / 100);
-        
+
         const exciseVat = parseFloat(updated.exciseVat) || 0;
         const interiorVat = parseFloat(updated.interiorVat) || 0;
         updated.total = subTotal + updated.vatAmount + exciseVat + interiorVat;
       }
-      
+
       // Auto-calculate when excise or interior VAT changes
-      if (field === 'exciseVat' || field === 'interiorVat') {
-        const exciseVat = parseFloat(field === 'exciseVat' ? value.toString() : updated.exciseVat) || 0;
-        const interiorVat = parseFloat(field === 'interiorVat' ? value.toString() : updated.interiorVat) || 0;
-        updated.total = updated.subTotal + updated.vatAmount + exciseVat + interiorVat;
+      if (field === "exciseVat" || field === "interiorVat") {
+        const exciseVat =
+          parseFloat(
+            field === "exciseVat" ? value.toString() : updated.exciseVat
+          ) || 0;
+        const interiorVat =
+          parseFloat(
+            field === "interiorVat" ? value.toString() : updated.interiorVat
+          ) || 0;
+        updated.total =
+          updated.subTotal + updated.vatAmount + exciseVat + interiorVat;
       }
-      
+
       return updated;
     });
   };
 
   const handleExpenseCodeSelect = (expenseCode: string) => {
-    const expense = expenseList.find(e => e.expenseCode === expenseCode);
+    const expense = expenseList.find((e) => e.expenseCode === expenseCode);
     if (expense) {
-      setExpenseItemForm(prev => ({
+      setExpenseItemForm((prev) => ({
         ...prev,
         expenseCode,
         expenseName: expense.expenseName,
-        vatPercent: (expense.taxRate || 7) as number
+        vatPercent: (expense.taxRate || 7) as number,
       }));
     }
   };
 
   const handleServiceProviderSelect = (providerName: string) => {
-    setExpenseItemForm(prev => ({
+    setExpenseItemForm((prev) => ({
       ...prev,
-      serviceProvider: providerName
+      serviceProvider: providerName,
     }));
   };
 
   const resetExpenseForm = () => {
     setExpenseItemForm({
-      expenseCode: '',
-      expenseName: '',
-      serviceProvider: '',
-      qty: '',
-      rate: '',
+      expenseCode: "",
+      expenseName: "",
+      serviceProvider: "",
+      qty: "",
+      rate: "",
       subTotal: 0,
       vatBase: 0,
       vatPercent: 0,
       vatAmount: 0,
-      exciseVat: '',
-      interiorVat: '',
+      exciseVat: "",
+      interiorVat: "",
       total: 0,
-      documentNo: '',
-      documentDate: '',
-      remarks: ''
+      documentNo: "",
+      documentDate: "",
+      remarks: "",
     });
     setEditingExpenseIndex(null);
   };
 
   const handleSaveExpenseItem = () => {
     // Validate required fields
-    if (!expenseItemForm.expenseCode || !expenseItemForm.serviceProvider || !expenseItemForm.qty || !expenseItemForm.rate) {
-      alert('Please fill in all required fields');
+    if (
+      !expenseItemForm.expenseCode ||
+      !expenseItemForm.serviceProvider ||
+      !expenseItemForm.qty ||
+      !expenseItemForm.rate
+    ) {
+      alert("Please fill in all required fields");
       return;
     }
 
     const newExpenseItem: ExpenseItem = {
-      id: editingExpenseIndex !== null ? expenseItems[editingExpenseIndex].id : Date.now().toString(),
+      id:
+        editingExpenseIndex !== null
+          ? expenseItems[editingExpenseIndex].id
+          : Date.now().toString(),
       expenseCode: expenseItemForm.expenseCode,
       expenseName: expenseItemForm.expenseName,
       serviceProvider: expenseItemForm.serviceProvider,
@@ -383,7 +487,7 @@ export function CreatePSTForm({
       exciseVatAmount: parseFloat(expenseItemForm.exciseVat) || 0,
       interiorVat: parseFloat(expenseItemForm.interiorVat) || 0,
       total: expenseItemForm.total,
-      isFromAPI: false
+      isFromAPI: false,
     };
 
     if (editingExpenseIndex !== null) {
@@ -408,49 +512,58 @@ export function CreatePSTForm({
   const addExpenseItem = () => {
     const newItem: ExpenseItem = {
       id: Date.now().toString(),
-      expenseCode: '',
-      serviceProvider: '',
+      expenseCode: "",
+      serviceProvider: "",
       qty: 1,
       rate: 0,
-      documentNo: '',
-      documentDate: '',
+      documentNo: "",
+      documentDate: "",
       subTotal: 0,
       vatBaseAmount: 0,
-      remarks: '',
+      remarks: "",
       vatPercent: 7,
       vatAmount: 0,
       exciseVatAmount: 0,
       interiorVat: 0,
-      total: 0
+      total: 0,
     };
     setExpenseItems([...expenseItems, newItem]);
   };
 
   const removeExpenseItem = async (id: string) => {
-    const itemToRemove = expenseItems.find(item => item.id === id);
-    
+    const itemToRemove = expenseItems.find((item) => item.id === id);
+
     if (itemToRemove?.isFromAPI && itemToRemove.rowId && pstWebSeqId) {
       // If item is from API, call DELETE API
       try {
-        console.log('🗑️ Deleting expense via API:', { webSeqId: pstWebSeqId, rowId: itemToRemove.rowId });
-        const response = await pstService.deleteExpense(pstWebSeqId, itemToRemove.rowId);
-        
+        console.log("🗑️ Deleting expense via API:", {
+          webSeqId: pstWebSeqId,
+          rowId: itemToRemove.rowId,
+        });
+        const response = await pstService.deleteExpense(
+          pstWebSeqId,
+          itemToRemove.rowId
+        );
+
         if (!response.error) {
-          console.log('✅ Expense deleted successfully from API');
+          console.log("✅ Expense deleted successfully from API");
           // Remove from local state after successful API call
-          setExpenseItems(expenseItems.filter(item => item.id !== id));
+          setExpenseItems(expenseItems.filter((item) => item.id !== id));
         } else {
-          console.error('❌ Failed to delete expense from API:', response.message);
-          alert('Failed to delete expense: ' + response.message);
+          console.error(
+            "❌ Failed to delete expense from API:",
+            response.message
+          );
+          alert("Failed to delete expense: " + response.message);
         }
       } catch (error) {
-        console.error('❌ Error deleting expense:', error);
-        alert('Error deleting expense. Please try again.');
+        console.error("❌ Error deleting expense:", error);
+        alert("Error deleting expense. Please try again.");
       }
     } else {
       // If item is local (newly added), just remove from state
-      console.log('🗑️ Removing local expense item:', id);
-      setExpenseItems(expenseItems.filter(item => item.id !== id));
+      console.log("🗑️ Removing local expense item:", id);
+      setExpenseItems(expenseItems.filter((item) => item.id !== id));
     }
   };
 
@@ -471,15 +584,18 @@ export function CreatePSTForm({
 
   // Validation
   const isFormValid = () => {
-    return formData.refKey.trim() !== '' && 
-           formData.requestPaymentDate !== '' && 
-           expenseItems.length > 0 && 
-           expenseItems.every(item => 
-             item.expenseCode !== '' && 
-             item.serviceProvider !== '' && 
-             item.qty > 0 && 
-             item.rate > 0
-           );
+    return (
+      formData.refKey.trim() !== "" &&
+      formData.requestPaymentDate !== "" &&
+      expenseItems.length > 0 &&
+      expenseItems.every(
+        (item) =>
+          item.expenseCode !== "" &&
+          item.serviceProvider !== "" &&
+          item.qty > 0 &&
+          item.rate > 0
+      )
+    );
   };
 
   // Handle final submission
@@ -487,25 +603,31 @@ export function CreatePSTForm({
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitProgress(0);
-    
+
     try {
       // Simulate progress steps
       const progressSteps = [
-        { progress: 20, message: 'Preparing PST data...' },
-        { progress: 40, message: 'Calculating totals...' },
-        { progress: 60, message: 'Validating documents...' },
-        { progress: 80, message: 'Submitting to system...' },
-        { progress: 100, message: 'PST completed successfully!' }
+        { progress: 20, message: "Preparing PST data..." },
+        { progress: 40, message: "Calculating totals..." },
+        { progress: 60, message: "Validating documents..." },
+        { progress: 80, message: "Submitting to system..." },
+        { progress: 100, message: "PST completed successfully!" },
       ];
 
       for (const step of progressSteps) {
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise((resolve) => setTimeout(resolve, 400));
         setSubmitProgress(step.progress);
       }
 
       // Calculate totals
-      const totalAmount = expenseItems.reduce((sum, item) => sum + item.total, 0);
-      const totalVAT = expenseItems.reduce((sum, item) => sum + item.vatAmount, 0);
+      const totalAmount = expenseItems.reduce(
+        (sum, item) => sum + item.total,
+        0
+      );
+      const totalVAT = expenseItems.reduce(
+        (sum, item) => sum + item.vatAmount,
+        0
+      );
 
       const submissionData = {
         ...step1Data,
@@ -513,7 +635,7 @@ export function CreatePSTForm({
         expenseItems,
         totalAmount,
         totalVAT,
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
       };
 
       await onSubmit(submissionData);
@@ -523,23 +645,28 @@ export function CreatePSTForm({
         setSubmitProgress(0);
         onClose();
       }, 2000);
-
     } catch (error) {
-      console.error('Error submitting PST:', error);
+      console.error("Error submitting PST:", error);
       setIsSubmitting(false);
       setSubmitProgress(0);
     }
   };
 
   // Calculate totals
-  const totalSubTotal = expenseItems.reduce((sum, item) => sum + item.subTotal, 0);
-  const totalVATAmount = expenseItems.reduce((sum, item) => sum + item.vatAmount, 0);
+  const totalSubTotal = expenseItems.reduce(
+    (sum, item) => sum + item.subTotal,
+    0
+  );
+  const totalVATAmount = expenseItems.reduce(
+    (sum, item) => sum + item.vatAmount,
+    0
+  );
   const grandTotal = expenseItems.reduce((sum, item) => sum + item.total, 0);
 
   // Debug logs for render
   if (pstWebSeqId) {
-    console.log('🔍 CreatePSTForm render - pstWebSeqId:', pstWebSeqId);
-    console.log('🔍 CreatePSTForm render - formData.refKey:', formData.refKey);
+    console.log("🔍 CreatePSTForm render - pstWebSeqId:", pstWebSeqId);
+    console.log("🔍 CreatePSTForm render - formData.refKey:", formData.refKey);
   }
 
   return (
@@ -561,17 +688,13 @@ export function CreatePSTForm({
               <h1 className="font-semibold text-gray-900">
                 Create PST Request
               </h1>
-              <p className="text-sm text-gray-600">
-                Complete PST Details
-              </p>
+              <p className="text-sm text-gray-600">Complete PST Details</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             {/* Simple indicator */}
             <div className="flex items-center gap-2">
-              <Badge variant="default">
-                Complete Details
-              </Badge>
+              <Badge variant="default">Complete Details</Badge>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
@@ -588,12 +711,16 @@ export function CreatePSTForm({
                 {createdPSTNumber ? (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">PST: {createdPSTNumber}</span>
+                    <span className="text-sm font-medium text-green-700">
+                      PST: {createdPSTNumber}
+                    </span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
                     <Key className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-700">Ready to Submit</span>
+                    <span className="text-sm font-medium text-blue-700">
+                      Ready to Submit
+                    </span>
                   </div>
                 )}
               </div>
@@ -609,7 +736,6 @@ export function CreatePSTForm({
           <div className="space-y-8">
             {/* Main Layout: Content + Sidebar - Enhanced for Full Width */}
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8">
-              
               {/* Main Content Area - Wider for better content distribution */}
               <div className="xl:col-span-4 space-y-8">
                 <form onSubmit={handleFinalSubmit} className="space-y-8">
@@ -619,48 +745,74 @@ export function CreatePSTForm({
                       <CardTitle className="flex items-center gap-2">
                         <Key className="w-5 h-5 text-amber-600" />
                         PST Details
-                        <Badge className="ml-2 bg-amber-50 text-amber-700 border-amber-200">Complete Form</Badge>
+                        <Badge className="ml-2 bg-amber-50 text-amber-700 border-amber-200">
+                          Complete Form
+                        </Badge>
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-2">
-                        Fill in the Ref Key, request payment date, and expense items to complete your PST request.
+                        Fill in the Ref Key, request payment date, and expense
+                        items to complete your PST request.
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-8">
                       {/* Enhanced Ref Key and Payment Date Grid */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                         <div className="space-y-2">
-                          <Label htmlFor="refKey" className="text-sm font-medium text-gray-700">
+                          <Label
+                            htmlFor="refKey"
+                            className="text-sm font-medium text-gray-700"
+                          >
                             Ref Key <span className="text-red-500">*</span>
                             {pstWebSeqId && (
-                              <span className="text-xs text-gray-500 ml-2">(From API webSeqID)</span>
+                              <span className="text-xs text-gray-500 ml-2">
+                                (From API webSeqID)
+                              </span>
                             )}
                           </Label>
                           <Input
                             id="refKey"
-                            placeholder={pstWebSeqId ? "Auto-filled from API" : "Enter reference key"}
+                            placeholder={
+                              pstWebSeqId
+                                ? "Auto-filled from API"
+                                : "Enter reference key"
+                            }
                             value={formData.refKey}
-                            onChange={(e) => handleInputChange('refKey', e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("refKey", e.target.value)
+                            }
                             required
-                            className={`border-amber-200 focus:border-amber-500 transition-colors duration-200 ${pstWebSeqId ? 'bg-gray-50 text-gray-700' : ''}`}
+                            className={`border-amber-200 focus:border-amber-500 transition-colors duration-200 ${
+                              pstWebSeqId ? "bg-gray-50 text-gray-700" : ""
+                            }`}
                             disabled={pstWebSeqId ? true : isSubmitting}
                             readOnly={pstWebSeqId ? true : false}
                           />
                           {pstWebSeqId && formData.refKey && (
                             <p className="text-xs text-gray-500 mt-1">
-                              This value is automatically set from API webSeqID: {formData.refKey}
+                              This value is automatically set from API webSeqID:{" "}
+                              {formData.refKey}
                             </p>
                           )}
                         </div>
-                        
+
                         <div className="space-y-2">
-                          <Label htmlFor="requestPaymentDate" className="text-sm font-medium text-gray-700">
-                            Request Payment Date <span className="text-red-500">*</span>
+                          <Label
+                            htmlFor="requestPaymentDate"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Request Payment Date{" "}
+                            <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             id="requestPaymentDate"
                             type="date"
                             value={formData.requestPaymentDate}
-                            onChange={(e) => handleInputChange('requestPaymentDate', e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "requestPaymentDate",
+                                e.target.value
+                              )
+                            }
                             required
                             className="border-amber-200 focus:border-amber-500 transition-colors duration-200"
                             disabled={isSubmitting}
@@ -685,30 +837,50 @@ export function CreatePSTForm({
                             <table className="w-full border border-gray-200 rounded-lg">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier Code</th>
-                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier Name</th>
-                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice No</th>
-                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference No</th>
-                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transport By</th>
+                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Supplier Code
+                                  </th>
+                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Supplier Name
+                                  </th>
+                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Invoice No
+                                  </th>
+                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Reference No
+                                  </th>
+                                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Transport By
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody className="bg-white divide-y divide-gray-200">
                                 {invoiceItems.map((item) => (
                                   <tr key={item.id}>
                                     <td className="p-3">
-                                      <span className="text-sm font-medium">{item.supplierCode}</span>
+                                      <span className="text-sm font-medium">
+                                        {item.supplierCode}
+                                      </span>
                                     </td>
                                     <td className="p-3">
-                                      <span className="text-sm">{item.supplierName}</span>
+                                      <span className="text-sm">
+                                        {item.supplierName}
+                                      </span>
                                     </td>
                                     <td className="p-3">
-                                      <span className="text-sm font-medium">{item.invoiceNo}</span>
+                                      <span className="text-sm font-medium">
+                                        {item.invoiceNo}
+                                      </span>
                                     </td>
                                     <td className="p-3">
-                                      <span className="text-sm">{item.referenceNo}</span>
+                                      <span className="text-sm">
+                                        {item.referenceNo}
+                                      </span>
                                     </td>
                                     <td className="p-3">
-                                      <span className="text-sm">{item.transportBy}</span>
+                                      <span className="text-sm">
+                                        {item.transportBy}
+                                      </span>
                                     </td>
                                   </tr>
                                 ))}
@@ -742,296 +914,422 @@ export function CreatePSTForm({
 
                         {/* Add/Edit Expense Item Form */}
                         {showExpenseForm && (
-                        <Card className="border-green-200 bg-green-50">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-green-600 text-white text-xs">Expense Item</Badge>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="ml-auto h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
-                                onClick={handleCancelExpenseForm}
-                              >
-                                <X className="w-3 h-3" />
-                              </Button>
-                            </div>
-                            <h3 className="text-base font-medium text-gray-900">
-                              {editingExpenseIndex !== null ? 'Edit Expense Item' : 'Add Expense Item'}
-                            </h3>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            {/* Row 1: Expense Code and Service Provider */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">
-                                  Expense Code <span className="text-red-500">*</span>
-                                </Label>
-                                <Select value={expenseItemForm.expenseCode} onValueChange={handleExpenseCodeSelect} disabled={isSubmitting}>
-                                  <SelectTrigger className="h-8 w-full bg-white border-gray-300 text-sm">
-                                    <SelectValue placeholder="Select expense code" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {expenseList.map((expense) => (
-                                      <SelectItem key={expense.expenseCode} value={expense.expenseCode}>
-                                        {expense.expenseName}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                          <Card className="border-green-200 bg-green-50">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-green-600 text-white text-xs">
+                                  Expense Item
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="ml-auto h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
+                                  onClick={handleCancelExpenseForm}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <h3 className="text-base font-medium text-gray-900">
+                                {editingExpenseIndex !== null
+                                  ? "Edit Expense Item"
+                                  : "Add Expense Item"}
+                              </h3>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              {/* Row 1: Expense Code and Service Provider */}
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Expense Code{" "}
+                                    <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Select
+                                    value={expenseItemForm.expenseCode}
+                                    onValueChange={handleExpenseCodeSelect}
+                                    disabled={isSubmitting}
+                                  >
+                                    <SelectTrigger className="h-8 w-full bg-white border-gray-300 text-sm">
+                                      <SelectValue placeholder="Select expense code" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {expenseList.map((expense) => (
+                                        <SelectItem
+                                          key={expense.expenseCode}
+                                          value={expense.expenseCode}
+                                        >
+                                          {expense.expenseName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Service Provider{" "}
+                                    <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="h-8 w-full justify-between bg-white border-gray-300 text-sm"
+                                        disabled={isSubmitting}
+                                      >
+                                        {expenseItemForm.serviceProvider ||
+                                          "Select service provider"}
+                                        <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0">
+                                      <Command>
+                                        <CommandInput
+                                          placeholder="Search..."
+                                          className="h-8 border-0 focus:ring-0 text-sm"
+                                        />
+                                        <CommandEmpty>
+                                          No provider found.
+                                        </CommandEmpty>
+                                        <CommandGroup className="max-h-40 overflow-y-auto">
+                                          {serviceProviders.map(
+                                            (provider, index) => (
+                                              <CommandItem
+                                                key={index}
+                                                value={provider.name}
+                                                className="cursor-pointer text-sm"
+                                                onSelect={() =>
+                                                  handleServiceProviderSelect(
+                                                    provider.name
+                                                  )
+                                                }
+                                              >
+                                                <Check
+                                                  className={`mr-2 h-3 w-3 ${
+                                                    expenseItemForm.serviceProvider ===
+                                                    provider.name
+                                                      ? "opacity-100"
+                                                      : "opacity-0"
+                                                  }`}
+                                                />
+                                                {provider.name}
+                                              </CommandItem>
+                                            )
+                                          )}
+                                        </CommandGroup>
+                                      </Command>
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
                               </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">
-                                  Service Provider <span className="text-red-500">*</span>
-                                </Label>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      className="h-8 w-full justify-between bg-white border-gray-300 text-sm"
-                                      disabled={isSubmitting}
-                                    >
-                                      {expenseItemForm.serviceProvider || "Select service provider"}
-                                      <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-full p-0">
-                                    <Command>
-                                      <CommandInput placeholder="Search..." className="h-8 border-0 focus:ring-0 text-sm" />
-                                      <CommandEmpty>No provider found.</CommandEmpty>
-                                      <CommandGroup className="max-h-40 overflow-y-auto">
-                                        {serviceProviders.map((provider, index) => (
-                                          <CommandItem 
-                                            key={index} 
-                                            value={provider.name} 
-                                            className="cursor-pointer text-sm"
-                                            onSelect={() => handleServiceProviderSelect(provider.name)}
-                                          >
-                                            <Check className={`mr-2 h-3 w-3 ${expenseItemForm.serviceProvider === provider.name ? 'opacity-100' : 'opacity-0'}`} />
-                                            {provider.name}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                            </div>
+                              {/* Row 2: Qty, Rate, and Calculated Fields */}
+                              <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Qty <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="3.00"
+                                    value={expenseItemForm.qty}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "qty",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
 
-                            {/* Row 2: Qty, Rate, and Calculated Fields */}
-                            <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Qty <span className="text-red-500">*</span></Label>
-                                <Input 
-                                  type="number" 
-                                  placeholder="3.00" 
-                                  value={expenseItemForm.qty}
-                                  onChange={(e) => handleExpenseFormChange('qty', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
-                              </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Rate <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="250.00"
+                                    value={expenseItemForm.rate}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "rate",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Rate <span className="text-red-500">*</span></Label>
-                                <Input 
-                                  type="number" 
-                                  placeholder="250.00" 
-                                  value={expenseItemForm.rate}
-                                  onChange={(e) => handleExpenseFormChange('rate', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
-                              </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Sub Total
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.subTotal.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Sub Total</Label>
-                                <Input 
-                                  value={expenseItemForm.subTotal.toFixed(2)} 
-                                  readOnly 
-                                  className="h-8 text-sm bg-gray-100 border-gray-300" 
-                                />
-                              </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    VAT Base
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.vatBase.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">VAT Base</Label>
-                                <Input 
-                                  value={expenseItemForm.vatBase.toFixed(2)} 
-                                  readOnly 
-                                  className="h-8 text-sm bg-gray-100 border-gray-300" 
-                                />
-                              </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    VAT %
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.vatPercent.toFixed(
+                                      2
+                                    )}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">VAT %</Label>
-                                <Input 
-                                  value={expenseItemForm.vatPercent.toFixed(2)} 
-                                  readOnly 
-                                  className="h-8 text-sm bg-gray-100 border-gray-300" 
-                                />
-                              </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    VAT Amt
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.vatAmount.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">VAT Amt</Label>
-                                <Input 
-                                  value={expenseItemForm.vatAmount.toFixed(2)} 
-                                  readOnly 
-                                  className="h-8 text-sm bg-gray-100 border-gray-300" 
-                                />
-                              </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Excise VAT
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.exciseVat}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "exciseVat",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Excise VAT</Label>
-                                <Input 
-                                  value={expenseItemForm.exciseVat} 
-                                  onChange={(e) => handleExpenseFormChange('exciseVat', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
-                              </div>
-
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Interior VAT</Label>
-                                <Input 
-                                  value={expenseItemForm.interiorVat} 
-                                  onChange={(e) => handleExpenseFormChange('interiorVat', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
-                              </div>
-                            </div>
-
-                            {/* Row 3: Total and Document Info */}
-                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Total</Label>
-                                <Input 
-                                  value={expenseItemForm.total.toFixed(2)} 
-                                  readOnly 
-                                  className="h-8 text-sm bg-gray-100 border-gray-300 font-medium" 
-                                />
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Interior VAT
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.interiorVat}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "interiorVat",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
                               </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Document No.</Label>
-                                <Input 
-                                  placeholder="Narendra" 
-                                  value={expenseItemForm.documentNo}
-                                  onChange={(e) => handleExpenseFormChange('documentNo', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
+                              {/* Row 3: Total and Document Info */}
+                              <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Total
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.total.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Document No.
+                                  </Label>
+                                  <Input
+                                    placeholder="Narendra"
+                                    value={expenseItemForm.documentNo}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "documentNo",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Document Date
+                                  </Label>
+                                  <Input
+                                    type="date"
+                                    value={expenseItemForm.documentDate}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "documentDate",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Remarks
+                                  </Label>
+                                  <Input
+                                    placeholder="Test"
+                                    value={expenseItemForm.remarks}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "remarks",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
                               </div>
 
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Document Date</Label>
-                                <Input 
-                                  type="date" 
-                                  value={expenseItemForm.documentDate}
-                                  onChange={(e) => handleExpenseFormChange('documentDate', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isSubmitting}
+                                  className="h-8 px-3 text-sm"
+                                  onClick={handleCancelExpenseForm}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="h-8 px-3 bg-gray-800 hover:bg-gray-900 text-white text-sm"
+                                  disabled={isSubmitting}
+                                  onClick={handleSaveExpenseItem}
+                                >
+                                  {editingExpenseIndex !== null
+                                    ? "Update"
+                                    : "Add"}
+                                </Button>
                               </div>
-
-                              <div className="space-y-1">
-                                <Label className="text-xs font-medium text-gray-700">Remarks</Label>
-                                <Input 
-                                  placeholder="Test" 
-                                  value={expenseItemForm.remarks}
-                                  onChange={(e) => handleExpenseFormChange('remarks', e.target.value)}
-                                  className="h-8 text-sm" 
-                                  disabled={isSubmitting} 
-                                />
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={isSubmitting}
-                                className="h-8 px-3 text-sm"
-                                onClick={handleCancelExpenseForm}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                className="h-8 px-3 bg-gray-800 hover:bg-gray-900 text-white text-sm"
-                                disabled={isSubmitting}
-                                onClick={handleSaveExpenseItem}
-                              >
-                                {editingExpenseIndex !== null ? 'Update' : 'Add'}
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
                         )}
 
                         {/* Add Expense Item Button */}
                         <Button
-                          onClick={addExpenseItem}
+                          type="button"
                           variant="outline"
+                          size="sm"
+                          onClick={addExpenseItem}
+                          disabled={isSubmitting}
                           className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
                         >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Expense Item
+                          <Plus className="w-4 h-4" />
+                          Add Item
                         </Button>
 
                         {/* Expense Items Display as Full Forms */}
                         <div className="space-y-4">
-                          {expenseItems.map((item, index) => (
-                            <Card key={item.id} className={`border ${item.isFromAPI ? 'border-gray-200 bg-white' : 'border-green-200 bg-green-50'}`}>
-                              <CardHeader className="pb-3">
-                                <div className="flex items-center gap-2">
-                                  <Badge className={`text-white text-xs ${item.isFromAPI ? 'bg-gray-600' : 'bg-green-600'}`}>
-                                    Expense Item
-                                  </Badge>
-                                  {item.isFromAPI && (
-                                    <Badge className="bg-blue-100 text-blue-800 text-xs">From API</Badge>
-                                  )}
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteClick(item.id)}
-                                    disabled={isSubmitting}
-                                    className="ml-auto h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                                <h3 className="text-base font-medium text-gray-900">
-                                  Expense Item #{index + 1}
-                                </h3>
-                              </CardHeader>
-                              <CardContent className="space-y-4">
+                          {expenseItems.map((item, index) => {
+                            const isCollapsed = collapsedItems.has(item.id);
+                            return (
+                              <Collapsible key={item.id} open={!isCollapsed}>
+                                <Card
+                                  className={`border ${
+                                    item.isFromAPI
+                                      ? "border-gray-200 bg-white"
+                                      : "border-green-200 bg-green-50"
+                                  }`}
+                                >
+                                  <CardHeader className="pb-3">
+                                    <div className="flex items-center gap-2">
+                                      <CollapsibleTrigger asChild>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => toggleItemCollapse(item.id)}
+                                          className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+                                        >
+                                          {isCollapsed ? (
+                                            <ChevronRight className="w-4 h-4" />
+                                          ) : (
+                                            <ChevronDown className="w-4 h-4" />
+                                          )}
+                                        </Button>
+                                      </CollapsibleTrigger>
+                                      <h3 className="text-base font-medium text-gray-900 flex-1">
+                                        Expense Item #{index + 1}
+                                        {isCollapsed && (
+                                          <span className="ml-2 text-sm text-gray-500">
+                                            ({item.expenseName || item.expenseCode} - ฿{item.total.toFixed(2)})
+                                          </span>
+                                        )}
+                                      </h3>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteClick(item.id)}
+                                        disabled={isSubmitting}
+                                        className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  </CardHeader>
+                                  <CollapsibleContent>
+                                    <CardContent className="space-y-4">
                                 {/* Row 1: Expense Code and Service Provider */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                   <div className="space-y-1">
                                     <Label className="text-xs font-medium text-gray-700">
-                                      Expense Code <span className="text-red-500">*</span>
+                                      Expense Code{" "}
+                                      <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input 
-                                      value={item.expenseName || item.expenseCode}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Input
+                                      value={
+                                        item.expenseName || item.expenseCode
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
                                     <Label className="text-xs font-medium text-gray-700">
-                                      Service Provider <span className="text-red-500">*</span>
+                                      Service Provider{" "}
+                                      <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input 
+                                    <Input
                                       value={item.serviceProvider}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
                                 </div>
@@ -1039,74 +1337,101 @@ export function CreatePSTForm({
                                 {/* Row 2: Qty, Rate, and Calculated Fields */}
                                 <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Qty</Label>
-                                    <Input 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Qty
+                                    </Label>
+                                    <Input
                                       value={item.qty}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Rate</Label>
-                                    <Input 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Rate
+                                    </Label>
+                                    <Input
                                       value={item.rate.toFixed(2)}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Sub Total</Label>
-                                    <Input 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Sub Total
+                                    </Label>
+                                    <Input
                                       value={item.subTotal.toFixed(2)}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">VAT Base</Label>
-                                    <Input 
-                                      value={item.vatBaseAmount?.toFixed(2) || '0.00'}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      VAT Base
+                                    </Label>
+                                    <Input
+                                      value={
+                                        item.vatBaseAmount?.toFixed(2) || "0.00"
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">VAT %</Label>
-                                    <Input 
-                                      value={item.vatPercent?.toFixed(2) || '0.00'}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      VAT %
+                                    </Label>
+                                    <Input
+                                      value={
+                                        item.vatPercent?.toFixed(2) || "0.00"
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">VAT Amt</Label>
-                                    <Input 
-                                      value={item.vatAmount?.toFixed(2) || '0.00'}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      VAT Amt
+                                    </Label>
+                                    <Input
+                                      value={
+                                        item.vatAmount?.toFixed(2) || "0.00"
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Excise VAT</Label>
-                                    <Input 
-                                      value={item.exciseVatAmount?.toFixed(2) || '0.00'}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Excise VAT
+                                    </Label>
+                                    <Input
+                                      value={
+                                        item.exciseVatAmount?.toFixed(2) ||
+                                        "0.00"
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Interior VAT</Label>
-                                    <Input 
-                                      value={item.interiorVat?.toFixed(2) || '0.00'}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Interior VAT
+                                    </Label>
+                                    <Input
+                                      value={
+                                        item.interiorVat?.toFixed(2) || "0.00"
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
                                 </div>
@@ -1114,44 +1439,59 @@ export function CreatePSTForm({
                                 {/* Row 3: Total and Document Info */}
                                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Total</Label>
-                                    <Input 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Total
+                                    </Label>
+                                    <Input
                                       value={item.total.toFixed(2)}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300 font-medium" 
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Document No.</Label>
-                                    <Input 
-                                      value={item.documentNo || ''}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Document No.
+                                    </Label>
+                                    <Input
+                                      value={item.documentNo || ""}
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Document Date</Label>
-                                    <Input 
-                                      value={item.documentDate ? item.documentDate.split('T')[0] : ''}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Document Date
+                                    </Label>
+                                    <Input
+                                      value={
+                                        item.documentDate
+                                          ? item.documentDate.split("T")[0]
+                                          : ""
+                                      }
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">Remarks</Label>
-                                    <Input 
-                                      value={item.remarks || ''}
-                                      readOnly 
-                                      className="h-8 text-sm bg-gray-100 border-gray-300" 
+                                    <Label className="text-xs font-medium text-gray-700">
+                                      Remarks
+                                    </Label>
+                                    <Input
+                                      value={item.remarks || ""}
+                                      readOnly
+                                      className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
                                   </div>
                                 </div>
-                              </CardContent>
-                            </Card>
-                          ))}
+                                    </CardContent>
+                                  </CollapsibleContent>
+                                </Card>
+                              </Collapsible>
+                            );
+                          })}
                         </div>
 
                         {/* Totals Summary */}
@@ -1177,14 +1517,17 @@ export function CreatePSTForm({
 
                         {/* Add Expense Item Button at Bottom */}
                         <div className="pt-4">
-                          <Button
-                            onClick={addExpenseItem}
-                            variant="outline"
-                            className="w-full h-12 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 bg-white hover:bg-gray-50"
-                          >
-                            <Plus className="w-5 h-5 mr-2" />
-                            Add Expense Item
-                          </Button>
+                         <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addExpenseItem}
+                          disabled={isSubmitting}
+                          className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Item
+                        </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -1192,22 +1535,25 @@ export function CreatePSTForm({
 
                   {/* Form Actions */}
                   <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={onClose}
                       disabled={isSubmitting}
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={!isFormValid() || isSubmitting}
                       className="min-w-40 relative overflow-hidden"
                     >
                       {isSubmitting ? (
                         <div className="flex items-center gap-2">
-                          <LoadingSpinner size="sm" className="border-white border-t-white/50" />
+                          <LoadingSpinner
+                            size="sm"
+                            className="border-white border-t-white/50"
+                          />
                           <span>Submitting...</span>
                         </div>
                       ) : (
@@ -1217,7 +1563,7 @@ export function CreatePSTForm({
                         </div>
                       )}
                       {isSubmitting && (
-                        <div 
+                        <div
                           className="absolute bottom-0 left-0 h-1 bg-white/30 transition-all duration-300 ease-out"
                           style={{ width: `${submitProgress}%` }}
                         />
@@ -1234,13 +1580,14 @@ export function CreatePSTForm({
                             <LoadingSpinner size="lg" />
                           </div>
                           <h3 className="font-semibold text-gray-900 mb-2">
-                            {showSuccess ? 'PST Created Successfully!' : 'Creating PST Request'}
+                            {showSuccess
+                              ? "PST Created Successfully!"
+                              : "Creating PST Request"}
                           </h3>
                           <p className="text-sm text-gray-600 mb-4">
-                            {showSuccess 
-                              ? 'Your PST request has been submitted successfully.'
-                              : 'Please wait while we process your request...'
-                            }
+                            {showSuccess
+                              ? "Your PST request has been submitted successfully."
+                              : "Please wait while we process your request..."}
                           </p>
                           <ProgressBar
                             progress={submitProgress}
@@ -1267,20 +1614,36 @@ export function CreatePSTForm({
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Invoice No.</p>
-                      <p className="text-sm text-gray-900">{step1Data.invoiceNo}</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        Invoice No.
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {step1Data.invoiceNo}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Supplier</p>
-                      <p className="text-sm text-gray-900">{step1Data.supplierName}</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        Supplier
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {step1Data.supplierName}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Transport</p>
-                      <p className="text-sm text-gray-900">{step1Data.transportMode}</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        Transport
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {step1Data.transportMode}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Due Date</p>
-                      <p className="text-sm text-gray-900">{step1Data.dueDate}</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        Due Date
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {step1Data.dueDate}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1297,7 +1660,9 @@ export function CreatePSTForm({
                     <Textarea
                       placeholder="Add notes or comments..."
                       value={formData.message}
-                      onChange={(e) => handleInputChange('message', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("message", e.target.value)
+                      }
                       disabled={isSubmitting}
                       className="min-h-24 resize-none"
                     />
@@ -1310,7 +1675,10 @@ export function CreatePSTForm({
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmation.open} onOpenChange={(open) => setDeleteConfirmation({ open, itemId: null })}>
+      <AlertDialog
+        open={deleteConfirmation.open}
+        onOpenChange={(open) => setDeleteConfirmation({ open, itemId: null })}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -1318,18 +1686,20 @@ export function CreatePSTForm({
               Delete Expense Item
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense item? This action cannot be undone.
-              {deleteConfirmation.itemId && 
-                expenseItems.find(item => item.id === deleteConfirmation.itemId)?.isFromAPI && 
-                " This will also remove the item from the server."
-              }
+              Are you sure you want to delete this expense item? This action
+              cannot be undone.
+              {deleteConfirmation.itemId &&
+                expenseItems.find(
+                  (item) => item.id === deleteConfirmation.itemId
+                )?.isFromAPI &&
+                " This will also remove the item from the server."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleDeleteCancel}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
             >
