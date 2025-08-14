@@ -814,11 +814,42 @@ export default function ShippingDashboard() {
 
   // Render PST Form if currentView is 'create-pst'
   if (currentView === 'create-pst') {
+    // Helper function to format date from ISO string to YYYY-MM-DD
+    const formatDate = (dateString: string) => {
+      if (!dateString) return "";
+      try {
+        return dateString.split("T")[0]; // Extract YYYY-MM-DD part
+      } catch {
+        return dateString; // Return as-is if already in correct format
+      }
+    };
+
+    // Convert selected shipment to header data
+    const dashboardHeaderData = selectedShipment ? {
+      supplierName: selectedShipment.supplierName,
+      poBook: selectedShipment.originalPOData?.poBook || selectedShipment.pstBook || "",
+      poNo: (selectedShipment.originalPOData?.poNo || selectedShipment.poNumber)?.toString() || "",
+      poDate: formatDate(selectedShipment.poDate),
+      etd: formatDate(selectedShipment.etd),
+      eta: formatDate(selectedShipment.eta),
+      wrDate: formatDate(selectedShipment.dateClear),
+      invoiceNo: selectedShipment.invoiceNumber,
+      invoiceDate: formatDate(selectedShipment.invoiceDate),
+      awbNo: selectedShipment.blAwbNumber,
+      importEntryNo: selectedShipment.importEntryNo,
+      portOfOrigin: selectedShipment.originPort,
+      portOfDestination: selectedShipment.destinationPort,
+      status: selectedShipment.poType,
+      pstBook: selectedShipment.pstBook || "",
+      pstNo: selectedShipment.pstNo?.toString() || "",
+    } : undefined;
+
     return (
       <>
         <CreatePSTForm
           createdPSTNumber={createdPSTNumber}
           pstWebSeqId={pstWebSeqId ?? undefined}
+          dashboardHeaderData={dashboardHeaderData}
           onClose={handleClosePSTForm}
           onSubmit={handlePSTSubmit}
         />

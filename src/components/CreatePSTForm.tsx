@@ -52,6 +52,10 @@ import {
   ChevronsUpDown,
   ChevronDown,
   ChevronRight,
+  Package2,
+  MapPin,
+  ArrowRight,
+  FileDigit,
 } from "lucide-react";
 import {
   pstService,
@@ -90,9 +94,30 @@ interface InvoiceItem {
   transportBy: string;
 }
 
+// Interface for header data from dashboard
+interface HeaderData {
+  supplierName: string;
+  poBook: string;
+  poNo: string;
+  poDate: string;
+  etd: string;
+  eta: string;
+  wrDate: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  awbNo: string;
+  importEntryNo: string;
+  portOfOrigin: string;
+  portOfDestination: string;
+  status: string;
+  pstBook: string;
+  pstNo: string;
+}
+
 interface CreatePSTFormProps {
   createdPSTNumber?: string | null;
   pstWebSeqId?: number; // Add this for Update PST functionality
+  dashboardHeaderData?: HeaderData; // Optional header data from dashboard
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }
@@ -100,12 +125,14 @@ interface CreatePSTFormProps {
 export function CreatePSTForm({
   createdPSTNumber,
   pstWebSeqId,
+  dashboardHeaderData,
   onClose,
   onSubmit,
 }: CreatePSTFormProps) {
   console.log("🚀 CreatePSTForm initialized with props:", {
     createdPSTNumber,
     pstWebSeqId,
+    dashboardHeaderData,
   });
 
   // No step management - single form only
@@ -122,16 +149,36 @@ export function CreatePSTForm({
     messageEditMode: false,
   });
 
-  // Step 1 data from parent component (pre-filled)
+  // Step 1 data from parent component (pre-filled) - use dashboard data when available
   const [step1Data, setStep1Data] = useState({
-    invoiceNo: "INV-TH-2024-1205-0001",
+    invoiceNo: dashboardHeaderData?.invoiceNo || "INV-TH-2024-1205-0001",
     contactPerson: "วรัญญา มิติปัญญา",
-    supplierName: "Global Foods Ltd.",
+    supplierName: dashboardHeaderData?.supplierName || "Global Foods Ltd.",
     transportMode: "Sea Freight",
-    importEntryNo: "IET-24-001205-0001",
+    importEntryNo: dashboardHeaderData?.importEntryNo || "IET-24-001205-0001",
     currency: "THB",
     dueDate: "2024-12-20",
     creditTerm: "30",
+  });
+
+  // Header data from API for display - initialize with dashboard data if provided
+  const [headerData, setHeaderData] = useState({
+    supplierName: dashboardHeaderData?.supplierName || "",
+    poBook: dashboardHeaderData?.poBook || "",
+    poNo: dashboardHeaderData?.poNo || "",
+    poDate: dashboardHeaderData?.poDate || "",
+    etd: dashboardHeaderData?.etd || "",
+    eta: dashboardHeaderData?.eta || "",
+    wrDate: dashboardHeaderData?.wrDate || "",
+    invoiceNo: dashboardHeaderData?.invoiceNo || "",
+    invoiceDate: dashboardHeaderData?.invoiceDate || "",
+    awbNo: dashboardHeaderData?.awbNo || "",
+    importEntryNo: dashboardHeaderData?.importEntryNo || "",
+    portOfOrigin: dashboardHeaderData?.portOfOrigin || "",
+    portOfDestination: dashboardHeaderData?.portOfDestination || "",
+    status: (dashboardHeaderData?.status || "Single") as "Single" | "Multiple",
+    pstBook: dashboardHeaderData?.pstBook || "",
+    pstNo: dashboardHeaderData?.pstNo || "",
   });
 
   // Expense items state - Start empty, will be populated based on API data or default
@@ -188,7 +235,7 @@ export function CreatePSTForm({
 
   // Toggle collapse state for an expense item
   const toggleItemCollapse = (itemId: string) => {
-    setCollapsedItems(prev => {
+    setCollapsedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
@@ -211,8 +258,30 @@ export function CreatePSTForm({
     if (!pstWebSeqId && expenseItems.length === 0) {
       console.log("🔧 No API data expected, showing one empty expense form");
       setShowExpenseForm(true);
+
+      // Only set default header data if no dashboard data was provided
+      if (!dashboardHeaderData) {
+        setHeaderData({
+          supplierName: "Sample Company Co., Ltd.",
+          poBook: "PO24",
+          poNo: "12345",
+          poDate: "2024-07-07",
+          etd: "2024-07-07",
+          eta: "2024-07-17",
+          wrDate: "2024-07-19",
+          invoiceNo: "BMJ824-13",
+          invoiceDate: "2024-06-27",
+          awbNo: "AMQ0231038",
+          importEntryNo: "",
+          portOfOrigin: "QINGDAO",
+          portOfDestination: "LEAM CHABANG PORT",
+          status: "Single",
+          pstBook: "",
+          pstNo: "",
+        });
+      }
     }
-  }, [pstWebSeqId, expenseItems.length]);
+  }, [pstWebSeqId, expenseItems.length, dashboardHeaderData]);
 
   const loadExpenseList = async () => {
     console.log("🔄 Loading expense list from API...");
@@ -294,6 +363,55 @@ export function CreatePSTForm({
           creditTerm: data.creditDays?.toString() || "",
         });
 
+        // Update header data with API response, but prefer dashboard data for supplier info
+        console.log("🔍 API Data - invoiceList:", data.invoiceList);
+        console.log(
+          "🔍 API Data - supplierName from API:",
+          data.invoiceList[0]?.supplierName
+        );
+        console.log(
+          "🔍 Dashboard - supplierName from dashboard:",
+          dashboardHeaderData?.supplierName
+        );
+
+        setHeaderData({
+          // Prefer dashboard supplier name, fallback to API if not available
+          supplierName:
+            dashboardHeaderData?.supplierName ||
+            data.invoiceList[0]?.supplierName ||
+            "",
+          poBook: dashboardHeaderData?.poBook || data.poBook || "",
+          poNo: dashboardHeaderData?.poNo || data.poNo?.toString() || "",
+          poDate: data.poDate
+            ? data.poDate.split("T")[0]
+            : dashboardHeaderData?.poDate || "",
+          etd: data.awbDate
+            ? data.awbDate.split("T")[0]
+            : dashboardHeaderData?.etd || "",
+          eta: data.eta
+            ? data.eta.split("T")[0]
+            : dashboardHeaderData?.eta || "",
+          wrDate: data.requestPaymentDateTime
+            ? data.requestPaymentDateTime.split("T")[0]
+            : dashboardHeaderData?.wrDate || "",
+          invoiceNo: data.invoiceNo || dashboardHeaderData?.invoiceNo || "",
+          invoiceDate: data.invoiceDate
+            ? data.invoiceDate.split("T")[0]
+            : dashboardHeaderData?.invoiceDate || "",
+          awbNo: data.awbNo || dashboardHeaderData?.awbNo || "",
+          importEntryNo:
+            data.importEntryNo || dashboardHeaderData?.importEntryNo || "",
+          portOfOrigin:
+            data.countryOfOrigin || dashboardHeaderData?.portOfOrigin || "",
+          portOfDestination: dashboardHeaderData?.portOfDestination || "",
+          status:
+            data.invoiceList?.length > 1
+              ? ("Multiple" as const)
+              : ("Single" as const),
+          pstBook: dashboardHeaderData?.pstBook || "",
+          pstNo: dashboardHeaderData?.pstNo || "",
+        });
+
         // Convert expenseList to ExpenseItem format
         const convertedExpenses: ExpenseItem[] = data.expenseList.map(
           (expense, index) => ({
@@ -336,7 +454,7 @@ export function CreatePSTForm({
         // Collapse all expense items from API data
         if (convertedExpenses.length > 0) {
           console.log("📁 Collapsing all expense items from API");
-          const allItemIds = new Set(convertedExpenses.map(item => item.id));
+          const allItemIds = new Set(convertedExpenses.map((item) => item.id));
           setCollapsedItems(allItemIds);
         }
 
@@ -605,105 +723,162 @@ export function CreatePSTForm({
   const handleExpenseCodeChange = (itemId: string, newExpenseCode: string) => {
     const expense = expenseList.find((e) => e.expenseCode === newExpenseCode);
     if (expense) {
-      setExpenseItems(prev => prev.map(item => {
-        if (item.id !== itemId) return item;
-        
-        const vatPercent = parseFloat(expense.taxRate) || 0;
-        const subTotal = item.qty * item.rate;
-        const vatBase = subTotal;
-        const vatAmount = vatBase * (vatPercent / 100);
-        const total = subTotal + vatAmount + (item.exciseVatAmount || 0) + (item.interiorVat || 0);
-        
-        return { 
-          ...item, 
-          expenseCode: newExpenseCode,
-          expenseName: expense.expenseName,
-          vatPercent,
-          subTotal,
-          vatBaseAmount: vatBase,
-          vatAmount,
-          total
-        };
-      }));
+      setExpenseItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== itemId) return item;
+
+          const vatPercent = parseFloat(expense.taxRate) || 0;
+          const subTotal = item.qty * item.rate;
+          const vatBase = subTotal;
+          const vatAmount = vatBase * (vatPercent / 100);
+          const total =
+            subTotal +
+            vatAmount +
+            (item.exciseVatAmount || 0) +
+            (item.interiorVat || 0);
+
+          return {
+            ...item,
+            expenseCode: newExpenseCode,
+            expenseName: expense.expenseName,
+            vatPercent,
+            subTotal,
+            vatBaseAmount: vatBase,
+            vatAmount,
+            total,
+          };
+        })
+      );
 
       // Mark item as changed if it's from API
-      const item = expenseItems.find(item => item.id === itemId);
+      const item = expenseItems.find((item) => item.id === itemId);
       if (item?.isFromAPI) {
-        setChangedItems(prev => new Set([...prev, itemId]));
+        setChangedItems((prev) => new Set([...prev, itemId]));
       }
     }
   };
 
   // Handle service provider change for display items
-  const handleServiceProviderChange = (itemId: string, newServiceProvider: string) => {
-    setExpenseItems(prev => prev.map(item => 
-      item.id === itemId 
-        ? { 
-            ...item, 
-            serviceProvider: newServiceProvider
-          }
-        : item
-    ));
+  const handleServiceProviderChange = (
+    itemId: string,
+    newServiceProvider: string
+  ) => {
+    setExpenseItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              serviceProvider: newServiceProvider,
+            }
+          : item
+      )
+    );
 
     // Mark item as changed if it's from API
-    const item = expenseItems.find(item => item.id === itemId);
+    const item = expenseItems.find((item) => item.id === itemId);
     if (item?.isFromAPI) {
-      setChangedItems(prev => new Set([...prev, itemId]));
+      setChangedItems((prev) => new Set([...prev, itemId]));
     }
   };
 
   // Handle field changes for display items with calculations
-  const handleExpenseFieldChange = (itemId: string, field: string, value: string | number) => {
-    setExpenseItems(prev => prev.map(item => {
-      if (item.id !== itemId) return item;
+  const handleExpenseFieldChange = (
+    itemId: string,
+    field: string,
+    value: string | number
+  ) => {
+    setExpenseItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item;
 
-      const updatedItem = { ...item, [field]: value };
+        const updatedItem = { ...item, [field]: value };
 
-      // Recalculate if qty or rate changes
-      if (field === 'qty' || field === 'rate') {
-        const qty = parseFloat(field === 'qty' ? value.toString() : item.qty.toString()) || 0;
-        const rate = parseFloat(field === 'rate' ? value.toString() : item.rate.toString()) || 0;
-        
-        updatedItem.subTotal = qty * rate;
-        updatedItem.vatBaseAmount = updatedItem.subTotal;
-        updatedItem.vatAmount = updatedItem.vatBaseAmount * (updatedItem.vatPercent / 100);
-        updatedItem.total = updatedItem.subTotal + updatedItem.vatAmount + (updatedItem.exciseVatAmount || 0) + (updatedItem.interiorVat || 0);
-      }
+        // Recalculate if qty or rate changes
+        if (field === "qty" || field === "rate") {
+          const qty =
+            parseFloat(
+              field === "qty" ? value.toString() : item.qty.toString()
+            ) || 0;
+          const rate =
+            parseFloat(
+              field === "rate" ? value.toString() : item.rate.toString()
+            ) || 0;
 
-      // Recalculate if VAT Base changes
-      if (field === 'vatBaseAmount') {
-        const vatBase = parseFloat(value.toString()) || 0;
-        updatedItem.vatAmount = vatBase * (updatedItem.vatPercent / 100);
-        updatedItem.total = updatedItem.subTotal + updatedItem.vatAmount + (updatedItem.exciseVatAmount || 0) + (updatedItem.interiorVat || 0);
-      }
+          updatedItem.subTotal = qty * rate;
+          updatedItem.vatBaseAmount = updatedItem.subTotal;
+          updatedItem.vatAmount =
+            updatedItem.vatBaseAmount * (updatedItem.vatPercent / 100);
+          updatedItem.total =
+            updatedItem.subTotal +
+            updatedItem.vatAmount +
+            (updatedItem.exciseVatAmount || 0) +
+            (updatedItem.interiorVat || 0);
+        }
 
-      // Recalculate if VAT Amount changes
-      if (field === 'vatAmount') {
-        updatedItem.total = updatedItem.subTotal + parseFloat(value.toString()) + (updatedItem.exciseVatAmount || 0) + (updatedItem.interiorVat || 0);
-      }
+        // Recalculate if VAT Base changes
+        if (field === "vatBaseAmount") {
+          const vatBase = parseFloat(value.toString()) || 0;
+          updatedItem.vatAmount = vatBase * (updatedItem.vatPercent / 100);
+          updatedItem.total =
+            updatedItem.subTotal +
+            updatedItem.vatAmount +
+            (updatedItem.exciseVatAmount || 0) +
+            (updatedItem.interiorVat || 0);
+        }
 
-      // Recalculate if Excise VAT or Interior VAT changes
-      if (field === 'exciseVatAmount' || field === 'interiorVat') {
-        const exciseVat = parseFloat(field === 'exciseVatAmount' ? value.toString() : (updatedItem.exciseVatAmount || 0).toString()) || 0;
-        const interiorVat = parseFloat(field === 'interiorVat' ? value.toString() : (updatedItem.interiorVat || 0).toString()) || 0;
-        updatedItem.total = updatedItem.subTotal + updatedItem.vatAmount + exciseVat + interiorVat;
-      }
+        // Recalculate if VAT Amount changes
+        if (field === "vatAmount") {
+          updatedItem.total =
+            updatedItem.subTotal +
+            parseFloat(value.toString()) +
+            (updatedItem.exciseVatAmount || 0) +
+            (updatedItem.interiorVat || 0);
+        }
 
-      return updatedItem;
-    }));
+        // Recalculate if Excise VAT or Interior VAT changes
+        if (field === "exciseVatAmount" || field === "interiorVat") {
+          const exciseVat =
+            parseFloat(
+              field === "exciseVatAmount"
+                ? value.toString()
+                : (updatedItem.exciseVatAmount || 0).toString()
+            ) || 0;
+          const interiorVat =
+            parseFloat(
+              field === "interiorVat"
+                ? value.toString()
+                : (updatedItem.interiorVat || 0).toString()
+            ) || 0;
+          updatedItem.total =
+            updatedItem.subTotal +
+            updatedItem.vatAmount +
+            exciseVat +
+            interiorVat;
+        }
+
+        return updatedItem;
+      })
+    );
 
     // Mark item as changed if it's from API
-    const item = expenseItems.find(item => item.id === itemId);
+    const item = expenseItems.find((item) => item.id === itemId);
     if (item?.isFromAPI) {
-      setChangedItems(prev => new Set([...prev, itemId]));
+      setChangedItems((prev) => new Set([...prev, itemId]));
     }
   };
 
   // Handle save expense for display items
   const handleSaveExpenseDisplay = async (item: ExpenseItem) => {
     // Validate required fields
-    if (!item.expenseCode || !item.serviceProvider || item.qty <= 0 || item.rate <= 0) {
-      alert("Please fill in all required fields (Expense Code, Service Provider, Qty, Rate)");
+    if (
+      !item.expenseCode ||
+      !item.serviceProvider ||
+      item.qty <= 0 ||
+      item.rate <= 0
+    ) {
+      alert(
+        "Please fill in all required fields (Expense Code, Service Provider, Qty, Rate)"
+      );
       return;
     }
 
@@ -733,32 +908,36 @@ export function CreatePSTForm({
         remarks: item.remarks || "",
       };
 
-      console.log('💾 Saving expense item:', expenseData);
+      console.log("💾 Saving expense item:", expenseData);
 
       // Call API
       const response = await pstService.saveExpenseItem(expenseData);
 
-      if (!response.error && response.data && response.data[0]?.STATUS === "Saved Succssfully") {
+      if (
+        !response.error &&
+        response.data &&
+        response.data[0]?.STATUS === "Saved Succssfully"
+      ) {
         alert("Expense item saved successfully!");
-        console.log('✅ Save response:', response);
-        
+        console.log("✅ Save response:", response);
+
         // Remove item from changed items set
-        setChangedItems(prev => {
+        setChangedItems((prev) => {
           const newSet = new Set(prev);
           newSet.delete(item.id);
           return newSet;
         });
-        
+
         // Optionally reload the PST details to get updated data
         if (pstWebSeqId) {
           loadPSTDetails();
         }
       } else {
         alert("Failed to save expense item. Please try again.");
-        console.error('❌ Save failed:', response);
+        console.error("❌ Save failed:", response);
       }
     } catch (error) {
-      console.error('❌ Error saving expense item:', error);
+      console.error("❌ Error saving expense item:", error);
       alert("An error occurred while saving. Please try again.");
     }
   };
@@ -915,6 +1094,155 @@ export function CreatePSTForm({
         <div className="max-w-7xl mx-auto">
           {/* PST Details Form */}
           <div className="space-y-8">
+            {/* Header Information Section - Dashboard Style */}
+            {(headerData.supplierName || headerData.poNo) && (
+              <Card className="border-l-4 border-l-blue-500 shadow-sm relative">
+                <CardContent className="p-4">
+                  {/* Content area with space for right-aligned action button */}
+                  <div className="flex">
+                    {/* Left content area */}
+                    <div className="flex-1 pr-4">
+                      {/* Section 1: Primary Information - Supplier Name & PO Type */}
+                      <div className="mb-3">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-7 h-7 bg-blue-50 rounded border border-blue-200 flex items-center justify-center">
+                            <Building className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {headerData.supplierName}
+                          </h3>
+
+                          {/* PO Type Label */}
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-xs bg-green-100 border-green-200 text-green-700">
+                            <Building className="w-2.5 h-2.5" />
+                            <span className="font-medium">
+                              {headerData.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Consolidated Reference & PO Info */}
+                        <div className="flex items-center gap-6 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Package2 className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-600">PO:</span>
+                            <span className="font-medium text-gray-900">
+                              {headerData.poBook}-{headerData.poNo}
+                            </span>
+                          </div>
+
+                          {/* Documents row */}
+                          {headerData.awbNo && (
+                            <div className="flex items-center gap-6 text-sm">
+                              {/* {headerData.importEntryNo && (
+                                <div className="flex items-center gap-1">
+                                  <Key className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-600">Ref:</span>
+                                  <span className="font-medium text-gray-800">
+                                    {headerData.importEntryNo}
+                                  </span>
+                                </div>
+                              )} */}
+                              
+                              {/* PST Information */}
+                              {(headerData.pstBook || headerData.pstNo) && (
+                                <div className="flex items-center gap-1">
+                                  <FileDigit className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-600">PST:</span>
+                                  <span className="font-medium text-gray-800">
+                                    {headerData.pstBook}-{headerData.pstNo}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Section 2: Left-Aligned Timeline */}
+                      <div className="mb-3">
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div className="text-left">
+                            <div className="flex items-center gap-1 mb-1">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-gray-600 text-xs font-medium">
+                                ETD
+                              </span>
+                            </div>
+                            <span className="font-semibold text-gray-900">
+                              {headerData.etd || "N/A"}
+                            </span>
+                          </div>
+                          <div className="text-left">
+                            <div className="flex items-center gap-1 mb-1">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                              <span className="text-gray-600 text-xs font-medium">
+                                ETA
+                              </span>
+                            </div>
+                            <span className="font-semibold text-gray-900">
+                              {headerData.eta || "N/A"}
+                            </span>
+                          </div>
+                          <div className="text-left">
+                            <div className="flex items-center gap-1 mb-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-gray-600 text-xs font-medium">
+                                WR Date
+                              </span>
+                            </div>
+                            <span className="font-semibold text-gray-900">
+                              {headerData.wrDate || "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Consolidated Document & Route Info */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-6 text-sm">
+                          {headerData.invoiceNo && (
+                            <div className="flex items-center gap-2">
+                              <Key className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">Invoice:</span>
+                              <span className="font-medium text-gray-900">
+                                {headerData.invoiceNo}
+                              </span>
+                              <span className="text-gray-500">
+                                ({headerData.invoiceDate})
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-gray-400" />
+                            <span className="text-gray-600">AWB:</span>
+                            <span className="font-medium text-gray-800">
+                              {headerData.awbNo}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Route row */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span className="font-medium text-gray-700">
+                            {headerData.portOfOrigin || "QINGDAO"}
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-gray-400" />
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span className="font-medium text-gray-700">
+                            {headerData.portOfDestination ||
+                              "LEAM CHABANG PORT"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Main Layout: Content + Sidebar - Enhanced for Full Width */}
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8">
               {/* Main Content Area - Wider for better content distribution */}
@@ -1080,7 +1408,6 @@ export function CreatePSTForm({
                             <Calculator className="w-4 h-4" />
                             Expense Items
                           </h4>
-                       
                         </div>
 
                         {/* Add/Edit Expense Item Form */}
@@ -1446,7 +1773,9 @@ export function CreatePSTForm({
                                           type="button"
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => toggleItemCollapse(item.id)}
+                                          onClick={() =>
+                                            toggleItemCollapse(item.id)
+                                          }
                                           className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
                                         >
                                           {isCollapsed ? (
@@ -1458,14 +1787,18 @@ export function CreatePSTForm({
                                       </CollapsibleTrigger>
                                       <h3 className="text-base font-medium text-gray-900 flex-1">
                                         Expense Item #{index + 1}
-                                        {item.isFromAPI && changedItems.has(item.id) && (
-                                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                            Modified
-                                          </span>
-                                        )}
+                                        {item.isFromAPI &&
+                                          changedItems.has(item.id) && (
+                                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                              Modified
+                                            </span>
+                                          )}
                                         {isCollapsed && (
                                           <span className="ml-2 text-sm text-gray-500">
-                                            ({item.expenseName || item.expenseCode} - ฿{item.total.toFixed(2)})
+                                            (
+                                            {item.expenseName ||
+                                              item.expenseCode}{" "}
+                                            - ฿{item.total.toFixed(2)})
                                           </span>
                                         )}
                                       </h3>
@@ -1473,7 +1806,9 @@ export function CreatePSTForm({
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleDeleteClick(item.id)}
+                                        onClick={() =>
+                                          handleDeleteClick(item.id)
+                                        }
                                         disabled={isSubmitting}
                                         className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
                                       >
@@ -1483,272 +1818,378 @@ export function CreatePSTForm({
                                   </CardHeader>
                                   <CollapsibleContent>
                                     <CardContent className="space-y-4">
-                                {/* Row 1: Expense Code and Service Provider */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Expense Code{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Select
-                                      value={item.expenseCode}
-                                      onValueChange={(value) => handleExpenseCodeChange(item.id, value)}
-                                      disabled={isSubmitting}
-                                    >
-                                      <SelectTrigger className="h-8 w-full text-sm bg-white border-gray-300">
-                                        <SelectValue placeholder="Select expense code">
-                                          {item.expenseName || item.expenseCode}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {expenseList.map((expense) => (
-                                          <SelectItem
-                                            key={expense.expenseCode}
-                                            value={expense.expenseCode}
-                                          >
-                                            {expense.expenseName}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Service Provider{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          role="combobox"
-                                          className="h-8 w-full justify-between text-sm bg-white border-gray-300"
-                                          disabled={isSubmitting}
-                                        >
-                                          {item.serviceProvider || "Select service provider"}
-                                          <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-full p-0">
-                                        <Command>
-                                          <CommandInput
-                                            placeholder="Search..."
-                                            className="h-8 border-0 focus:ring-0 text-sm"
-                                          />
-                                          <CommandEmpty>
-                                            No provider found.
-                                          </CommandEmpty>
-                                          <CommandGroup className="max-h-40 overflow-y-auto">
-                                            {serviceProviders.map(
-                                              (provider, index) => (
-                                                <CommandItem
-                                                  key={index}
-                                                  value={provider.name}
-                                                  className="cursor-pointer text-sm"
-                                                  onSelect={() =>
-                                                    handleServiceProviderChange(item.id, provider.name)
-                                                  }
-                                                >
-                                                  <Check
-                                                    className={`mr-2 h-3 w-3 ${
-                                                      item.serviceProvider === provider.name
-                                                        ? "opacity-100"
-                                                        : "opacity-0"
-                                                    }`}
-                                                  />
-                                                  {provider.name}
-                                                </CommandItem>
+                                      {/* Row 1: Expense Code and Service Provider */}
+                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Expense Code{" "}
+                                            <span className="text-red-500">
+                                              *
+                                            </span>
+                                          </Label>
+                                          <Select
+                                            value={item.expenseCode}
+                                            onValueChange={(value) =>
+                                              handleExpenseCodeChange(
+                                                item.id,
+                                                value
                                               )
-                                            )}
-                                          </CommandGroup>
-                                        </Command>
-                                      </PopoverContent>
-                                    </Popover>
-                                  </div>
-                                </div>
+                                            }
+                                            disabled={isSubmitting}
+                                          >
+                                            <SelectTrigger className="h-8 w-full text-sm bg-white border-gray-300">
+                                              <SelectValue placeholder="Select expense code">
+                                                {item.expenseName ||
+                                                  item.expenseCode}
+                                              </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {expenseList.map((expense) => (
+                                                <SelectItem
+                                                  key={expense.expenseCode}
+                                                  value={expense.expenseCode}
+                                                >
+                                                  {expense.expenseName}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
 
-                                {/* Row 2: Qty, Rate, and Calculated Fields */}
-                                <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Qty <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      value={item.qty}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'qty', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Service Provider{" "}
+                                            <span className="text-red-500">
+                                              *
+                                            </span>
+                                          </Label>
+                                          <Popover>
+                                            <PopoverTrigger asChild>
+                                              <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className="h-8 w-full justify-between text-sm bg-white border-gray-300"
+                                                disabled={isSubmitting}
+                                              >
+                                                {item.serviceProvider ||
+                                                  "Select service provider"}
+                                                <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                              </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0">
+                                              <Command>
+                                                <CommandInput
+                                                  placeholder="Search..."
+                                                  className="h-8 border-0 focus:ring-0 text-sm"
+                                                />
+                                                <CommandEmpty>
+                                                  No provider found.
+                                                </CommandEmpty>
+                                                <CommandGroup className="max-h-40 overflow-y-auto">
+                                                  {serviceProviders.map(
+                                                    (provider, index) => (
+                                                      <CommandItem
+                                                        key={index}
+                                                        value={provider.name}
+                                                        className="cursor-pointer text-sm"
+                                                        onSelect={() =>
+                                                          handleServiceProviderChange(
+                                                            item.id,
+                                                            provider.name
+                                                          )
+                                                        }
+                                                      >
+                                                        <Check
+                                                          className={`mr-2 h-3 w-3 ${
+                                                            item.serviceProvider ===
+                                                            provider.name
+                                                              ? "opacity-100"
+                                                              : "opacity-0"
+                                                          }`}
+                                                        />
+                                                        {provider.name}
+                                                      </CommandItem>
+                                                    )
+                                                  )}
+                                                </CommandGroup>
+                                              </Command>
+                                            </PopoverContent>
+                                          </Popover>
+                                        </div>
+                                      </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Rate <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={item.rate}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'rate', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                      {/* Row 2: Qty, Rate, and Calculated Fields */}
+                                      <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Qty{" "}
+                                            <span className="text-red-500">
+                                              *
+                                            </span>
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            value={item.qty}
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "qty",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Sub Total
-                                    </Label>
-                                    <Input
-                                      value={item.subTotal.toFixed(2)}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Rate{" "}
+                                            <span className="text-red-500">
+                                              *
+                                            </span>
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={item.rate}
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "rate",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      VAT Base
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={item.vatBaseAmount?.toFixed(2) || "0.00"}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'vatBaseAmount', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Sub Total
+                                          </Label>
+                                          <Input
+                                            value={item.subTotal.toFixed(2)}
+                                            readOnly
+                                            className="h-8 text-sm bg-gray-100 border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      VAT %
-                                    </Label>
-                                    <Input
-                                      value={item.vatPercent?.toFixed(2) || "0.00"}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            VAT Base
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={
+                                              item.vatBaseAmount?.toFixed(2) ||
+                                              "0.00"
+                                            }
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "vatBaseAmount",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      VAT Amt
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={item.vatAmount?.toFixed(2) || "0.00"}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'vatAmount', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            VAT %
+                                          </Label>
+                                          <Input
+                                            value={
+                                              item.vatPercent?.toFixed(2) ||
+                                              "0.00"
+                                            }
+                                            readOnly
+                                            className="h-8 text-sm bg-gray-100 border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Excise VAT
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={item.exciseVatAmount?.toFixed(2) || "0.00"}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'exciseVatAmount', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            VAT Amt
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={
+                                              item.vatAmount?.toFixed(2) ||
+                                              "0.00"
+                                            }
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "vatAmount",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Interior VAT
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={item.interiorVat?.toFixed(2) || "0.00"}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'interiorVat', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
-                                </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Excise VAT
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={
+                                              item.exciseVatAmount?.toFixed(
+                                                2
+                                              ) || "0.00"
+                                            }
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "exciseVatAmount",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                {/* Row 3: Total and Document Info */}
-                                <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Total
-                                    </Label>
-                                    <Input
-                                      value={item.total.toFixed(2)}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Interior VAT
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={
+                                              item.interiorVat?.toFixed(2) ||
+                                              "0.00"
+                                            }
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "interiorVat",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
+                                      </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Document No.
-                                    </Label>
-                                    <Input
-                                      value={item.documentNo || ""}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'documentNo', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                      {/* Row 3: Total and Document Info */}
+                                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Total
+                                          </Label>
+                                          <Input
+                                            value={item.total.toFixed(2)}
+                                            readOnly
+                                            className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Document Date
-                                    </Label>
-                                    <Input
-                                      type="date"
-                                      value={
-                                        item.documentDate
-                                          ? item.documentDate.split("T")[0]
-                                          : ""
-                                      }
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'documentDate', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Document No.
+                                          </Label>
+                                          <Input
+                                            value={item.documentNo || ""}
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "documentNo",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Remarks
-                                    </Label>
-                                    <Input
-                                      value={item.remarks || ""}
-                                      onChange={(e) => handleExpenseFieldChange(item.id, 'remarks', e.target.value)}
-                                      disabled={isSubmitting}
-                                      className="h-8 text-sm bg-white border-gray-300"
-                                    />
-                                  </div>
-                                </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Document Date
+                                          </Label>
+                                          <Input
+                                            type="date"
+                                            value={
+                                              item.documentDate
+                                                ? item.documentDate.split(
+                                                    "T"
+                                                  )[0]
+                                                : ""
+                                            }
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "documentDate",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
 
-                                {/* Save Expense Button for editable items or changed API items */}
-                                {(!item.isFromAPI || changedItems.has(item.id)) && (
-                                  <div className="flex justify-end pt-4 border-t border-gray-200">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      onClick={() => handleSaveExpenseDisplay(item)}
-                                      disabled={isSubmitting || !item.expenseCode || !item.serviceProvider || item.qty <= 0 || item.rate <= 0}
-                                      className={`text-white text-sm px-4 py-2 ${
-                                        item.isFromAPI && changedItems.has(item.id)
-                                          ? "bg-blue-600 hover:bg-blue-700" 
-                                          : "bg-green-600 hover:bg-green-700"
-                                      }`}
-                                    >
-                                      {item.isFromAPI && changedItems.has(item.id) ? "Update Expense" : "Save Expense"}
-                                    </Button>
-                                  </div>
-                                )}
+                                        <div className="space-y-1">
+                                          <Label className="text-xs font-medium text-gray-700">
+                                            Remarks
+                                          </Label>
+                                          <Input
+                                            value={item.remarks || ""}
+                                            onChange={(e) =>
+                                              handleExpenseFieldChange(
+                                                item.id,
+                                                "remarks",
+                                                e.target.value
+                                              )
+                                            }
+                                            disabled={isSubmitting}
+                                            className="h-8 text-sm bg-white border-gray-300"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {/* Save Expense Button for editable items or changed API items */}
+                                      {(!item.isFromAPI ||
+                                        changedItems.has(item.id)) && (
+                                        <div className="flex justify-end pt-4 border-t border-gray-200">
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleSaveExpenseDisplay(item)
+                                            }
+                                            disabled={
+                                              isSubmitting ||
+                                              !item.expenseCode ||
+                                              !item.serviceProvider ||
+                                              item.qty <= 0 ||
+                                              item.rate <= 0
+                                            }
+                                            className={`text-white text-sm px-4 py-2 ${
+                                              item.isFromAPI &&
+                                              changedItems.has(item.id)
+                                                ? "bg-blue-600 hover:bg-blue-700"
+                                                : "bg-green-600 hover:bg-green-700"
+                                            }`}
+                                          >
+                                            {item.isFromAPI &&
+                                            changedItems.has(item.id)
+                                              ? "Update Expense"
+                                              : "Save Expense"}
+                                          </Button>
+                                        </div>
+                                      )}
                                     </CardContent>
                                   </CollapsibleContent>
                                 </Card>
@@ -1780,17 +2221,17 @@ export function CreatePSTForm({
 
                         {/* Add Expense Item Button at Bottom */}
                         <div className="pt-4">
-                         <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addExpenseItem}
-                          disabled={isSubmitting}
-                          className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Item
-                        </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addExpenseItem}
+                            disabled={isSubmitting}
+                            className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Item
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -1889,7 +2330,7 @@ export function CreatePSTForm({
                         Supplier
                       </p>
                       <p className="text-sm text-gray-900">
-                        {step1Data.supplierName}
+                        {headerData.supplierName || step1Data.supplierName}
                       </p>
                     </div>
                     <div>
