@@ -99,6 +99,34 @@ export interface DeleteExpenseResponse {
   query: string;
 }
 
+export interface SaveExpenseRequest {
+  webSeqId: number;
+  podRowId: string;
+  productCode: string;
+  serviceProvider: string;
+  qty: number;
+  rate: number;
+  vatBaseAmount: number;
+  vatPercent: number;
+  vatAmount: number;
+  exciseVatAmount: number;
+  interiorVatAmount: number;
+  total: number;
+  documentNo: string;
+  documentDate: string;
+  remarks: string;
+}
+
+export interface SaveExpenseResponse {
+  error: boolean;
+  message: string;
+  data: Array<{
+    STATUS: string;
+  }>;
+  rowsAffected: number;
+  query: string;
+}
+
 export interface ServiceProviderItem {
   name: string;
 }
@@ -202,6 +230,47 @@ export const pstService = {
     }
 
     const data: ServiceProviderResponse = await res.json();
+    return data;
+  },
+
+  // Save expense item
+  async saveExpenseItem(expenseData: SaveExpenseRequest): Promise<SaveExpenseResponse> {
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+    headers.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0");
+
+    const requestBody = JSON.stringify({
+      webSeqId: expenseData.webSeqId,
+      podRowId: expenseData.podRowId,
+      productCode: expenseData.productCode,
+      serviceProvider: expenseData.serviceProvider,
+      qty: expenseData.qty,
+      rate: expenseData.rate,
+      vatBaseAmount: expenseData.vatBaseAmount,
+      vatPercent: expenseData.vatPercent,
+      vatAmount: expenseData.vatAmount,
+      exciseVatAmount: expenseData.exciseVatAmount,
+      interiorVatAmount: expenseData.interiorVatAmount,
+      total: expenseData.total,
+      documentNo: expenseData.documentNo,
+      documentDate: expenseData.documentDate,
+      remarks: expenseData.remarks,
+    });
+
+    const res = await fetch(
+      "https://jnodeapi-staging.jagota.com/v1/es/eshipping/expense",
+      {
+        method: "POST",
+        headers,
+        body: requestBody,
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data: SaveExpenseResponse = await res.json();
     return data;
   }
 };

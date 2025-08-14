@@ -57,6 +57,7 @@ import {
   pstService,
   type ExpenseListItem,
   type ServiceProviderItem,
+  type SaveExpenseRequest,
 } from "../api/services/pstService";
 
 interface ExpenseItem {
@@ -133,26 +134,8 @@ export function CreatePSTForm({
     creditTerm: "30",
   });
 
-  // Expense items state
-  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
-    {
-      id: "1",
-      expenseCode: "FREIGHT",
-      serviceProvider: "Ocean Logistics Co., Ltd.",
-      qty: 1,
-      rate: 25000,
-      documentNo: "BL-001205-2024",
-      documentDate: "2024-12-05",
-      subTotal: 25000,
-      vatBaseAmount: 25000,
-      remarks: "Sea freight charges",
-      vatPercent: 7,
-      vatAmount: 1750,
-      exciseVatAmount: 0,
-      interiorVat: 0,
-      total: 26750,
-    },
-  ]);
+  // Expense items state - Start empty, will be populated based on API data or default
+  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([]);
 
   // Invoice items state
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -200,6 +183,9 @@ export function CreatePSTForm({
   // State for controlling collapse/expand of each expense item
   const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
 
+  // State for tracking changes in expense items (to show Save button)
+  const [changedItems, setChangedItems] = useState<Set<string>>(new Set());
+
   // Toggle collapse state for an expense item
   const toggleItemCollapse = (itemId: string) => {
     setCollapsedItems(prev => {
@@ -218,6 +204,15 @@ export function CreatePSTForm({
     loadExpenseList();
     loadServiceProviders();
   }, []);
+
+  // Initialize expense items based on whether we have API data or not
+  useEffect(() => {
+    // Only initialize if we don't have pstWebSeqId (no API data expected)
+    if (!pstWebSeqId && expenseItems.length === 0) {
+      console.log("🔧 No API data expected, showing one empty expense form");
+      setShowExpenseForm(true);
+    }
+  }, [pstWebSeqId, expenseItems.length]);
 
   const loadExpenseList = async () => {
     console.log("🔄 Loading expense list from API...");
@@ -338,6 +333,16 @@ export function CreatePSTForm({
         setExpenseItems(convertedExpenses);
         setInvoiceItems(convertedInvoices);
 
+        // Collapse all expense items from API data
+        if (convertedExpenses.length > 0) {
+          console.log("📁 Collapsing all expense items from API");
+          const allItemIds = new Set(convertedExpenses.map(item => item.id));
+          setCollapsedItems(allItemIds);
+        }
+
+        // Clear any existing changed items when loading fresh data
+        setChangedItems(new Set());
+
         // Set form data with webSeqID as Ref Key
         console.log("🔑 About to set Ref Key to:", data.webSeqID);
         setFormData((prev) => {
@@ -418,11 +423,25 @@ export function CreatePSTForm({
   const handleExpenseCodeSelect = (expenseCode: string) => {
     const expense = expenseList.find((e) => e.expenseCode === expenseCode);
     if (expense) {
+      const vatPercent = parseFloat(expense.taxRate) || 0;
+      const qty = parseFloat(expenseItemForm.qty) || 0;
+      const rate = parseFloat(expenseItemForm.rate) || 0;
+      const subTotal = qty * rate;
+      const vatBase = subTotal;
+      const vatAmount = vatBase * (vatPercent / 100);
+      const exciseVat = parseFloat(expenseItemForm.exciseVat) || 0;
+      const interiorVat = parseFloat(expenseItemForm.interiorVat) || 0;
+      const total = subTotal + vatAmount + exciseVat + interiorVat;
+
       setExpenseItemForm((prev) => ({
         ...prev,
         expenseCode,
         expenseName: expense.expenseName,
-        vatPercent: (expense.taxRate || 7) as number,
+        vatPercent,
+        subTotal,
+        vatBase,
+        vatAmount,
+        total,
       }));
     }
   };
@@ -521,7 +540,7 @@ export function CreatePSTForm({
       subTotal: 0,
       vatBaseAmount: 0,
       remarks: "",
-      vatPercent: 7,
+      vatPercent: 0, // เริ่มต้นที่ 0
       vatAmount: 0,
       exciseVatAmount: 0,
       interiorVat: 0,
@@ -580,6 +599,168 @@ export function CreatePSTForm({
 
   const handleDeleteClick = (itemId: string) => {
     setDeleteConfirmation({ open: true, itemId });
+  };
+
+  // Handle expense code change for display items
+  const handleExpenseCodeChange = (itemId: string, newExpenseCode: string) => {
+    const expense = expenseList.find((e) => e.expenseCode === newExpenseCode);
+    if (expense) {
+      setExpenseItems(prev => prev.map(item => {
+        if (item.id !== itemId) return item;
+        
+        const vatPercent = parseFloat(expense.taxRate) || 0;
+        const subTotal = item.qty * item.rate;
+        const vatBase = subTotal;
+        const vatAmount = vatBase * (vatPercent / 100);
+        const total = subTotal + vatAmount + (item.exciseVatAmount || 0) + (item.interiorVat || 0);
+        
+        return { 
+          ...item, 
+          expenseCode: newExpenseCode,
+          expenseName: expense.expenseName,
+          vatPercent,
+          subTotal,
+          vatBaseAmount: vatBase,
+          vatAmount,
+          total
+        };
+      }));
+
+      // Mark item as changed if it's from API
+      const item = expenseItems.find(item => item.id === itemId);
+      if (item?.isFromAPI) {
+        setChangedItems(prev => new Set([...prev, itemId]));
+      }
+    }
+  };
+
+  // Handle service provider change for display items
+  const handleServiceProviderChange = (itemId: string, newServiceProvider: string) => {
+    setExpenseItems(prev => prev.map(item => 
+      item.id === itemId 
+        ? { 
+            ...item, 
+            serviceProvider: newServiceProvider
+          }
+        : item
+    ));
+
+    // Mark item as changed if it's from API
+    const item = expenseItems.find(item => item.id === itemId);
+    if (item?.isFromAPI) {
+      setChangedItems(prev => new Set([...prev, itemId]));
+    }
+  };
+
+  // Handle field changes for display items with calculations
+  const handleExpenseFieldChange = (itemId: string, field: string, value: string | number) => {
+    setExpenseItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item;
+
+      const updatedItem = { ...item, [field]: value };
+
+      // Recalculate if qty or rate changes
+      if (field === 'qty' || field === 'rate') {
+        const qty = parseFloat(field === 'qty' ? value.toString() : item.qty.toString()) || 0;
+        const rate = parseFloat(field === 'rate' ? value.toString() : item.rate.toString()) || 0;
+        
+        updatedItem.subTotal = qty * rate;
+        updatedItem.vatBaseAmount = updatedItem.subTotal;
+        updatedItem.vatAmount = updatedItem.vatBaseAmount * (updatedItem.vatPercent / 100);
+        updatedItem.total = updatedItem.subTotal + updatedItem.vatAmount + (updatedItem.exciseVatAmount || 0) + (updatedItem.interiorVat || 0);
+      }
+
+      // Recalculate if VAT Base changes
+      if (field === 'vatBaseAmount') {
+        const vatBase = parseFloat(value.toString()) || 0;
+        updatedItem.vatAmount = vatBase * (updatedItem.vatPercent / 100);
+        updatedItem.total = updatedItem.subTotal + updatedItem.vatAmount + (updatedItem.exciseVatAmount || 0) + (updatedItem.interiorVat || 0);
+      }
+
+      // Recalculate if VAT Amount changes
+      if (field === 'vatAmount') {
+        updatedItem.total = updatedItem.subTotal + parseFloat(value.toString()) + (updatedItem.exciseVatAmount || 0) + (updatedItem.interiorVat || 0);
+      }
+
+      // Recalculate if Excise VAT or Interior VAT changes
+      if (field === 'exciseVatAmount' || field === 'interiorVat') {
+        const exciseVat = parseFloat(field === 'exciseVatAmount' ? value.toString() : (updatedItem.exciseVatAmount || 0).toString()) || 0;
+        const interiorVat = parseFloat(field === 'interiorVat' ? value.toString() : (updatedItem.interiorVat || 0).toString()) || 0;
+        updatedItem.total = updatedItem.subTotal + updatedItem.vatAmount + exciseVat + interiorVat;
+      }
+
+      return updatedItem;
+    }));
+
+    // Mark item as changed if it's from API
+    const item = expenseItems.find(item => item.id === itemId);
+    if (item?.isFromAPI) {
+      setChangedItems(prev => new Set([...prev, itemId]));
+    }
+  };
+
+  // Handle save expense for display items
+  const handleSaveExpenseDisplay = async (item: ExpenseItem) => {
+    // Validate required fields
+    if (!item.expenseCode || !item.serviceProvider || item.qty <= 0 || item.rate <= 0) {
+      alert("Please fill in all required fields (Expense Code, Service Provider, Qty, Rate)");
+      return;
+    }
+
+    // Confirm before saving
+    const confirmed = window.confirm("Do you want to save this expense item?");
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      // Prepare API request data
+      const expenseData: SaveExpenseRequest = {
+        webSeqId: pstWebSeqId || 152039978, // Use provided webSeqId or fallback
+        podRowId: item.rowId || "",
+        productCode: item.expenseCode,
+        serviceProvider: item.serviceProvider,
+        qty: item.qty,
+        rate: item.rate,
+        vatBaseAmount: item.vatBaseAmount || 0,
+        vatPercent: item.vatPercent || 0,
+        vatAmount: item.vatAmount || 0,
+        exciseVatAmount: item.exciseVatAmount || 0,
+        interiorVatAmount: item.interiorVat || 0,
+        total: item.total,
+        documentNo: item.documentNo || "",
+        documentDate: item.documentDate ? item.documentDate.split("T")[0] : "",
+        remarks: item.remarks || "",
+      };
+
+      console.log('💾 Saving expense item:', expenseData);
+
+      // Call API
+      const response = await pstService.saveExpenseItem(expenseData);
+
+      if (!response.error && response.data && response.data[0]?.STATUS === "Saved Succssfully") {
+        alert("Expense item saved successfully!");
+        console.log('✅ Save response:', response);
+        
+        // Remove item from changed items set
+        setChangedItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(item.id);
+          return newSet;
+        });
+        
+        // Optionally reload the PST details to get updated data
+        if (pstWebSeqId) {
+          loadPSTDetails();
+        }
+      } else {
+        alert("Failed to save expense item. Please try again.");
+        console.error('❌ Save failed:', response);
+      }
+    } catch (error) {
+      console.error('❌ Error saving expense item:', error);
+      alert("An error occurred while saving. Please try again.");
+    }
   };
 
   // Validation
@@ -899,17 +1080,7 @@ export function CreatePSTForm({
                             <Calculator className="w-4 h-4" />
                             Expense Items
                           </h4>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addExpenseItem}
-                            disabled={isSubmitting}
-                            className="flex items-center gap-2"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add Item
-                          </Button>
+                       
                         </div>
 
                         {/* Add/Edit Expense Item Form */}
@@ -1262,7 +1433,9 @@ export function CreatePSTForm({
                                 <Card
                                   className={`border ${
                                     item.isFromAPI
-                                      ? "border-gray-200 bg-white"
+                                      ? changedItems.has(item.id)
+                                        ? "border-blue-300 bg-blue-50"
+                                        : "border-gray-200 bg-white"
                                       : "border-green-200 bg-green-50"
                                   }`}
                                 >
@@ -1285,6 +1458,11 @@ export function CreatePSTForm({
                                       </CollapsibleTrigger>
                                       <h3 className="text-base font-medium text-gray-900 flex-1">
                                         Expense Item #{index + 1}
+                                        {item.isFromAPI && changedItems.has(item.id) && (
+                                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                            Modified
+                                          </span>
+                                        )}
                                         {isCollapsed && (
                                           <span className="ml-2 text-sm text-gray-500">
                                             ({item.expenseName || item.expenseCode} - ฿{item.total.toFixed(2)})
@@ -1312,13 +1490,27 @@ export function CreatePSTForm({
                                       Expense Code{" "}
                                       <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input
-                                      value={
-                                        item.expenseName || item.expenseCode
-                                      }
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
+                                    <Select
+                                      value={item.expenseCode}
+                                      onValueChange={(value) => handleExpenseCodeChange(item.id, value)}
+                                      disabled={isSubmitting}
+                                    >
+                                      <SelectTrigger className="h-8 w-full text-sm bg-white border-gray-300">
+                                        <SelectValue placeholder="Select expense code">
+                                          {item.expenseName || item.expenseCode}
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {expenseList.map((expense) => (
+                                          <SelectItem
+                                            key={expense.expenseCode}
+                                            value={expense.expenseCode}
+                                          >
+                                            {expense.expenseName}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
 
                                   <div className="space-y-1">
@@ -1326,11 +1518,53 @@ export function CreatePSTForm({
                                       Service Provider{" "}
                                       <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input
-                                      value={item.serviceProvider}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          role="combobox"
+                                          className="h-8 w-full justify-between text-sm bg-white border-gray-300"
+                                          disabled={isSubmitting}
+                                        >
+                                          {item.serviceProvider || "Select service provider"}
+                                          <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-full p-0">
+                                        <Command>
+                                          <CommandInput
+                                            placeholder="Search..."
+                                            className="h-8 border-0 focus:ring-0 text-sm"
+                                          />
+                                          <CommandEmpty>
+                                            No provider found.
+                                          </CommandEmpty>
+                                          <CommandGroup className="max-h-40 overflow-y-auto">
+                                            {serviceProviders.map(
+                                              (provider, index) => (
+                                                <CommandItem
+                                                  key={index}
+                                                  value={provider.name}
+                                                  className="cursor-pointer text-sm"
+                                                  onSelect={() =>
+                                                    handleServiceProviderChange(item.id, provider.name)
+                                                  }
+                                                >
+                                                  <Check
+                                                    className={`mr-2 h-3 w-3 ${
+                                                      item.serviceProvider === provider.name
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                    }`}
+                                                  />
+                                                  {provider.name}
+                                                </CommandItem>
+                                              )
+                                            )}
+                                          </CommandGroup>
+                                        </Command>
+                                      </PopoverContent>
+                                    </Popover>
                                   </div>
                                 </div>
 
@@ -1338,23 +1572,28 @@ export function CreatePSTForm({
                                 <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
                                   <div className="space-y-1">
                                     <Label className="text-xs font-medium text-gray-700">
-                                      Qty
+                                      Qty <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
+                                      type="number"
                                       value={item.qty}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'qty', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
                                   <div className="space-y-1">
                                     <Label className="text-xs font-medium text-gray-700">
-                                      Rate
+                                      Rate <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
-                                      value={item.rate.toFixed(2)}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      type="number"
+                                      step="0.01"
+                                      value={item.rate}
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'rate', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
@@ -1374,11 +1613,12 @@ export function CreatePSTForm({
                                       VAT Base
                                     </Label>
                                     <Input
-                                      value={
-                                        item.vatBaseAmount?.toFixed(2) || "0.00"
-                                      }
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      type="number"
+                                      step="0.01"
+                                      value={item.vatBaseAmount?.toFixed(2) || "0.00"}
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'vatBaseAmount', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
@@ -1387,9 +1627,7 @@ export function CreatePSTForm({
                                       VAT %
                                     </Label>
                                     <Input
-                                      value={
-                                        item.vatPercent?.toFixed(2) || "0.00"
-                                      }
+                                      value={item.vatPercent?.toFixed(2) || "0.00"}
                                       readOnly
                                       className="h-8 text-sm bg-gray-100 border-gray-300"
                                     />
@@ -1400,11 +1638,12 @@ export function CreatePSTForm({
                                       VAT Amt
                                     </Label>
                                     <Input
-                                      value={
-                                        item.vatAmount?.toFixed(2) || "0.00"
-                                      }
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      type="number"
+                                      step="0.01"
+                                      value={item.vatAmount?.toFixed(2) || "0.00"}
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'vatAmount', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
@@ -1413,12 +1652,12 @@ export function CreatePSTForm({
                                       Excise VAT
                                     </Label>
                                     <Input
-                                      value={
-                                        item.exciseVatAmount?.toFixed(2) ||
-                                        "0.00"
-                                      }
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      type="number"
+                                      step="0.01"
+                                      value={item.exciseVatAmount?.toFixed(2) || "0.00"}
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'exciseVatAmount', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
@@ -1427,11 +1666,12 @@ export function CreatePSTForm({
                                       Interior VAT
                                     </Label>
                                     <Input
-                                      value={
-                                        item.interiorVat?.toFixed(2) || "0.00"
-                                      }
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      type="number"
+                                      step="0.01"
+                                      value={item.interiorVat?.toFixed(2) || "0.00"}
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'interiorVat', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
                                 </div>
@@ -1455,8 +1695,9 @@ export function CreatePSTForm({
                                     </Label>
                                     <Input
                                       value={item.documentNo || ""}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'documentNo', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
@@ -1465,13 +1706,15 @@ export function CreatePSTForm({
                                       Document Date
                                     </Label>
                                     <Input
+                                      type="date"
                                       value={
                                         item.documentDate
                                           ? item.documentDate.split("T")[0]
                                           : ""
                                       }
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'documentDate', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
 
@@ -1481,11 +1724,31 @@ export function CreatePSTForm({
                                     </Label>
                                     <Input
                                       value={item.remarks || ""}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
+                                      onChange={(e) => handleExpenseFieldChange(item.id, 'remarks', e.target.value)}
+                                      disabled={isSubmitting}
+                                      className="h-8 text-sm bg-white border-gray-300"
                                     />
                                   </div>
                                 </div>
+
+                                {/* Save Expense Button for editable items or changed API items */}
+                                {(!item.isFromAPI || changedItems.has(item.id)) && (
+                                  <div className="flex justify-end pt-4 border-t border-gray-200">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => handleSaveExpenseDisplay(item)}
+                                      disabled={isSubmitting || !item.expenseCode || !item.serviceProvider || item.qty <= 0 || item.rate <= 0}
+                                      className={`text-white text-sm px-4 py-2 ${
+                                        item.isFromAPI && changedItems.has(item.id)
+                                          ? "bg-blue-600 hover:bg-blue-700" 
+                                          : "bg-green-600 hover:bg-green-700"
+                                      }`}
+                                    >
+                                      {item.isFromAPI && changedItems.has(item.id) ? "Update Expense" : "Save Expense"}
+                                    </Button>
+                                  </div>
+                                )}
                                     </CardContent>
                                   </CollapsibleContent>
                                 </Card>
