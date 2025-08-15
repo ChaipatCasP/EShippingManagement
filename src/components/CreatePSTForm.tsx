@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { LoadingSpinner, ProgressBar } from "./ui/loading";
@@ -37,6 +36,7 @@ import {
   CommandItem,
 } from "./ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Textarea } from "./ui/textarea";
 import {
   X,
   ArrowLeft,
@@ -46,7 +46,6 @@ import {
   Plus,
   Trash2,
   Calculator,
-  MessageSquare,
   Key,
   Check,
   ChevronsUpDown,
@@ -56,7 +55,6 @@ import {
   MapPin,
   ArrowRight,
   FileDigit,
-  Truck,
 } from "lucide-react";
 import {
   pstService,
@@ -145,6 +143,7 @@ export function CreatePSTForm({
   const [formData, setFormData] = useState({
     refKey: "",
     requestPaymentDate: "",
+    countryOfOrigin: "",
     message: "",
     messageSaved: false,
     messageEditMode: false,
@@ -1244,10 +1243,333 @@ export function CreatePSTForm({
               </Card>
             )}
 
-            {/* Main Layout: Content + Sidebar - Enhanced for Full Width */}
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8">
-              {/* Main Content Area - Wider for better content distribution */}
-              <div className="xl:col-span-4 space-y-8">
+            {/* Main Layout: Full Width Content */}
+            <div className="w-full">
+              {/* Main Content Area - Full Width */}
+              <div className="w-full space-y-8">
+                {/* Bill Entry Section */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-orange-600" />
+                      Bill Entry (Urgent Request)
+                      <div className="ml-auto flex items-center gap-4 text-sm">
+                        <span className="text-gray-600">
+                          Bill Status: <span className="font-medium text-blue-600">New Entry</span>
+                        </span>
+                        <span className="text-gray-600">
+                          Jagota Status: <span className="font-medium text-blue-600">New Entry</span>
+                        </span>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Row 1: PO Book, PST, PO Date, Reference Key */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          PO Book
+                        </Label>
+                        <Input
+                          value={headerData.poBook || ''}
+                          readOnly
+                          className="bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          PST
+                        </Label>
+                        <Input
+                          value={`${headerData.pstBook || ''}-${headerData.pstNo || ''}`}
+                          readOnly
+                          className="bg-gray-50 border-gray-300"
+                          placeholder="PST-17819"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          PO Date
+                        </Label>
+                        <Input
+                          value={headerData.poDate || '19-Oct-2023'}
+                          readOnly
+                          className="bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Reference Key #
+                        </Label>
+                        <Input
+                          value={formData.refKey || '102437605'}
+                          readOnly
+                          className="bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 2: Billing By */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Billing By
+                      </Label>
+                      <div className="bg-gray-50 border border-gray-300 rounded-md p-3">
+                        <div className="text-sm">
+                          <div className="font-medium text-gray-900">
+                            {headerData.supplierName || 'M INTER-CORP LOGISTICS CO.,LTD.'}
+                          </div>
+                          
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Invoice No, Contact Person, Invoice Date, Credit Term */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Invoice No. <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          value={headerData.invoiceNo || ''}
+                          onChange={(e) => setHeaderData({...headerData, invoiceNo: e.target.value})}
+                          placeholder="Enter invoice number"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Contact Person <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="flex gap-2">
+                          <Select defaultValue="airway-bill">
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="airway-bill">Airway Bill</SelectItem>
+                              <SelectItem value="bill-of-lading">Bill of Lading</SelectItem>
+                              <SelectItem value="truck-bill">Truck Bill</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder="Khun Pan"
+                            className="flex-1"
+                            defaultValue="Khun Pan"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Invoice Date
+                        </Label>
+                        <Input
+                          type="date"
+                          value={headerData.invoiceDate || ''}
+                          onChange={(e) => setHeaderData({...headerData, invoiceDate: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Credit Term
+                        </Label>
+                        <div className="flex gap-2">
+                          <Select defaultValue="credit-30">
+                            <SelectTrigger className="flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="credit-30">เครดิต 30 วัน</SelectItem>
+                              <SelectItem value="credit-60">เครดิต 60 วัน</SelectItem>
+                              <SelectItem value="credit-90">เครดิต 90 วัน</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm text-gray-600">Credit Days</span>
+                            <Input
+                              value="30.00"
+                              readOnly
+                              className="w-20 bg-gray-50"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 4: AWB/BL/Truck Date, Import Entry No, Currency, Reference Code */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          AWB/BL/Truck Date <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          type="date"
+                          value={headerData.etd || ''}
+                          onChange={(e) => setHeaderData({...headerData, etd: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Import Entry No.(เลขที่ใบขน)
+                        </Label>
+                        <Input
+                          value={headerData.importEntryNo || ''}
+                          onChange={(e) => setHeaderData({...headerData, importEntryNo: e.target.value})}
+                          placeholder="Import Entry No. (เลขที่ใบขน)"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Currency
+                        </Label>
+                        <Input
+                          value="THB 1"
+                          readOnly
+                          className="bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Reference Code
+                        </Label>
+                        <Input
+                          placeholder="Reference code"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 5: ETA, Vessel Name, Tax ID No, Payment Term */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          ETA <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          type="date"
+                          value={headerData.eta || ''}
+                          onChange={(e) => setHeaderData({...headerData, eta: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Vessel Name
+                        </Label>
+                        <Input
+                          placeholder="Vessel Name"
+                          defaultValue="test"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Tax ID No.
+                        </Label>
+                        <Input
+                          placeholder="Tax ID number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Payment Term
+                        </Label>
+                        <Input
+                          placeholder="Payment term"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 6: Country of Origin, Due Date, Request Payment Date */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Country of Origin <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          value={formData.countryOfOrigin || 'test'}
+                          onChange={(e) => handleInputChange('countryOfOrigin', e.target.value)}
+                          placeholder="Country of origin"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Due Date
+                        </Label>
+                        <Input
+                          type="date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Request Payment Date
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="date"
+                            value={formData.requestPaymentDate}
+                            onChange={(e) => handleInputChange('requestPaymentDate', e.target.value)}
+                          />
+                          <Select defaultValue="08:00">
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="08:00">08:00</SelectItem>
+                              <SelectItem value="09:00">09:00</SelectItem>
+                              <SelectItem value="10:00">10:00</SelectItem>
+                              <SelectItem value="11:00">11:00</SelectItem>
+                              <SelectItem value="12:00">12:00</SelectItem>
+                              <SelectItem value="13:00">13:00</SelectItem>
+                              <SelectItem value="14:00">14:00</SelectItem>
+                              <SelectItem value="15:00">15:00</SelectItem>
+                              <SelectItem value="16:00">16:00</SelectItem>
+                              <SelectItem value="17:00">17:00</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 7: Remarks */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Remarks
+                      </Label>
+                      <Textarea
+                        placeholder="Remarks"
+                        defaultValue="Remarks"
+                        className="min-h-20"
+                        rows={3}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="bg-gray-600 text-white hover:bg-gray-700"
+                      >
+                        Save Changes
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="bg-gray-600 text-white hover:bg-gray-700"
+                      >
+                        Cancel Bill
+                      </Button>
+                      <Button
+                        type="button"
+                        className="bg-green-600 text-white hover:bg-green-700"
+                      >
+                        Submit Bill
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <form onSubmit={handleFinalSubmit} className="space-y-8">
                   {/* Step 2 Information */}
                   <Card className="shadow-sm">
@@ -2303,183 +2625,6 @@ export function CreatePSTForm({
                     </div>
                   )}
                 </form>
-              </div>
-
-              {/* Enhanced Sidebar - Optimized for better information display */}
-              <div className="xl:col-span-1 space-y-6">
-                {/* Bill Information Card */}
-                <Card className="shadow-sm border-l-4 border-l-blue-500">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Building className="w-4 h-4 text-blue-600" />
-                      Bill Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {/* Supplier */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <Building className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                          Supplier
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900 pl-4">
-                        {headerData.supplierName || step1Data.supplierName}
-                      </p>
-                    </div>
-
-                    {/* PO Information */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <Package2 className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                          Purchase Order
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900 pl-4">
-                        {headerData.poBook}-{headerData.poNo}
-                      </p>
-                      <p className="text-xs text-gray-500 pl-4">
-                        Date: {headerData.poDate}
-                      </p>
-                    </div>
-
-                    {/* Invoice Information */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <FileText className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                          Invoice
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900 pl-4">
-                        {headerData.invoiceNo || step1Data.invoiceNo}
-                      </p>
-                      <p className="text-xs text-gray-500 pl-4">
-                        Date: {headerData.invoiceDate}
-                      </p>
-                    </div>
-
-                    {/* PST Information */}
-                    {(headerData.pstBook || headerData.pstNo) && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1">
-                          <FileDigit className="w-3 h-3 text-gray-400" />
-                          <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                            PST Reference
-                          </p>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900 pl-4">
-                          {headerData.pstBook}-{headerData.pstNo}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Transport Information */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <Truck className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                          Transport
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900 pl-4">
-                        {step1Data.transportMode}
-                      </p>
-                      <p className="text-xs text-gray-500 pl-4">
-                        AWB: {headerData.awbNo}
-                      </p>
-                    </div>
-
-                    {/* Timeline Information */}
-                    <div className="space-y-2 pt-2 border-t border-gray-100">
-                      <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
-                        Timeline
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                            <span className="text-xs text-gray-600">ETD</span>
-                          </div>
-                          <span className="text-xs font-medium text-gray-900">
-                            {headerData.etd || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
-                            <span className="text-xs text-gray-600">ETA</span>
-                          </div>
-                          <span className="text-xs font-medium text-gray-900">
-                            {headerData.eta || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-gray-600">WR Date</span>
-                          </div>
-                          <span className="text-xs font-medium text-gray-900">
-                            {headerData.wrDate || "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Route Information */}
-                    <div className="space-y-2 pt-2 border-t border-gray-100">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                          Route
-                        </p>
-                      </div>
-                      <div className="space-y-1 pl-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                            <span className="text-xs text-gray-600">From</span>
-                          </div>
-                          <span className="text-xs font-medium text-gray-900">
-                            {headerData.portOfOrigin || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-gray-600">To</span>
-                          </div>
-                          <span className="text-xs font-medium text-gray-900">
-                            {headerData.portOfDestination || "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Message/Notes Card */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5 text-green-600" />
-                      Notes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      placeholder="Add notes or comments..."
-                      value={formData.message}
-                      onChange={(e) =>
-                        handleInputChange("message", e.target.value)
-                      }
-                      disabled={isSubmitting}
-                      className="min-h-24 resize-none"
-                    />
-                  </CardContent>
-                </Card>
               </div>
             </div>
           </div>
