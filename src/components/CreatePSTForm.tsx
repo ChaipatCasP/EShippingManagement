@@ -111,6 +111,10 @@ interface HeaderData {
   status: string;
   pstBook: string;
   pstNo: string;
+  vesselName?: string;
+  referenceCode?: string;
+  taxIdNo?: string;
+  paymentTerm?: string;
 }
 
 interface CreatePSTFormProps {
@@ -128,7 +132,7 @@ export function CreatePSTForm({
   onClose,
   onSubmit,
 }: CreatePSTFormProps) {
-  console.log("🚀 CreatePSTForm initialized with props:", {
+  console.log("🚀 Chaipat CreatePSTForm initialized with props:", {
     createdPSTNumber,
     pstWebSeqId,
     dashboardHeaderData,
@@ -143,22 +147,44 @@ export function CreatePSTForm({
   const [formData, setFormData] = useState({
     refKey: "",
     requestPaymentDate: "",
-    countryOfOrigin: "",
     message: "",
     messageSaved: false,
     messageEditMode: false,
+    remarks: "",
   });
 
   // Step 1 data from parent component (pre-filled) - use dashboard data when available
   const [step1Data, setStep1Data] = useState({
-    invoiceNo: dashboardHeaderData?.invoiceNo || "INV-TH-2024-1205-0001",
-    contactPerson: "วรัญญา มิติปัญญา",
-    supplierName: dashboardHeaderData?.supplierName || "Global Foods Ltd.",
-    transportMode: "Sea Freight",
-    importEntryNo: dashboardHeaderData?.importEntryNo || "IET-24-001205-0001",
-    currency: "THB",
-    dueDate: "2024-12-20",
-    creditTerm: "30",
+    invoiceNo: dashboardHeaderData?.invoiceNo,
+    contactPerson: "",
+    supplierName: dashboardHeaderData?.supplierName,
+    transportMode: "",
+    importEntryNo: dashboardHeaderData?.importEntryNo,
+    currency: "",
+    dueDate: "",
+    creditTerm: "",
+  });
+
+  // Bill Entry data - separate from header data
+  const [billEntryData, setBillEntryData] = useState({
+    invoiceNo: "",
+    contactPerson: "",
+    transportMode: "",
+    invoiceDate: "",
+    creditTerm: "",
+    awbDate: "",
+    importEntryNo: "",
+    currency: "",
+    referenceCode: "",
+    eta: "",
+    vesselName: "",
+    taxIdNo: "",
+    paymentTerm: "",
+    countryOfOrigin: "",
+    dueDate: "",
+    requestPaymentDate: "",
+    requestPaymentTime: "",
+    remarks: "",
   });
 
   // Header data from API for display - initialize with dashboard data if provided
@@ -176,9 +202,13 @@ export function CreatePSTForm({
     importEntryNo: dashboardHeaderData?.importEntryNo || "",
     portOfOrigin: dashboardHeaderData?.portOfOrigin || "",
     portOfDestination: dashboardHeaderData?.portOfDestination || "",
-    status: (dashboardHeaderData?.status || "Single") as "Single" | "Multiple",
+    status: (dashboardHeaderData?.status || "") as "Single" | "Multiple" | "",
     pstBook: dashboardHeaderData?.pstBook || "",
     pstNo: dashboardHeaderData?.pstNo || "",
+    vesselName: "",
+    referenceCode: "",
+    taxIdNo: "",
+    paymentTerm: "",
   });
 
   // Expense items state - Start empty, will be populated based on API data or default
@@ -252,49 +282,70 @@ export function CreatePSTForm({
     loadServiceProviders();
   }, []);
 
+  // Read URL parameters and update form data
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const pstWebSeqIdParam = url.searchParams.get("pstWebSeqId");
+    const modeParam = url.searchParams.get("mode");
+
+    if (pstWebSeqIdParam && !pstWebSeqId) {
+      const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
+      if (!isNaN(pstWebSeqIdValue)) {
+        // Update the formData refKey with the URL parameter value
+        setFormData((prev) => ({
+          ...prev,
+          refKey: pstWebSeqIdValue.toString(),
+        }));
+      }
+    } else if (pstWebSeqId) {
+      // Update formData with the prop value
+      setFormData((prev) => ({
+        ...prev,
+        refKey: pstWebSeqId.toString(),
+      }));
+    }
+  }, [pstWebSeqId]);
+
   // Initialize expense items based on whether we have API data or not
   useEffect(() => {
     // Only initialize if we don't have pstWebSeqId (no API data expected)
     if (!pstWebSeqId && expenseItems.length === 0) {
-      console.log("🔧 No API data expected, showing one empty expense form");
       setShowExpenseForm(true);
 
       // Only set default header data if no dashboard data was provided
       if (!dashboardHeaderData) {
         setHeaderData({
-          supplierName: "Sample Company Co., Ltd.",
-          poBook: "PO24",
-          poNo: "12345",
-          poDate: "2024-07-07",
-          etd: "2024-07-07",
-          eta: "2024-07-17",
-          wrDate: "2024-07-19",
-          invoiceNo: "BMJ824-13",
-          invoiceDate: "2024-06-27",
-          awbNo: "AMQ0231038",
+          supplierName: "",
+          poBook: "",
+          poNo: "",
+          poDate: "",
+          etd: "",
+          eta: "",
+          wrDate: "",
+          invoiceNo: "",
+          invoiceDate: "",
+          awbNo: "",
           importEntryNo: "",
-          portOfOrigin: "QINGDAO",
-          portOfDestination: "LEAM CHABANG PORT",
-          status: "Single",
+          portOfOrigin: "",
+          portOfDestination: "",
+          status: "",
           pstBook: "",
           pstNo: "",
+          vesselName: "",
+          referenceCode: "",
+          taxIdNo: "",
+          paymentTerm: "",
         });
       }
     }
   }, [pstWebSeqId, expenseItems.length, dashboardHeaderData]);
 
   const loadExpenseList = async () => {
-    console.log("🔄 Loading expense list from API...");
     try {
       const response = await pstService.getExpenseList("Y");
       console.log("📥 Expense list API response:", response);
       if (!response.error && response.data) {
         setExpenseList(response.data);
-        console.log(
-          "✅ Expense list loaded successfully:",
-          response.data.length,
-          "items"
-        );
       } else {
         console.error("❌ Expense list API returned error:", response);
       }
@@ -304,17 +355,11 @@ export function CreatePSTForm({
   };
 
   const loadServiceProviders = async () => {
-    console.log("🔄 Loading service providers from API...");
     try {
       const response = await pstService.getServiceProviders();
       console.log("📥 Service providers API response:", response);
       if (!response.error && response.data) {
         setServiceProviders(response.data);
-        console.log(
-          "✅ Service providers loaded successfully:",
-          response.data.length,
-          "items"
-        );
       } else {
         console.error("❌ Service providers API returned error:", response);
       }
@@ -336,21 +381,15 @@ export function CreatePSTForm({
 
   const loadPSTDetails = async () => {
     if (!pstWebSeqId) {
-      console.log("❌ No pstWebSeqId provided");
       return;
     }
 
-    console.log("🔄 Loading PST details for webSeqId:", pstWebSeqId);
     setIsSubmitting(true);
     try {
-      console.log("📞 Calling pstService.getPSTDetails...");
       const response = await pstService.getPSTDetails(pstWebSeqId);
-      console.log("📥 API Response received:", response);
 
       if (!response.error && response.data) {
         const data = response.data;
-        console.log("📋 Processing data - webSeqID:", data.webSeqID);
-
         // Update step1Data with API response
         setStep1Data({
           invoiceNo: data.invoiceNo || "No Invoice",
@@ -364,53 +403,45 @@ export function CreatePSTForm({
         });
 
         // Update header data with API response, but prefer dashboard data for supplier info
-        console.log("🔍 API Data - invoiceList:", data.invoiceList);
-        console.log(
-          "🔍 API Data - supplierName from API:",
-          data.invoiceList[0]?.supplierName
-        );
-        console.log(
-          "🔍 Dashboard - supplierName from dashboard:",
-          dashboardHeaderData?.supplierName
-        );
-
         setHeaderData({
           // Prefer dashboard supplier name, fallback to API if not available
-          supplierName:
-            dashboardHeaderData?.supplierName ||
-            data.invoiceList[0]?.supplierName ||
-            "",
-          poBook: dashboardHeaderData?.poBook || data.poBook || "",
-          poNo: dashboardHeaderData?.poNo || data.poNo?.toString() || "",
-          poDate: data.poDate
-            ? data.poDate.split("T")[0]
-            : dashboardHeaderData?.poDate || "",
-          etd: data.awbDate
-            ? data.awbDate.split("T")[0]
-            : dashboardHeaderData?.etd || "",
-          eta: data.eta
-            ? data.eta.split("T")[0]
-            : dashboardHeaderData?.eta || "",
-          wrDate: data.requestPaymentDateTime
-            ? data.requestPaymentDateTime.split("T")[0]
-            : dashboardHeaderData?.wrDate || "",
-          invoiceNo: data.invoiceNo || dashboardHeaderData?.invoiceNo || "",
-          invoiceDate: data.invoiceDate
-            ? data.invoiceDate.split("T")[0]
-            : dashboardHeaderData?.invoiceDate || "",
-          awbNo: data.awbNo || dashboardHeaderData?.awbNo || "",
-          importEntryNo:
-            data.importEntryNo || dashboardHeaderData?.importEntryNo || "",
-          portOfOrigin:
-            data.countryOfOrigin || dashboardHeaderData?.portOfOrigin || "",
+          supplierName: dashboardHeaderData?.supplierName || "",
+          poBook: dashboardHeaderData?.poBook || "",
+          poNo: dashboardHeaderData?.poNo || "",
+          poDate: dashboardHeaderData?.poDate || "",
+          etd: dashboardHeaderData?.etd || "",
+          eta: dashboardHeaderData?.eta || "",
+          wrDate: dashboardHeaderData?.wrDate || "",
+          invoiceNo: dashboardHeaderData?.invoiceNo || "",
+          invoiceDate: dashboardHeaderData?.invoiceDate || "",
+          awbNo: dashboardHeaderData?.awbNo || "",
+          importEntryNo: dashboardHeaderData?.importEntryNo || "",
+          portOfOrigin: dashboardHeaderData?.portOfOrigin || "",
           portOfDestination: dashboardHeaderData?.portOfDestination || "",
-          status:
-            data.invoiceList?.length > 1
-              ? ("Multiple" as const)
-              : ("Single" as const),
-          pstBook: dashboardHeaderData?.pstBook || "",
-          pstNo: dashboardHeaderData?.pstNo || "",
+          status: dashboardHeaderData?.status
+            ? ("Multiple" as const)
+            : ("Single" as const),
+          pstBook: dashboardHeaderData?.pstBook || data.poBook || "",
+          pstNo: dashboardHeaderData?.pstNo || (data.poNo !== undefined && data.poNo !== null ? String(data.poNo) : "") || "",
+          vesselName: data.vesselName || "",
+          referenceCode: "",
+          taxIdNo: "",
+          paymentTerm: data.paymentTerm || "",
         });
+
+        // Update form data with API response
+        setFormData((prev) => ({
+          ...prev,
+          requestPaymentDate: data.requestPaymentDateTime
+            ? data.requestPaymentDateTime.split("T")[0]
+            : prev.requestPaymentDate || "",
+        }));
+
+        // Update bill entry data with API response
+        setBillEntryData((prev) => ({
+          ...prev,
+          countryOfOrigin: data.countryOfOrigin || prev.countryOfOrigin || "",
+        }));
 
         // Convert expenseList to ExpenseItem format
         const convertedExpenses: ExpenseItem[] = data.expenseList.map(
@@ -1134,16 +1165,6 @@ export function CreatePSTForm({
                           {/* Documents row */}
                           {headerData.awbNo && (
                             <div className="flex items-center gap-6 text-sm">
-                              {/* {headerData.importEntryNo && (
-                                <div className="flex items-center gap-1">
-                                  <Key className="w-4 h-4 text-gray-400" />
-                                  <span className="text-gray-600">Ref:</span>
-                                  <span className="font-medium text-gray-800">
-                                    {headerData.importEntryNo}
-                                  </span>
-                                </div>
-                              )} */}
-                              
                               {/* PST Information */}
                               {(headerData.pstBook || headerData.pstNo) && (
                                 <div className="flex items-center gap-1">
@@ -1170,7 +1191,7 @@ export function CreatePSTForm({
                               </span>
                             </div>
                             <span className="font-semibold text-gray-900">
-                              {headerData.etd || "N/A"}
+                              {headerData.etd}
                             </span>
                           </div>
                           <div className="text-left">
@@ -1181,7 +1202,7 @@ export function CreatePSTForm({
                               </span>
                             </div>
                             <span className="font-semibold text-gray-900">
-                              {headerData.eta || "N/A"}
+                              {headerData.eta}
                             </span>
                           </div>
                           <div className="text-left">
@@ -1192,7 +1213,7 @@ export function CreatePSTForm({
                               </span>
                             </div>
                             <span className="font-semibold text-gray-900">
-                              {headerData.wrDate || "N/A"}
+                              {headerData.wrDate}
                             </span>
                           </div>
                         </div>
@@ -1227,13 +1248,12 @@ export function CreatePSTForm({
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="w-4 h-4 text-gray-500" />
                           <span className="font-medium text-gray-700">
-                            {headerData.portOfOrigin || "QINGDAO"}
+                            {headerData.portOfOrigin}
                           </span>
                           <ArrowRight className="w-4 h-4 text-gray-400" />
                           <MapPin className="w-4 h-4 text-gray-500" />
                           <span className="font-medium text-gray-700">
-                            {headerData.portOfDestination ||
-                              "LEAM CHABANG PORT"}
+                            {headerData.portOfDestination}
                           </span>
                         </div>
                       </div>
@@ -1255,60 +1275,21 @@ export function CreatePSTForm({
                       Bill Entry (Urgent Request)
                       <div className="ml-auto flex items-center gap-4 text-sm">
                         <span className="text-gray-600">
-                          Bill Status: <span className="font-medium text-blue-600">New Entry</span>
+                          Bill Status:{" "}
+                          <span className="font-medium text-blue-600">
+                            New Entry
+                          </span>
                         </span>
                         <span className="text-gray-600">
-                          Jagota Status: <span className="font-medium text-blue-600">New Entry</span>
+                          Jagota Status:{" "}
+                          <span className="font-medium text-blue-600">
+                            New Entry
+                          </span>
                         </span>
                       </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Row 1: PO Book, PST, PO Date, Reference Key */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          PO Book
-                        </Label>
-                        <Input
-                          value={headerData.poBook || ''}
-                          readOnly
-                          className="bg-gray-50 border-gray-300"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          PST
-                        </Label>
-                        <Input
-                          value={`${headerData.pstBook || ''}-${headerData.pstNo || ''}`}
-                          readOnly
-                          className="bg-gray-50 border-gray-300"
-                          placeholder="PST-17819"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          PO Date
-                        </Label>
-                        <Input
-                          value={headerData.poDate || '19-Oct-2023'}
-                          readOnly
-                          className="bg-gray-50 border-gray-300"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Reference Key #
-                        </Label>
-                        <Input
-                          value={formData.refKey || '102437605'}
-                          readOnly
-                          className="bg-gray-50 border-gray-300"
-                        />
-                      </div>
-                    </div>
-
                     {/* Row 2: Billing By */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700">
@@ -1317,9 +1298,8 @@ export function CreatePSTForm({
                       <div className="bg-gray-50 border border-gray-300 rounded-md p-3">
                         <div className="text-sm">
                           <div className="font-medium text-gray-900">
-                            {headerData.supplierName || 'M INTER-CORP LOGISTICS CO.,LTD.'}
+                            {headerData.supplierName}
                           </div>
-                          
                         </div>
                       </div>
                     </div>
@@ -1331,9 +1311,13 @@ export function CreatePSTForm({
                           Invoice No. <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          value={headerData.invoiceNo || ''}
-                          onChange={(e) => setHeaderData({...headerData, invoiceNo: e.target.value})}
-                          placeholder="Enter invoice number"
+                          value={billEntryData.invoiceNo || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              invoiceNo: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
@@ -1342,20 +1326,39 @@ export function CreatePSTForm({
                           Contact Person <span className="text-red-500">*</span>
                         </Label>
                         <div className="flex gap-2">
-                          <Select defaultValue="airway-bill">
+                          <Select
+                            value={billEntryData.transportMode}
+                            onValueChange={(value) =>
+                              setBillEntryData({
+                                ...billEntryData,
+                                transportMode: value,
+                              })
+                            }
+                          >
                             <SelectTrigger className="w-32">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="airway-bill">Airway Bill</SelectItem>
-                              <SelectItem value="bill-of-lading">Bill of Lading</SelectItem>
-                              <SelectItem value="truck-bill">Truck Bill</SelectItem>
+                              <SelectItem value="airway-bill">
+                                Airway Bill
+                              </SelectItem>
+                              <SelectItem value="bill-of-lading">
+                                Bill of Lading
+                              </SelectItem>
+                              <SelectItem value="truck-bill">
+                                Truck Bill
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <Input
-                            placeholder="Khun Pan"
                             className="flex-1"
-                            defaultValue="Khun Pan"
+                            value={billEntryData.contactPerson || ""}
+                            onChange={(e) =>
+                              setBillEntryData({
+                                ...billEntryData,
+                                contactPerson: e.target.value,
+                              })
+                            }
                           />
                         </div>
                       </div>
@@ -1365,8 +1368,13 @@ export function CreatePSTForm({
                         </Label>
                         <Input
                           type="date"
-                          value={headerData.invoiceDate || ''}
-                          onChange={(e) => setHeaderData({...headerData, invoiceDate: e.target.value})}
+                          value={billEntryData.invoiceDate || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              invoiceDate: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -1374,20 +1382,36 @@ export function CreatePSTForm({
                           Credit Term
                         </Label>
                         <div className="flex gap-2">
-                          <Select defaultValue="credit-30">
+                          <Select
+                            value={billEntryData.creditTerm}
+                            onValueChange={(value) =>
+                              setBillEntryData({
+                                ...billEntryData,
+                                creditTerm: value,
+                              })
+                            }
+                          >
                             <SelectTrigger className="flex-1">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="credit-30">เครดิต 30 วัน</SelectItem>
-                              <SelectItem value="credit-60">เครดิต 60 วัน</SelectItem>
-                              <SelectItem value="credit-90">เครดิต 90 วัน</SelectItem>
+                              <SelectItem value="credit-30">
+                                เครดิต 30 วัน
+                              </SelectItem>
+                              <SelectItem value="credit-60">
+                                เครดิต 60 วัน
+                              </SelectItem>
+                              <SelectItem value="credit-90">
+                                เครดิต 90 วัน
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <div className="flex items-center gap-1">
-                            <span className="text-sm text-gray-600">Credit Days</span>
+                            <span className="text-sm text-gray-600">
+                              Credit Daysxx
+                            </span>
                             <Input
-                              value="30.00"
+                              value={billEntryData.creditTerm?.split("-")[1]}
                               readOnly
                               className="w-20 bg-gray-50"
                             />
@@ -1400,12 +1424,18 @@ export function CreatePSTForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                          AWB/BL/Truck Date <span className="text-red-500">*</span>
+                          AWB/BL/Truck Date{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           type="date"
-                          value={headerData.etd || ''}
-                          onChange={(e) => setHeaderData({...headerData, etd: e.target.value})}
+                          value={billEntryData.awbDate || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              awbDate: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
@@ -1414,9 +1444,13 @@ export function CreatePSTForm({
                           Import Entry No.(เลขที่ใบขน)
                         </Label>
                         <Input
-                          value={headerData.importEntryNo || ''}
-                          onChange={(e) => setHeaderData({...headerData, importEntryNo: e.target.value})}
-                          placeholder="Import Entry No. (เลขที่ใบขน)"
+                          value={billEntryData.importEntryNo || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              importEntryNo: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -1424,7 +1458,7 @@ export function CreatePSTForm({
                           Currency
                         </Label>
                         <Input
-                          value="THB 1"
+                          value={billEntryData.currency}
                           readOnly
                           className="bg-gray-50 border-gray-300"
                         />
@@ -1434,7 +1468,13 @@ export function CreatePSTForm({
                           Reference Code
                         </Label>
                         <Input
-                          placeholder="Reference code"
+                          value={billEntryData.referenceCode || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              referenceCode: e.target.value,
+                            })
+                          }
                         />
                       </div>
                     </div>
@@ -1447,8 +1487,13 @@ export function CreatePSTForm({
                         </Label>
                         <Input
                           type="date"
-                          value={headerData.eta || ''}
-                          onChange={(e) => setHeaderData({...headerData, eta: e.target.value})}
+                          value={billEntryData.eta || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              eta: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
@@ -1457,8 +1502,13 @@ export function CreatePSTForm({
                           Vessel Name
                         </Label>
                         <Input
-                          placeholder="Vessel Name"
-                          defaultValue="test"
+                          value={billEntryData.vesselName || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              vesselName: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -1466,7 +1516,13 @@ export function CreatePSTForm({
                           Tax ID No.
                         </Label>
                         <Input
-                          placeholder="Tax ID number"
+                          value={billEntryData.taxIdNo || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              taxIdNo: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -1474,7 +1530,13 @@ export function CreatePSTForm({
                           Payment Term
                         </Label>
                         <Input
-                          placeholder="Payment term"
+                          value={billEntryData.paymentTerm || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              paymentTerm: e.target.value,
+                            })
+                          }
                         />
                       </div>
                     </div>
@@ -1483,12 +1545,17 @@ export function CreatePSTForm({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                          Country of Origin <span className="text-red-500">*</span>
+                          Country of Origin{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          value={formData.countryOfOrigin || 'test'}
-                          onChange={(e) => handleInputChange('countryOfOrigin', e.target.value)}
-                          placeholder="Country of origin"
+                          value={billEntryData.countryOfOrigin || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              countryOfOrigin: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
@@ -1498,6 +1565,13 @@ export function CreatePSTForm({
                         </Label>
                         <Input
                           type="date"
+                          value={billEntryData.dueDate || ""}
+                          onChange={(e) =>
+                            setBillEntryData({
+                              ...billEntryData,
+                              dueDate: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -1507,10 +1581,23 @@ export function CreatePSTForm({
                         <div className="flex gap-2">
                           <Input
                             type="date"
-                            value={formData.requestPaymentDate}
-                            onChange={(e) => handleInputChange('requestPaymentDate', e.target.value)}
+                            value={billEntryData.requestPaymentDate || ""}
+                            onChange={(e) =>
+                              setBillEntryData({
+                                ...billEntryData,
+                                requestPaymentDate: e.target.value,
+                              })
+                            }
                           />
-                          <Select defaultValue="08:00">
+                          <Select
+                            value={billEntryData.requestPaymentTime}
+                            onValueChange={(value) =>
+                              setBillEntryData({
+                                ...billEntryData,
+                                requestPaymentTime: value,
+                              })
+                            }
+                          >
                             <SelectTrigger className="w-24">
                               <SelectValue />
                             </SelectTrigger>
@@ -1537,8 +1624,13 @@ export function CreatePSTForm({
                         Remarks
                       </Label>
                       <Textarea
-                        placeholder="Remarks"
-                        defaultValue="Remarks"
+                        value={billEntryData.remarks || ""}
+                        onChange={(e) =>
+                          setBillEntryData({
+                            ...billEntryData,
+                            remarks: e.target.value,
+                          })
+                        }
                         className="min-h-20"
                         rows={3}
                       />
@@ -1577,7 +1669,6 @@ export function CreatePSTForm({
                       <CardTitle className="flex items-center gap-2">
                         <Key className="w-5 h-5 text-amber-600" />
                         PST Details
-                      
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-2">
                         Fill in the Ref Key, request payment date, and expense
@@ -1587,7 +1678,7 @@ export function CreatePSTForm({
                     <CardContent className="space-y-8">
                       {/* Enhanced Ref Key and Payment Date Grid */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                        <div className="space-y-2" style={{display:'none',}}>
+                        <div className="space-y-2" style={{ display: "none" }}>
                           <Label
                             htmlFor="refKey"
                             className="text-sm font-medium text-gray-700"
@@ -1850,7 +1941,6 @@ export function CreatePSTForm({
                                   </Label>
                                   <Input
                                     type="number"
-                                    placeholder="3.00"
                                     value={expenseItemForm.qty}
                                     onChange={(e) =>
                                       handleExpenseFormChange(
@@ -1869,7 +1959,6 @@ export function CreatePSTForm({
                                   </Label>
                                   <Input
                                     type="number"
-                                    placeholder="250.00"
                                     value={expenseItemForm.rate}
                                     onChange={(e) =>
                                       handleExpenseFormChange(
@@ -1981,7 +2070,6 @@ export function CreatePSTForm({
                                     Document No.
                                   </Label>
                                   <Input
-                                    placeholder="Narendra"
                                     value={expenseItemForm.documentNo}
                                     onChange={(e) =>
                                       handleExpenseFormChange(
@@ -2017,7 +2105,6 @@ export function CreatePSTForm({
                                     Remarks
                                   </Label>
                                   <Input
-                                    placeholder="Test"
                                     value={expenseItemForm.remarks}
                                     onChange={(e) =>
                                       handleExpenseFormChange(

@@ -191,16 +191,16 @@ export interface Dimensions {
 
 export type ShippingServiceType = 'standard' | 'express' | 'overnight' | 'economy';
 export type PackageType = 'envelope' | 'box' | 'tube' | 'pallet' | 'custom';
-export type ShipmentStatus = 
-  | 'draft' 
-  | 'pending' 
-  | 'confirmed' 
-  | 'picked_up' 
-  | 'in_transit' 
-  | 'out_for_delivery' 
-  | 'delivered' 
-  | 'failed_delivery' 
-  | 'returned' 
+export type ShipmentStatus =
+  | 'draft'
+  | 'pending'
+  | 'confirmed'
+  | 'picked_up'
+  | 'in_transit'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'failed_delivery'
+  | 'returned'
   | 'cancelled';
 
 export interface ShipmentTimeline {
@@ -279,17 +279,19 @@ export interface POListItem {
   warehouseReceivedDate: string;
   coLoadPOCount: number;
   coLoadSupplierCount: number;
-  // Added from API response
-  pstWebSeqId?: number; // PST web sequence id
-  pswWebSeqId?: number; // PSW web sequence id
-  pstBook?: string | null; // PST Book จาก API
-  pstNo?: number | null; // PST Number จาก API
-  pstStatus?: string; // PST Status จาก API
-  pswStatus?: string; // PSW Status จาก API
+  pstBook?: string | null;
+  pstNo?: number | null; 
+  pstStatus?: string;
+  pstJagotaStatus?: string;
+  pstWebSeqId?: number; 
+  pswBook?: string | null;
+  pswNo?: number | null; 
+  pswStatus?: string;
+  pswJagotaStatus?: string;
+  pswWebSeqId?: number; 
+
   pstNumber?: string; // PST Number จาก API
   pswNumber?: string; // PSW Number จาก API
-  pstJagotaStatus?: string; // PST Jagota Status จาก API
-  pswJagotaStatus?: string; // PSW Jagota Status จาก API
 }
 
 export interface EShippingPOListResponse {

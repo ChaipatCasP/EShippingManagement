@@ -41,14 +41,14 @@ export interface Shipment {
   weight: string;
   dimensions: string;
   assignedAgent: string;
-  agentContact: string;
-  trackingNumber: string;
-  customsDeclaration: string;
-  insurance: boolean;
-  priority: 'High' | 'Medium' | 'Low';
-  remarks: string;
-  specialInstructions: string;
-  documents: string[];
+  // agentContact: string;
+  // trackingNumber: string;
+  // customsDeclaration: string;
+  // insurance: boolean;
+  // priority: 'High' | 'Medium' | 'Low';
+  // remarks: string;
+  // specialInstructions: string;
+  // documents: string[];
   relatedSuppliers: RelatedSupplier[];
   
   // Original PO List data for API calls

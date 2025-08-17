@@ -143,9 +143,19 @@ export default function ShippingDashboard() {
           break;
         case 'create-pst':
           if (selectedPOForPST) {
-            window.history.replaceState(null, '', `/create-pst/${selectedPOForPST}`);
+            const url = new URL(window.location.origin + `/create-pst/${selectedPOForPST}`);
+            if (pstWebSeqId) {
+              url.searchParams.set('pstWebSeqId', pstWebSeqId.toString());
+              url.searchParams.set('mode', 'update');
+            }
+            window.history.replaceState(null, '', url.toString());
           } else {
-            window.history.replaceState(null, '', '/create-pst');
+            const url = new URL(window.location.origin + '/create-pst');
+            if (pstWebSeqId) {
+              url.searchParams.set('pstWebSeqId', pstWebSeqId.toString());
+              url.searchParams.set('mode', 'update');
+            }
+            window.history.replaceState(null, '', url.toString());
           }
           break;
         case 'create-psw':
@@ -159,7 +169,27 @@ export default function ShippingDashboard() {
           window.history.replaceState(null, '', '/dashboard');
       }
     }
-  }, [isAuthenticated, needsOTP, currentView, selectedPOForPST, selectedPOForPSW]);
+  }, [isAuthenticated, needsOTP, currentView, selectedPOForPST, selectedPOForPSW, pstWebSeqId]);
+
+  // Read URL parameters on component mount
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const pstWebSeqIdParam = url.searchParams.get('pstWebSeqId');
+    const modeParam = url.searchParams.get('mode');
+    
+    if (pstWebSeqIdParam && isAuthenticated) {
+      const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
+      if (!isNaN(pstWebSeqIdValue)) {
+        console.log('🔍 Reading URL parameters:', { pstWebSeqIdValue, mode: modeParam });
+        setPstWebSeqId(pstWebSeqIdValue);
+        
+        // If we're not already on create-pst page, navigate there
+        if (currentView !== 'create-pst') {
+          setCurrentView('create-pst');
+        }
+      }
+    }
+  }, [isAuthenticated, currentView]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -189,6 +219,16 @@ export default function ShippingDashboard() {
         const poNumber = path.split('/')[2];
         setSelectedPOForPST(poNumber || null);
         setCurrentView('create-pst');
+        
+        // Read URL parameters for PST
+        const url = new URL(window.location.href);
+        const pstWebSeqIdParam = url.searchParams.get('pstWebSeqId');
+        if (pstWebSeqIdParam) {
+          const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
+          if (!isNaN(pstWebSeqIdValue)) {
+            setPstWebSeqId(pstWebSeqIdValue);
+          }
+        }
       } else if (path.startsWith('/create-psw') && isAuthenticated) {
         const poNumber = path.split('/')[2];
         setSelectedPOForPSW(poNumber || null);
@@ -632,13 +672,23 @@ export default function ShippingDashboard() {
 
   const handleUpdatePST = (pstWebSeqId: number, shipment: Shipment) => {
     console.log('App.tsx - handleUpdatePST called:', { pstWebSeqId, shipment: shipment.poNumber });
+    console.log('App.tsx - handleUpdatePST called:', { pstWebSeqId, shipment: shipment });
+
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPST(shipment.poNumber);
-    setCurrentView('create-pst');
+    
     // Store pstWebSeqId for Update mode
     setPstWebSeqId(pstWebSeqId);
     console.log('App.tsx - Setting pstWebSeqId to:', pstWebSeqId);
+    
+    // Navigate to create-pst with pstWebSeqId parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('pstWebSeqId', pstWebSeqId.toString());
+    url.searchParams.set('mode', 'update');
+    window.history.pushState({}, '', url.toString());
+    
+    setCurrentView('create-pst');
     // Reset transition state after animation
     setTimeout(() => setIsTransitioning(false), 400);
   };
@@ -691,9 +741,16 @@ export default function ShippingDashboard() {
         setIsTransitioning(true);
         setSelectedShipment(shipment); // Set the shipment data for header
         setSelectedPOForPST(poNumber);
-        setCurrentView('create-pst');
         setPstWebSeqId(webSeqID); // Set the webSeqID for Update mode
         setPstCompleted(false);
+        
+        // Set URL parameters for create mode
+        const url = new URL(window.location.href);
+        url.searchParams.set('pstWebSeqId', webSeqID.toString());
+        url.searchParams.set('mode', 'create');
+        window.history.pushState({}, '', url.toString());
+        
+        setCurrentView('create-pst');
         
         console.log('🎯 Navigating to create-pst with:', { 
           webSeqID, 
@@ -721,9 +778,16 @@ export default function ShippingDashboard() {
         setIsTransitioning(true);
         setSelectedShipment(shipment);
         setSelectedPOForPST(poNumber);
-        setCurrentView('create-pst');
         setPstWebSeqId(12345); // Demo webSeqID
         setPstCompleted(false);
+        
+        // Set URL parameters for demo mode
+        const url = new URL(window.location.href);
+        url.searchParams.set('pstWebSeqId', '12345');
+        url.searchParams.set('mode', 'create');
+        window.history.pushState({}, '', url.toString());
+        
+        setCurrentView('create-pst');
         
         console.log('🎯 Demo navigation to create-pst');
       } else {
@@ -749,6 +813,13 @@ export default function ShippingDashboard() {
     setCurrentView('dashboard');
     setSelectedPOForPST(null);
     setPstWebSeqId(null); // Reset update mode
+    
+    // Clear URL parameters
+    const url = new URL(window.location.href);
+    url.searchParams.delete('pstWebSeqId');
+    url.searchParams.delete('mode');
+    window.history.pushState({}, '', url.toString());
+    
     // Keep PST completed status and number for dashboard display
     // Don't reset these when just closing the form
     setTimeout(() => setIsTransitioning(false), 400);
@@ -887,6 +958,40 @@ export default function ShippingDashboard() {
       status: selectedShipment.poType,
       pstBook: selectedShipment.pstBook || "",
       pstNo: selectedShipment.pstNo?.toString() || "",
+
+
+
+
+/*
+supCode
+supName
+transType
+poBook
+poNo
+poDate
+eta
+etd
+transportBy
+invoiceNo
+invoiceDate
+portOfOrigin
+portOfDestination
+blNo
+warehouseReceivedDate
+coLoadPOCount
+coLoadSupplierCount
+pstBook
+pstNo
+pstStatus
+pstJagotaStatus
+pstWebSeqId
+pswBook
+pswNo
+pswStatus
+pswJagotaStatus
+pswWebSeqId
+*/
+
     } : undefined;
 
     return (

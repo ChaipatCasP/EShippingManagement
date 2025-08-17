@@ -49,9 +49,9 @@ export function ShipmentTimeline({
   onCreatePSW,
   onCreatePSTWithConfirmation
 }: ShipmentTimelineProps) {
-  console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
-  console.log('onUpdatePST function available:', !!onUpdatePST);
-  console.log('onCreatePSTWithConfirmation function available:', !!onCreatePSTWithConfirmation);
+  // console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
+  // console.log('onUpdatePST function available:', !!onUpdatePST);
+  // console.log('onCreatePSTWithConfirmation function available:', !!onCreatePSTWithConfirmation);
   
   // State for PST confirmation
   const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
@@ -60,15 +60,15 @@ export function ShipmentTimeline({
 
   // Handler for PST creation with confirmation
   const handleCreatePSTWithConfirmation = (shipment: Shipment) => {
-    console.log('🚀 Timeline - handleCreatePSTWithConfirmation called with:', shipment.poNumber);
+    // console.log('🚀 Timeline - handleCreatePSTWithConfirmation called with:', shipment.poNumber);
     setSelectedPstShipment(shipment);
     setPstConfirmationOpen(true);
-    console.log('📝 Timeline - Popup state set to true');
+    // console.log('📝 Timeline - Popup state set to true');
   };
 
   // Handler for PST confirmation
   const handleConfirmCreatePST = async () => {
-    console.log('✅ Timeline - handleConfirmCreatePST called with:', selectedPstShipment?.poNumber);
+    // console.log('✅ Timeline - handleConfirmCreatePST called with:', selectedPstShipment?.poNumber);
     
     if (!selectedPstShipment) {
       console.log('❌ No selectedPstShipment found');
@@ -107,7 +107,7 @@ export function ShipmentTimeline({
   }
 
   const handleActionClick = (shipment: Shipment, action: string) => {
-    console.log('ShipmentTimeline - handleActionClick:', { action, shipment: shipment.poNumber, pstWebSeqId: shipment.pstWebSeqId });
+    // console.log('ShipmentTimeline - handleActionClick:', { action, shipment: shipment.poNumber, pstWebSeqId: shipment.pstWebSeqId });
     
     switch (action) {
       case 'create-pst':
@@ -217,7 +217,7 @@ export function ShipmentTimeline({
   // Helper function to get action button configuration based on PST/PSW status
   const getCustomActionConfig = (shipment: Shipment) => {
     const { pstStatus, pswStatus } = shipment;
-    console.log('getCustomActionConfig for shipment:', shipment.poNumber, { pstStatus, pswStatus, pstWebSeqId: shipment.pstWebSeqId });
+    // console.log('getCustomActionConfig for shipment:', shipment.poNumber, { pstStatus, pswStatus, pstWebSeqId: shipment.pstWebSeqId });
     
     // ถ้า pstStatus เป็นว่าง หรือ null ให้แสดงปุ่ม CreatePst
     if (!pstStatus || pstStatus === '' || pstStatus === null) {
@@ -233,7 +233,7 @@ export function ShipmentTimeline({
     
     // ถ้า pstStatus เป็น N ให้แสดงปุ่ม UpdatePst
     if (pstStatus === 'N') {
-      console.log('Should show Update PST button for:', shipment.poNumber);
+      // console.log('Should show Update PST button for:', shipment.poNumber);
       return {
         text: 'Update PST',
         action: 'edit-pst',
@@ -283,7 +283,7 @@ export function ShipmentTimeline({
     <div className="space-y-3">
       {shipments.map((shipment) => {
         const customActionConfig = getCustomActionConfig(shipment);
-        console.log('Rendering shipment:', shipment.poNumber, 'with action config:', customActionConfig);
+        // console.log('Rendering shipment:', shipment.poNumber, 'with action config:', customActionConfig);
         const borderColor = getBorderColor(shipment.billType);
         const totalSuppliers = 1 + (shipment.relatedSuppliers?.length || 0);
         const poTypeStyle = getPOTypeStyle(shipment.poType);

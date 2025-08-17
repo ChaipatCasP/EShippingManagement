@@ -7,12 +7,12 @@ import { formatDateForAPI } from './dateUtils';
  */
 function formatDateForDisplay(dateString: string): string {
   if (!dateString) return '';
-  
+
   // ถ้าวันที่มาในรูปแบบ ISO (YYYY-MM-DD) ให้แปลงเป็น DD-MMM-YYYY
   if (dateString.includes('-') && dateString.length === 10) {
     return formatDateForAPI(dateString);
   }
-  
+
   // ถ้าเป็นรูปแบบ DD-MMM-YYYY อยู่แล้ว ให้ return ตรงๆ
   return dateString;
 }
@@ -35,7 +35,7 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
 
     // กำหนด PO Type ตาม coLoadPOCount
     const poType = (item.coLoadPOCount || 0) > 0 ? 'Co-load' : 'Single';
-    
+
     // แปลง transportBy เป็น type
     const getTransportType = (transportBy: string): 'Air' | 'Sea' | 'Land' => {
       if (!transportBy) return 'Land';
@@ -49,7 +49,7 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       const currentDate = new Date();
       const etaDate = new Date(item.eta || '');
       const etdDate = new Date(item.etd || '');
-      
+
       if (currentDate < etdDate) return 'pending';
       if (currentDate >= etdDate && currentDate < etaDate) return 'pst-created';
       if (item.warehouseReceivedDate) return 'completed';
@@ -75,9 +75,9 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       term: 'FOB', // Default term, can be enhanced with actual data
       permitStatus: true,
       blAwbNumber: item.blNo || 'N/A',
-  qualityContainer: `QC-${item.supCode || 'SUP'}`,
-  // Map PST web seq id from API for Update PST
-  pstWebSeqId: item.pstWebSeqId,
+      qualityContainer: `QC-${item.supCode || 'SUP'}`,
+      // Map PST web seq id from API for Update PST
+      pstWebSeqId: item.pstWebSeqId,
       taxStatus: true,
       etd: formatDateForDisplay(item.etd || ''),
       eta: formatDateForDisplay(item.eta || ''),
@@ -101,22 +101,22 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       weight: '0kg', // Would need additional API data
       dimensions: '0x0x0', // Would need additional API data
       assignedAgent: 'Auto Assigned',
-      agentContact: '+66-xxx-xxxx',
-      trackingNumber: item.blNo || 'N/A',
-      customsDeclaration: `CD-${item.poNo || '000'}`,
-      insurance: true,
-      priority: 'Medium',
-      remarks: '',
-      specialInstructions: '',
-      documents: [],
+      // agentContact: '+66-xxx-xxxx',
+      // trackingNumber: item.blNo || 'N/A',
+      // customsDeclaration: `CD-${item.poNo || '000'}`,
+      // insurance: true,
+      // priority: 'Medium',
+      // remarks: '',
+      // specialInstructions: '',
+      // documents: [],
       relatedSuppliers: (item.coLoadSupplierCount || 0) > 0 ? [
-        { 
-          name: item.supName || 'Unknown', 
-          referenceKey: item.supCode || 'SUP', 
+        {
+          name: item.supName || 'Unknown',
+          referenceKey: item.supCode || 'SUP',
           poNumber: `${item.poBook || 'PO'}-${item.poNo || '000'}`
         }
       ] : [],
-      
+
       // Store original PO data for API calls
       originalPOData: {
         supCode: item.supCode || 'UNKNOWN',
@@ -161,6 +161,6 @@ function getCountryFromPort(port: string): string {
       return country;
     }
   }
-  
+
   return 'Unknown';
 }
