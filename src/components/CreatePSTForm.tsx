@@ -132,6 +132,13 @@ export function CreatePSTForm({
   onClose,
   onSubmit,
 }: CreatePSTFormProps) {
+  // Add error and loading states
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState({
+    expenseList: false,
+    serviceProviders: false,
+    pstDetails: false
+  });
   console.log("🚀 Chaipat CreatePSTForm initialized with props:", {
     createdPSTNumber,
     pstWebSeqId,
@@ -288,6 +295,19 @@ export function CreatePSTForm({
     const pstWebSeqIdParam = url.searchParams.get("pstWebSeqId");
     const modeParam = url.searchParams.get("mode");
 
+    // Handle different modes (create/update)
+    if (modeParam === "update") {
+      console.log("🔄 Update mode detected - Loading existing PST details");
+      if (pstWebSeqId) {
+        loadPSTDetails();
+      }
+    } else {
+      console.log("✨ Create mode detected - Initializing new PST form");
+      // Reset form for create mode
+      resetForm();
+    }
+
+    // Update refKey from URL parameter or prop
     if (pstWebSeqIdParam && !pstWebSeqId) {
       const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
       if (!isNaN(pstWebSeqIdValue)) {
@@ -342,15 +362,20 @@ export function CreatePSTForm({
 
   const loadExpenseList = async () => {
     try {
+      setLoading(prev => ({ ...prev, expenseList: true }));
       const response = await pstService.getExpenseList("Y");
       console.log("📥 Expense list API response:", response);
       if (!response.error && response.data) {
         setExpenseList(response.data);
       } else {
         console.error("❌ Expense list API returned error:", response);
+        setError("Failed to load expense list. " + response.message);
       }
     } catch (error) {
       console.error("❌ Error loading expense list:", error);
+      setError("Failed to load expense list. Please try again.");
+    } finally {
+      setLoading(prev => ({ ...prev, expenseList: false }));
     }
   };
 
@@ -385,7 +410,9 @@ export function CreatePSTForm({
     }
 
     setIsSubmitting(true);
+    setLoading(prev => ({ ...prev, pstDetails: true }));
     try {
+      console.log("📥 Loading PST details for webSeqId:", pstWebSeqId);
       const response = await pstService.getPSTDetails(pstWebSeqId);
 
       if (!response.error && response.data) {
@@ -600,6 +627,44 @@ export function CreatePSTForm({
       ...prev,
       serviceProvider: providerName,
     }));
+  };
+
+  const resetForm = () => {
+    // Reset all form states to initial values
+    setBillEntryData({
+      invoiceNo: "",
+      contactPerson: "",
+      transportMode: "",
+      invoiceDate: "",
+      creditTerm: "",
+      awbDate: "",
+      importEntryNo: "",
+      currency: "",
+      referenceCode: "",
+      eta: "",
+      vesselName: "",
+      taxIdNo: "",
+      paymentTerm: "",
+      countryOfOrigin: "",
+      dueDate: "",
+      requestPaymentDate: "",
+      requestPaymentTime: "",
+      remarks: "",
+    });
+
+    setFormData({
+      refKey: "",
+      requestPaymentDate: "",
+      message: "",
+      messageSaved: false,
+      messageEditMode: false,
+      remarks: "",
+    });
+
+    setExpenseItems([]);
+    setInvoiceItems([]);
+    setShowExpenseForm(false);
+    resetExpenseForm();
   };
 
   const resetExpenseForm = () => {
@@ -973,25 +1038,62 @@ export function CreatePSTForm({
     }
   };
 
-  // Validation
+  // Enhanced validation
+  const validateForm = (): string[] => {
+    const errors: string[] = [];
+
+    // Required fields validation
+    if (!billEntryData.invoiceNo) {
+      errors.push("Invoice number is required");
+    }
+
+    if (!billEntryData.contactPerson) {
+      errors.push("Contact person is required");
+    }
+
+    if (!formData.requestPaymentDate) {
+      errors.push("Request payment date is required");
+    }
+
+    // Expense items validation
+    if (expenseItems.length === 0) {
+      errors.push("At least one expense item is required");
+    } else {
+      expenseItems.forEach((item, index) => {
+        if (!item.expenseCode) {
+          errors.push(`Expense code is required for item #${index + 1}`);
+        }
+        if (!item.serviceProvider) {
+          errors.push(`Service provider is required for item #${index + 1}`);
+        }
+        if (item.qty <= 0) {
+          errors.push(`Quantity must be greater than 0 for item #${index + 1}`);
+        }
+        if (item.rate <= 0) {
+          errors.push(`Rate must be greater than 0 for item #${index + 1}`);
+        }
+      });
+    }
+
+    return errors;
+  };
+
+  // Simple validation for UI feedback
   const isFormValid = () => {
-    return (
-      formData.refKey.trim() !== "" &&
-      formData.requestPaymentDate !== "" &&
-      expenseItems.length > 0 &&
-      expenseItems.every(
-        (item) =>
-          item.expenseCode !== "" &&
-          item.serviceProvider !== "" &&
-          item.qty > 0 &&
-          item.rate > 0
-      )
-    );
+    return validateForm().length === 0;
   };
 
   // Handle final submission
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setError(errors.join("\n"));
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitProgress(0);
 
