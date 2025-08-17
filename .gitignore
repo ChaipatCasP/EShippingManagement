@@ -112,3 +112,7 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# SSH Keys
+no
+no.pub
