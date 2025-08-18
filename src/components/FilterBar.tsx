@@ -77,16 +77,13 @@ export function FilterBar({
            searchTerm.length > 0;
   };
 
-  // Helper function to clear all filters
+  // Helper function to clear all filters except date
   const clearAllFilters = () => {
     setSearchTerm('');
     setSelectedTransportType('all');
     setSelectedPSTStatus('');
     setSelectedPSWStatus('');
     setSelectedPriority('all');
-    handleDateFilterChange('today'); // Reset to default 'today' instead of 'all'
-    setCustomDateStart('');
-    setCustomDateEnd('');
   };
 
   return (

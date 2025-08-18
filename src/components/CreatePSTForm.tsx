@@ -374,19 +374,30 @@ export function CreatePSTForm({
       "🎯 CreatePSTForm useEffect triggered with pstWebSeqId:",
       pstWebSeqId
     );
-    if (pstWebSeqId) {
-      loadPSTDetails();
+    
+    // Check URL parameters first
+    const url = new URL(window.location.href);
+    const pstWebSeqIdFromUrl = url.searchParams.get("pstWebSeqId");
+    
+    if (pstWebSeqIdFromUrl) {
+      const id = parseInt(pstWebSeqIdFromUrl);
+      if (!isNaN(id)) {
+        loadPSTDetails(id);
+      }
+    } else if (pstWebSeqId) {
+      loadPSTDetails(pstWebSeqId);
     }
   }, [pstWebSeqId]);
 
-  const loadPSTDetails = async () => {
-    if (!pstWebSeqId) {
+  const loadPSTDetails = async (webSeqId?: number) => {
+    const idToUse = webSeqId || pstWebSeqId;
+    if (!idToUse) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await pstService.getPSTDetails(pstWebSeqId);
+      const response = await pstService.getPSTDetails(idToUse);
 
       if (!response.error && response.data) {
         const data = response.data;

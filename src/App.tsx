@@ -35,6 +35,42 @@ interface LoginCredentials {
 }
 
 export default function ShippingDashboard() {
+  // URL and navigation handling
+  useEffect(() => {
+    const handlePopState = () => {
+      const currentUrl = new URL(window.location.href);
+      const pstWebSeqId = currentUrl.searchParams.get('pstWebSeqId');
+      
+      if (pstWebSeqId) {
+        const id = parseInt(pstWebSeqId);
+        if (!isNaN(id)) {
+          setPstWebSeqId(id);
+          setCurrentView('create-pst');
+        }
+      } else {
+        setPstWebSeqId(null);
+        setCurrentView('dashboard');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Initialize view based on URL
+  useEffect(() => {
+    const currentUrl = new URL(window.location.href);
+    const pstWebSeqId = currentUrl.searchParams.get('pstWebSeqId');
+    
+    if (pstWebSeqId) {
+      const id = parseInt(pstWebSeqId);
+      if (!isNaN(id)) {
+        setPstWebSeqId(id);
+        setCurrentView('create-pst');
+      }
+    }
+  }, []);
+
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [needsOTP, setNeedsOTP] = useState(false);
@@ -51,9 +87,18 @@ export default function ShippingDashboard() {
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   
   // Date filter state with chip-based approach
-  const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>('today');
-  const [customDateStart, setCustomDateStart] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [customDateEnd, setCustomDateEnd] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>(() => {
+    const savedMode = new URL(window.location.href).searchParams.get('dateFilterMode') as DateFilterMode;
+    return savedMode || 'today';
+  });
+  const [customDateStart, setCustomDateStart] = useState<string>(() => {
+    const savedStart = new URL(window.location.href).searchParams.get('dateFrom');
+    return savedStart || new Date().toISOString().split('T')[0];
+  });
+  const [customDateEnd, setCustomDateEnd] = useState<string>(() => {
+    const savedEnd = new URL(window.location.href).searchParams.get('dateTo');
+    return savedEnd || new Date().toISOString().split('T')[0];
+  });
   
   const [activePOTypeTab, setActivePOTypeTab] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -528,20 +573,68 @@ export default function ShippingDashboard() {
     return Promise.resolve();
   };
 
+  // Helper function to update URL with date parameters
+  const updateUrlWithDateParams = (mode: DateFilterMode, start?: string, end?: string) => {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('dateFilterMode', mode);
+    
+    if (mode === 'custom' && start && end) {
+      currentUrl.searchParams.set('dateFrom', start);
+      currentUrl.searchParams.set('dateTo', end);
+    } else if (mode !== 'custom') {
+      currentUrl.searchParams.delete('dateFrom');
+      currentUrl.searchParams.delete('dateTo');
+    }
+    
+    window.history.pushState({}, '', currentUrl.toString());
+  };
+
+  // Helper function to handle custom date changes
+  const handleCustomDateChange = (start: string | null, end: string | null) => {
+    if (start !== null) {
+      setCustomDateStart(start);
+      if (dateFilterMode === 'custom') {
+        updateUrlWithDateParams('custom', start, customDateEnd);
+      }
+    }
+    if (end !== null) {
+      setCustomDateEnd(end);
+      if (dateFilterMode === 'custom') {
+        updateUrlWithDateParams('custom', customDateStart, end);
+      }
+    }
+  };
+
   // Helper function to handle date filter mode change
   const handleDateFilterChange = (mode: DateFilterMode) => {
     setIsDataLoading(true);
     setDateFilterMode(mode);
-    // When switching to custom mode, set dates to current date
+
+    // Update URL parameters
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('dateFilterMode', mode);
+
+    // When switching to custom mode, keep existing dates if they exist
     if (mode === 'custom') {
-      const currentDate = new Date().toISOString().split('T')[0];
-      setCustomDateStart(currentDate);
-      setCustomDateEnd(currentDate);
-    } else {
-      // Clear custom dates when switching away from custom mode
-      setCustomDateStart('');
-      setCustomDateEnd('');
+      const existingStart = currentUrl.searchParams.get('dateFrom');
+      const existingEnd = currentUrl.searchParams.get('dateTo');
+      
+      if (existingStart && existingEnd) {
+        setCustomDateStart(existingStart);
+        setCustomDateEnd(existingEnd);
+      } else {
+        const currentDate = new Date().toISOString().split('T')[0];
+        setCustomDateStart(currentDate);
+        setCustomDateEnd(currentDate);
+        currentUrl.searchParams.set('dateFrom', currentDate);
+        currentUrl.searchParams.set('dateTo', currentDate);
+      }
     }
+    // Don't clear custom dates when switching modes, keep them for when we switch back to custom
+
+    // Update URL
+    window.history.pushState({}, '', currentUrl.toString());
+    
     // Simulate data loading delay
     setTimeout(() => setIsDataLoading(false), 300);
   };
@@ -683,10 +776,10 @@ export default function ShippingDashboard() {
     console.log('App.tsx - Setting pstWebSeqId to:', pstWebSeqId);
     
     // Navigate to create-pst with pstWebSeqId parameter
-    const url = new URL(window.location.href);
-    url.searchParams.set('pstWebSeqId', pstWebSeqId.toString());
-    url.searchParams.set('mode', 'update');
-    window.history.pushState({}, '', url.toString());
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('pstWebSeqId', pstWebSeqId.toString());
+    newUrl.searchParams.set('mode', 'update');
+    window.history.pushState({}, '', newUrl.toString());
     
     setCurrentView('create-pst');
     // Reset transition state after animation
@@ -813,6 +906,26 @@ export default function ShippingDashboard() {
     setCurrentView('dashboard');
     setSelectedPOForPST(null);
     setPstWebSeqId(null); // Reset update mode
+    
+    // Update URL parameters on close
+    const currentUrl = new URL(window.location.href);
+    
+    // Remove PST-related parameters only
+    currentUrl.searchParams.delete('pstWebSeqId');
+    currentUrl.searchParams.delete('mode');
+    
+    // Keep or update date filter parameters
+    if (dateFilterMode === 'custom') {
+      currentUrl.searchParams.set('dateFilterMode', dateFilterMode);
+      if (customDateStart) currentUrl.searchParams.set('dateFrom', customDateStart);
+      if (customDateEnd) currentUrl.searchParams.set('dateTo', customDateEnd);
+    } else {
+      currentUrl.searchParams.set('dateFilterMode', dateFilterMode);
+      currentUrl.searchParams.delete('dateFrom');
+      currentUrl.searchParams.delete('dateTo');
+    }
+    
+    window.history.pushState({}, '', currentUrl.toString());
     
     // Clear URL parameters
     const url = new URL(window.location.href);
@@ -1198,9 +1311,9 @@ pswWebSeqId
             dateFilterMode={dateFilterMode}
             handleDateFilterChange={handleDateFilterChange}
             customDateStart={customDateStart}
-            setCustomDateStart={setCustomDateStart}
+            setCustomDateStart={(date: string) => handleCustomDateChange(date, null)}
             customDateEnd={customDateEnd}
-            setCustomDateEnd={setCustomDateEnd}
+            setCustomDateEnd={(date: string) => handleCustomDateChange(null, date)}
             filteredShipments={filteredShipments}
             activePOTypeTab={activePOTypeTab}
             setActivePOTypeTab={setActivePOTypeTab}
