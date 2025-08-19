@@ -45,32 +45,37 @@ import {
   CommandItem,
 } from "./ui/command";
 import { PSWApiResponse } from "../types/shipment";
-import {
-  pstService,
-  type ExpenseListItem,
-  type ServiceProviderItem,
-  type SaveExpenseRequest,
-} from "../api/services/pstService";
+import { pstService } from "../api/services/pstService";
 
 interface ExpenseItem {
   id: string;
-  rowId?: string; // API rowId for expense from API
   expenseCode: string;
   expenseName?: string;
   serviceProvider: string;
   qty: number;
   rate: number;
-  documentNo: string;
-  documentDate: string;
+  documentNo?: string;
+  documentDate?: string;
   subTotal: number;
-  vatBaseAmount: number;
-  remarks: string;
-  vatPercent: number;
+  vatBaseAmount?: number;
+  remarks?: string;
+  vatPercent?: number;
   vatAmount: number;
-  exciseVatAmount: number;
-  interiorVat: number;
+  exciseVatAmount?: number;
+  interiorVat?: number;
   total: number;
-  isFromAPI?: boolean; // Flag to indicate if this item came from API
+  isFromAPI?: boolean;
+  rowId?: number;
+}
+
+interface ExpenseListItem {
+  expenseCode: string;
+  expenseName: string;
+  taxRate: string;
+}
+
+interface ServiceProviderItem {
+  name: string;
 }
 
 interface User {
@@ -113,15 +118,6 @@ interface CreatePSWFormProps {
   user?: User | null;
 }
 
-interface InvoiceItem {
-  id: string;
-  supplierCode: string;
-  supplierName: string;
-  invoiceNo: string;
-  referenceNo: string;
-  transportBy: string;
-}
-
 export function CreatePSWForm({
   poNumber,
   pstNumber,
@@ -136,7 +132,7 @@ export function CreatePSWForm({
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
 
   const [uploadedFiles] = useState<File[]>([]);
-  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+
   // PST Details specific state
   const [expenseList, setExpenseList] = useState<ExpenseListItem[]>([]);
   const [serviceProviders, setServiceProviders] = useState<
@@ -191,33 +187,21 @@ export function CreatePSWForm({
     eta: dashboardHeaderData?.eta || "",
     wrDate: dashboardHeaderData?.wrDate || "",
     invoiceNo: dashboardHeaderData?.invoiceNo || "",
-    invoiceDate: dashboardHeaderData?.invoiceDate || "",
     awbNo: dashboardHeaderData?.awbNo || "",
-    importEntryNo: dashboardHeaderData?.importEntryNo || "",
-    portOfOrigin: dashboardHeaderData?.portOfOrigin || "",
-    portOfDestination: dashboardHeaderData?.portOfDestination || "",
-    status: (dashboardHeaderData?.status || "") as "Single" | "Multiple" | "",
     pstBook: dashboardHeaderData?.pstBook || "",
     pstNo: dashboardHeaderData?.pstNo || "",
-    vesselName: "",
-    referenceCode: "",
-    taxIdNo: "",
-    paymentTerm: "",
+    status: dashboardHeaderData?.status || "",
+    pswBook: "",
+    pswNo: "",
   });
 
   // Additional missing state variables
   const [submitProgress, setSubmitProgress] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  // Form state for PSW Details
   const [formData, setFormData] = useState({
     refKey: "",
-    requestPaymentDate: "",
-    message: "",
-    messageSaved: false,
-    messageEditMode: false,
-    remarks: "",
   });
+  const [invoiceItems] = useState<any[]>([]);
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([]);
   const [changedItems, setChangedItems] = useState<Set<string>>(new Set());
 
@@ -247,15 +231,26 @@ export function CreatePSWForm({
   // Load expense list and service providers from API
   const loadExpenseList = async () => {
     try {
-      const response = await pstService.getExpenseList("Y");
-      console.log("📥 Expense list API response:", response);
-      if (!response.error && response.data) {
+      const response = await pstService.getExpenseList();
+      if (response && response.data) {
         setExpenseList(response.data);
-      } else {
-        console.error("❌ Expense list API returned error:", response);
       }
     } catch (error) {
-      console.error("❌ Error loading expense list:", error);
+      console.error("Error loading expense list:", error);
+      // Fallback to hardcoded data if API fails
+      setExpenseList([
+        {
+          expenseCode: "THC",
+          expenseName: "Terminal Handling Charge",
+          taxRate: "7",
+        },
+        { expenseCode: "DOC", expenseName: "Documentation Fee", taxRate: "7" },
+        { expenseCode: "INS", expenseName: "Inspection Fee", taxRate: "7" },
+        { expenseCode: "WAR", expenseName: "Warehouse Fee", taxRate: "7" },
+        { expenseCode: "TRA", expenseName: "Transportation Fee", taxRate: "7" },
+        { expenseCode: "CUS", expenseName: "Customs Fee", taxRate: "7" },
+        { expenseCode: "OTH", expenseName: "Other Charges", taxRate: "7" },
+      ]);
     }
   };
 
@@ -279,202 +274,6 @@ export function CreatePSWForm({
     }
   };
 
-  useEffect(() => {
-
-
-    // Check URL parameters first
-    const url = new URL(window.location.href);
-    const pswWebSeqIdFromUrl = url.searchParams.get("pswWebSeqId");
-
-    if (pswWebSeqIdFromUrl) {
-      const id = parseInt(pswWebSeqIdFromUrl);
-      if (!isNaN(id)) {
-        loadPSTDetails(id);
-      }
-    } else if (pswWebSeqId) {
-      loadPSTDetails(pswWebSeqId);
-    }
-  }, [pswWebSeqId]);
-
-    useEffect(() => {
-      // Only initialize if we don't have pstWebSeqId (no API data expected)
-      if (!pswWebSeqId && expenseItems.length === 0) {
-        setShowExpenseForm(true);
-  
-        // Only set default header data if no dashboard data was provided
-        if (!dashboardHeaderData) {
-          setHeaderData({
-            supplierName: "",
-            poBook: "",
-            poNo: "",
-            poDate: "",
-            etd: "",
-            eta: "",
-            wrDate: "",
-            invoiceNo: "",
-            invoiceDate: "",
-            awbNo: "",
-            importEntryNo: "",
-            portOfOrigin: "",
-            portOfDestination: "",
-            status: "",
-            pstBook: "",
-            pstNo: "",
-            vesselName: "",
-            referenceCode: "",
-            taxIdNo: "",
-            paymentTerm: "",
-          });
-        }
-      }
-    }, [pswWebSeqId, expenseItems.length, dashboardHeaderData]);
-
-  const loadPSTDetails = async (webSeqId?: number) => {
-    const idToUse = webSeqId || pswWebSeqId;
-    if (!idToUse) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await pstService.getPSTDetails(idToUse);
-
-      if (!response.error && response.data) {
-        const data = response.data;
-        console.log("API Response Data:", {
-          invoiceDate: data.invoiceDate,
-          contactPerson: data.contactPerson,
-          awbNo: data.awbNo,
-          currency: data.currency,
-          eta: data.eta,
-          webSeqID: data.webSeqID,
-          requestPaymentDateTime: data.requestPaymentDateTime,
-        });
-
-        // Update header data with API response, but prefer dashboard data for supplier info
-        setHeaderData({
-          // Prefer dashboard supplier name, fallback to API if not available
-          supplierName: dashboardHeaderData?.supplierName || "",
-          poBook: dashboardHeaderData?.poBook || "",
-          poNo: dashboardHeaderData?.poNo || "",
-          poDate: dashboardHeaderData?.poDate || "",
-          etd: dashboardHeaderData?.etd || "",
-          eta: dashboardHeaderData?.eta || "",
-          wrDate: dashboardHeaderData?.wrDate || "",
-          invoiceNo: dashboardHeaderData?.invoiceNo || "",
-          invoiceDate: dashboardHeaderData?.invoiceDate || "",
-          awbNo: dashboardHeaderData?.awbNo || "",
-          importEntryNo: dashboardHeaderData?.importEntryNo || "",
-          portOfOrigin: dashboardHeaderData?.portOfOrigin || "",
-          portOfDestination: dashboardHeaderData?.portOfDestination || "",
-          status: dashboardHeaderData?.status
-            ? ("Multiple" as const)
-            : ("Single" as const),
-          pstBook: dashboardHeaderData?.pstBook || data.poBook || "",
-          pstNo:
-            dashboardHeaderData?.pstNo ||
-            (data.poNo !== undefined && data.poNo !== null
-              ? String(data.poNo)
-              : "") ||
-            "",
-          vesselName: data.vesselName || "",
-          referenceCode: "",
-          taxIdNo: "",
-          paymentTerm: data.paymentTerm || "",
-        });
-
-        // Update form data with API response
-        setFormData((prev) => ({
-          ...prev,
-          requestPaymentDate: data.requestPaymentDateTime
-            ? data.requestPaymentDateTime.split("T")[0]
-            : prev.requestPaymentDate || "",
-        }));
-
-        // Set original data for comparison
-
-        // Convert expenseList to ExpenseItem format
-        const convertedExpenses: ExpenseItem[] = data.expenseList.map(
-          (expense, index) => ({
-            id:
-              expense.rowId !== undefined && expense.rowId !== null
-                ? expense.rowId.toString()
-                : (index + 1).toString(),
-            rowId:
-              typeof expense.rowId === "number" ? expense.rowId : undefined, // Ensure rowId is a number or undefined
-            expenseCode: expense.expenseCode,
-            expenseName: expense.expenseName,
-            serviceProvider: expense.serviceProvider,
-            qty: expense.qty,
-            rate: expense.rate,
-            documentNo: expense.documentNo || "",
-            documentDate: expense.documentDate || "",
-            subTotal: expense.subTotal,
-            vatBaseAmount: expense.vatBase,
-            remarks: expense.remarks || "",
-            vatPercent: expense.vatPercent,
-            vatAmount: expense.vatAmount,
-            exciseVatAmount: expense.exciseVat,
-            interiorVat: expense.interiorVat,
-            total: expense.totalAmount,
-            isFromAPI: true, // Mark as coming from API
-          })
-        );
-
-        // Convert invoiceList to InvoiceItem format
-        const convertedInvoices: InvoiceItem[] = data.invoiceList.map(
-          (invoice, index) => ({
-            id: (index + 1).toString(),
-            supplierCode: invoice.supplierCode,
-            supplierName: invoice.supplierName,
-            invoiceNo: invoice.invoiceNo,
-            referenceNo: invoice.referenceNo,
-            transportBy: invoice.transportBy,
-          })
-        );
-
-        setExpenseItems(convertedExpenses);
-        setInvoiceItems(convertedInvoices);
-
-        // Collapse all expense items from API data
-        if (convertedExpenses.length > 0) {
-          console.log("📁 Collapsing all expense items from API");
-          const allItemIds = new Set(convertedExpenses.map((item) => item.id));
-          setCollapsedItems(allItemIds);
-        }
-
-        // Clear any existing changed items when loading fresh data
-        setChangedItems(new Set());
-
-        // Set form data with webSeqID as Ref Key
-        console.log("🔑 About to set Ref Key to:", data.webSeqID);
-        setFormData((prev) => {
-          const newFormData = {
-            ...prev,
-            refKey: data.webSeqID.toString(), // Set Ref Key from webSeqID
-            requestPaymentDate:
-              data.requestPaymentDateTime?.split("T")[0] || "",
-          };
-          console.log("📝 New form data:", newFormData);
-          return newFormData;
-        });
-
-        console.log("✅ PST Details loaded successfully");
-        console.log("🔑 Ref Key set to webSeqID:", data.webSeqID);
-      } else {
-        console.error("❌ API returned error or no data:", response);
-      }
-    } catch (error) {
-      console.error("❌ Error loading PST details:", error);
-      console.error("❌ Error details:", {
-        message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : "No stack trace",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Toggle collapse state for an expense item
   const toggleItemCollapse = (itemId: string) => {
     setCollapsedItems((prev) => {
@@ -493,6 +292,69 @@ export function CreatePSWForm({
     loadExpenseList();
     loadServiceProviders();
   }, []);
+
+  // Read URL parameters and handle pswWebSeqId
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const pswWebSeqIdParam = url.searchParams.get("pswWebSeqId");
+
+    const loadPSWData = async (webSeqId: number) => {
+      try {
+        console.log("Loading PSW data for webSeqId:", webSeqId);
+        const response = await pstService.getPSTDetails(webSeqId);
+
+        if (response && !response.error && response.data) {
+          const data = response.data;
+          console.log("PSW data loaded:", data);
+
+          // Get supplier name from first invoice in list
+          const apiSupplierName =
+            data.invoiceList && data.invoiceList.length > 0
+              ? data.invoiceList[0].supplierName
+              : "";
+
+          // Update header data with API response, but prefer dashboard data when available
+          setHeaderData((prevData) => ({
+            // Prefer dashboard data, fallback to API data, then existing data
+            supplierName:
+              dashboardHeaderData?.supplierName ||
+              apiSupplierName ||
+              prevData.supplierName,
+            poBook:
+              dashboardHeaderData?.poBook || data.poBook || prevData.poBook,
+            poNo:
+              dashboardHeaderData?.poNo ||
+              data.poNo?.toString() ||
+              prevData.poNo,
+            poDate:
+              dashboardHeaderData?.poDate || data.poDate || prevData.poDate,
+            etd: dashboardHeaderData?.etd || prevData.etd, // ETD from dashboard only
+            eta: dashboardHeaderData?.eta || prevData.eta, // ETA from dashboard only
+            wrDate: dashboardHeaderData?.wrDate || prevData.wrDate, // WR Date from dashboard only
+            invoiceNo:
+              dashboardHeaderData?.invoiceNo ||
+              data.invoiceList?.[0]?.invoiceNo ||
+              prevData.invoiceNo,
+            awbNo: dashboardHeaderData?.awbNo || data.awbNo || prevData.awbNo,
+            pstBook: dashboardHeaderData?.pstBook || prevData.pstBook,
+            pstNo: dashboardHeaderData?.pstNo || prevData.pstNo,
+            status: dashboardHeaderData?.status || prevData.status,
+            pswBook: prevData.pswBook, // PSW data from form state
+            pswNo: prevData.pswNo, // PSW data from form state
+          }));
+        }
+      } catch (error) {
+        console.error("Error loading PSW data:", error);
+      }
+    };
+
+    if (pswWebSeqIdParam && !isNaN(Number(pswWebSeqIdParam))) {
+      const webSeqId = Number(pswWebSeqIdParam);
+      loadPSWData(webSeqId);
+    } else if (pswWebSeqId) {
+      loadPSWData(pswWebSeqId);
+    }
+  }, [pswWebSeqId, dashboardHeaderData]);
 
   // Calculate totals
   const totalSummary = expenses.reduce(
@@ -514,154 +376,85 @@ export function CreatePSWForm({
   );
 
   // Additional calculated values
-  const totalSubTotal = expenseItems.reduce(
-    (sum, item) => sum + (item.subTotal || 0),
-    0
-  );
-  const totalVATAmount = expenseItems.reduce(
-    (sum, item) => sum + (item.vatAmount || 0),
-    0
-  );
-  const grandTotal = expenseItems.reduce(
-    (sum, item) => sum + (item.total || 0),
-    0
-  );
+  const totalSubTotal = expenseItems.reduce((sum, item) => sum + (item.subTotal || 0), 0);
+  const totalVATAmount = expenseItems.reduce((sum, item) => sum + (item.vatAmount || 0), 0);
+  const grandTotal = expenseItems.reduce((sum, item) => sum + (item.total || 0), 0);
 
   // Missing function definitions
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }));
   };
 
-  // Handle save expense for display items
-  const handleSaveExpenseDisplay = async (item: ExpenseItem) => {
-    // Validate required fields
-    if (
-      !item.expenseCode ||
-      !item.serviceProvider ||
-      item.qty <= 0 ||
-      item.rate <= 0
-    ) {
-      alert(
-        "Please fill in all required fields (Expense Code, Service Provider, Qty, Rate)"
-      );
-      return;
-    }
-
-    // Confirm before saving
-    const confirmed = window.confirm("Do you want to save this expense item?");
-    if (!confirmed) {
-      return;
-    }
-
+  const handleDeleteClick = async (itemId: string) => {
     try {
-      // Prepare API request data
-      const expenseData: SaveExpenseRequest = {
-        webSeqId: pswWebSeqId || 152039978, // Use provided webSeqId or fallback
-        podRowId: item.rowId || "",
-        productCode: item.expenseCode,
-        serviceProvider: item.serviceProvider,
-        qty: item.qty,
-        rate: item.rate,
-        vatBaseAmount: item.vatBaseAmount || 0,
-        vatPercent: item.vatPercent || 0,
-        vatAmount: item.vatAmount || 0,
-        exciseVatAmount: item.exciseVatAmount || 0,
-        interiorVatAmount: item.interiorVat || 0,
-        total: item.total,
-        documentNo: item.documentNo || "",
-        documentDate: item.documentDate ? item.documentDate.split("T")[0] : "",
-        remarks: item.remarks || "",
-      };
-
-      console.log("💾 Saving expense item:", expenseData);
-
-      // Call API
-      const response = await pstService.saveExpenseItem(expenseData);
-
-      if (
-        !response.error &&
-        response.data &&
-        response.data[0]?.STATUS === "Saved Succssfully"
-      ) {
-        alert("Expense item saved successfully!");
-        console.log("✅ Save response:", response);
-
-        // Remove item from changed items set
-        setChangedItems((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(item.id);
-          return newSet;
-        });
-
-        // Optionally reload the PST details to get updated data
-        if (pswWebSeqId) {
-          loadPSTDetails();
-        }
-      } else {
-        alert("Failed to save expense item. Please try again.");
-        console.error("❌ Save failed:", response);
-      }
+      setExpenses(prev => prev.filter(item => item.id !== itemId));
+      setExpenseItems(prev => prev.filter(item => item.id !== itemId));
+      setChangedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
     } catch (error) {
-      console.error("❌ Error saving expense item:", error);
-      alert("An error occurred while saving. Please try again.");
+      console.error("Error deleting item:", error);
     }
   };
 
-  // Validation
+  const handleSaveExpenseDisplay = async (item: ExpenseItem) => {
+    try {
+      // Update the item in the list
+      setExpenses(prev => 
+        prev.map(existing => existing.id === item.id ? item : existing)
+      );
+      setExpenseItems(prev => 
+        prev.map(existing => existing.id === item.id ? item : existing)
+      );
+      
+      // Remove from changed items
+      setChangedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item.id);
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Error saving expense item:", error);
+    }
+  };
+
   const isFormValid = () => {
-    return (
-      formData.refKey.trim() !== "" &&
-      formData.requestPaymentDate !== "" &&
-      expenseItems.length > 0 &&
-      expenseItems.every(
-        (item) =>
-          item.expenseCode !== "" &&
-          item.serviceProvider !== "" &&
-          item.qty > 0 &&
-          item.rate > 0
-      )
-    );
+    return formData.refKey.trim() !== "" && expenses.length > 0;
   };
 
   // LoadingSpinner component
-  const LoadingSpinner = ({
-    size = "sm",
-    className = "",
-  }: {
-    size?: "sm" | "lg";
-    className?: string;
-  }) => (
-    <div
-      className={`animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 ${
-        size === "lg" ? "h-6 w-6" : "h-4 w-4"
-      } ${className}`}
-    />
+  const LoadingSpinner = ({ size = "sm", className = "" }: { size?: "sm" | "lg"; className?: string }) => (
+    <div className={`animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 ${
+      size === "lg" ? "h-6 w-6" : "h-4 w-4"
+    } ${className}`} />
   );
 
   // ProgressBar component
-  const ProgressBar = ({
-    progress,
-    showPercentage = false,
-    animated = true,
-    color = "bg-blue-600",
-  }: {
-    progress: number;
-    showPercentage?: boolean;
-    animated?: boolean;
-    color?: string;
+  const ProgressBar = ({ 
+    progress, 
+    showPercentage = false, 
+    animated = true, 
+    color = "bg-blue-600" 
+  }: { 
+    progress: number; 
+    showPercentage?: boolean; 
+    animated?: boolean; 
+    color?: string; 
   }) => (
     <div className="w-full bg-gray-200 rounded-full h-2">
-      <div
-        className={`h-2 rounded-full ${
-          animated ? "transition-all duration-300" : ""
-        } ${color}`}
+      <div 
+        className={`h-2 rounded-full ${animated ? 'transition-all duration-300' : ''} ${color}`}
         style={{ width: `${progress}%` }}
       />
       {showPercentage && (
-        <div className="text-sm text-center mt-1">{Math.round(progress)}%</div>
+        <div className="text-sm text-center mt-1">
+          {Math.round(progress)}%
+        </div>
       )}
     </div>
   );
@@ -818,68 +611,8 @@ export function CreatePSWForm({
   };
 
   const addExpenseItem = () => {
-    const newItem: ExpenseItem = {
-      id: Date.now().toString(),
-      expenseCode: "",
-      serviceProvider: "",
-      qty: 1,
-      rate: 0,
-      documentNo: "",
-      documentDate: "",
-      subTotal: 0,
-      vatBaseAmount: 0,
-      remarks: "",
-      vatPercent: 0, // เริ่มต้นที่ 0
-      vatAmount: 0,
-      exciseVatAmount: 0,
-      interiorVat: 0,
-      total: 0,
-    };
-    setExpenseItems([...expenseItems, newItem]);
-  };
-
-  const removeExpenseItem = async (id: string) => {
-    const itemToRemove = expenseItems.find((item) => item.id === id);
-
-    if (itemToRemove?.isFromAPI && itemToRemove.rowId && pswWebSeqId) {
-      // If item is from API, call DELETE API
-      try {
-        console.log("🗑️ Deleting expense via API:", {
-          webSeqId: pswWebSeqId,
-          rowId: itemToRemove.rowId,
-        });
-        const response = await pstService.deleteExpense(
-          pswWebSeqId,
-          itemToRemove.rowId
-        );
-
-        if (!response.error) {
-          console.log("✅ Expense deleted successfully from API");
-          // Remove from local state after successful API call
-          setExpenseItems(expenseItems.filter((item) => item.id !== id));
-        } else {
-          console.error(
-            "❌ Failed to delete expense from API:",
-            response.message
-          );
-          alert("Failed to delete expense: " + response.message);
-        }
-      } catch (error) {
-        console.error("❌ Error deleting expense:", error);
-        alert("Error deleting expense. Please try again.");
-      }
-    } else {
-      // If item is local (newly added), just remove from state
-      console.log("🗑️ Removing local expense item:", id);
-      setExpenseItems(expenseItems.filter((item) => item.id !== id));
-    }
-  };
-
-  const handleDeleteClick = async (itemId: string) => {
-    const confirmed = window.confirm("คุณต้องการลบรายการนี้หรือไม่?");
-    if (!confirmed) return;
-
-    await removeExpenseItem(itemId);
+    resetExpenseForm();
+    setShowExpenseForm(true);
   };
 
   // Handle expense field changes for display items
@@ -948,7 +681,7 @@ export function CreatePSWForm({
 
         return updatedItem;
       });
-
+    
     setExpenses(updateFunction);
     setExpenseItems(updateFunction);
   };
@@ -982,7 +715,7 @@ export function CreatePSWForm({
             total,
           };
         });
-
+      
       setExpenses(updateFunction);
       setExpenseItems(updateFunction);
     }
@@ -999,7 +732,7 @@ export function CreatePSWForm({
           ? { ...item, serviceProvider: newServiceProvider }
           : item
       );
-
+    
     setExpenses(updateFunction);
     setExpenseItems(updateFunction);
   };
@@ -1425,6 +1158,328 @@ export function CreatePSWForm({
                         </div>
 
                         {/* Add/Edit Expense Item Form */}
+                        {showExpenseForm && (
+                          <Card className="border-green-200 bg-green-50">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-green-600 text-white text-xs">
+                                  Expense Item
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="ml-auto h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
+                                  onClick={handleCancelExpenseForm}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <h3 className="text-base font-medium text-gray-900">
+                                {editingExpenseIndex !== null
+                                  ? "Edit Expense Item"
+                                  : "Add Expense Item"}
+                              </h3>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              {/* Row 1: Expense Code and Service Provider */}
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Expense Code{" "}
+                                    <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Select
+                                    value={expenseItemForm.expenseCode}
+                                    onValueChange={handleExpenseCodeSelect}
+                                    disabled={isSubmitting}
+                                  >
+                                    <SelectTrigger className="h-8 w-full bg-white border-gray-300 text-sm">
+                                      <SelectValue placeholder="Select expense code" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {expenseList.map((expense) => (
+                                        <SelectItem
+                                          key={expense.expenseCode}
+                                          value={expense.expenseCode}
+                                        >
+                                          {expense.expenseName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Service Provider{" "}
+                                    <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="h-8 w-full justify-between bg-white border-gray-300 text-sm"
+                                        disabled={isSubmitting}
+                                      >
+                                        {expenseItemForm.serviceProvider ||
+                                          "Select service provider"}
+                                        <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0">
+                                      <Command>
+                                        <CommandInput
+                                          placeholder="Search..."
+                                          className="h-8 border-0 focus:ring-0 text-sm"
+                                        />
+                                        <CommandEmpty>
+                                          No provider found.
+                                        </CommandEmpty>
+                                        <CommandGroup className="max-h-40 overflow-y-auto">
+                                          {serviceProviders.map(
+                                            (provider, index) => (
+                                              <CommandItem
+                                                key={index}
+                                                value={provider.name}
+                                                className="cursor-pointer text-sm"
+                                                onSelect={() =>
+                                                  handleServiceProviderSelect(
+                                                    provider.name
+                                                  )
+                                                }
+                                              >
+                                                <Check
+                                                  className={`mr-2 h-3 w-3 ${
+                                                    expenseItemForm.serviceProvider ===
+                                                    provider.name
+                                                      ? "opacity-100"
+                                                      : "opacity-0"
+                                                  }`}
+                                                />
+                                                {provider.name}
+                                              </CommandItem>
+                                            )
+                                          )}
+                                        </CommandGroup>
+                                      </Command>
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
+                              </div>
+
+                              {/* Row 2: Qty, Rate, and Calculated Fields */}
+                              <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Qty <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    value={expenseItemForm.qty}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "qty",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Rate <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    value={expenseItemForm.rate}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "rate",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Sub Total
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.subTotal.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    VAT Base
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.vatBase.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    VAT %
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.vatPercent.toFixed(
+                                      2
+                                    )}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    VAT Amt
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.vatAmount.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Excise VAT
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.exciseVat}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "exciseVat",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Interior VAT
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.interiorVat}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "interiorVat",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Row 3: Total and Document Info */}
+                              <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Total
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.total.toFixed(2)}
+                                    readOnly
+                                    className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Document No.
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.documentNo}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "documentNo",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Document Date
+                                  </Label>
+                                  <Input
+                                    type="date"
+                                    value={expenseItemForm.documentDate}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "documentDate",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-gray-700">
+                                    Remarks
+                                  </Label>
+                                  <Input
+                                    value={expenseItemForm.remarks}
+                                    onChange={(e) =>
+                                      handleExpenseFormChange(
+                                        "remarks",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                    disabled={isSubmitting}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isSubmitting}
+                                  className="h-8 px-3 text-sm"
+                                  onClick={handleCancelExpenseForm}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="h-8 px-3 bg-gray-800 hover:bg-gray-900 text-white text-sm"
+                                  disabled={isSubmitting}
+                                  onClick={handleSaveExpenseItem}
+                                >
+                                  {editingExpenseIndex !== null
+                                    ? "Update"
+                                    : "Add"}
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
 
                         {/* Add Expense Item Button */}
                         <Button
