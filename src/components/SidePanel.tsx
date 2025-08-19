@@ -42,7 +42,9 @@ interface SidePanelProps {
   onOpenChange: (open: boolean) => void;
   selectedShipment: Shipment | null;
   onCreatePST: (poNumber: string) => void;
+  onUpdatePST?: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
+  onNavigate?: (path: string) => void;
   onViewDocs: () => void;
 }
 
@@ -50,8 +52,10 @@ export function SidePanel({
   isOpen, 
   onOpenChange, 
   selectedShipment, 
-  onCreatePST, 
-  onCreatePSW, 
+  onCreatePST,
+  onUpdatePST,
+  onCreatePSW,
+  onNavigate,
   onViewDocs 
 }: SidePanelProps) {
   // Use consolidated suppliers API for co-load data
@@ -116,11 +120,23 @@ export function SidePanel({
       };
     }
     
-    // ถ้า pstStatus เป็น Y และ pswStatus เป็น N or null ให้แสดงปุ่ม CreatePsw
-    if (pstStatus === 'Y' && (!pswStatus || pswStatus === 'N' || pswStatus === '' || pswStatus === null)) {
+    // ถ้า shipment มี pswNo และ pswStatus = N → แสดง Update PSW
+    if (shipment.pswNo && pswStatus === 'N') {
+      return {
+        text: 'Update PSW',
+        action: 'update-psw',
+        color: 'bg-orange-600 hover:bg-orange-700 text-white',
+        enabled: true,
+        tooltip: 'Update PSW document',
+        icon: <Calendar className="w-4 h-4" />
+      };
+    }
+    
+    // ถ้า pswNo ไม่มีค่า แต่มี pstNo มีค่า → แสดง Create PSW
+    if (!shipment.pswNo && shipment.pstNo) {
       return {
         text: 'Create PSW',
-        action: 'create-psw',
+        action: 'create-psw-with-confirmation',
         color: 'bg-green-600 hover:bg-green-700 text-white',
         enabled: true,
         tooltip: 'Create PSW document',
@@ -159,11 +175,32 @@ export function SidePanel({
     
     switch (actionConfig.action) {
       case 'create-pst':
-      case 'edit-pst':
         onCreatePST(selectedShipment.poNumber);
+        break;
+      case 'edit-pst':
+        if (onUpdatePST && selectedShipment.pstWebSeqId) {
+          onUpdatePST(selectedShipment.pstWebSeqId);
+        } else {
+          onCreatePST(selectedShipment.poNumber);
+        }
         break;
       case 'create-psw':
         onCreatePSW(selectedShipment.poNumber);
+        break;
+      case 'create-psw-with-confirmation':
+        // For now, just call onCreatePSW directly in SidePanel
+        // In the future, could add confirmation dialog here too
+        onCreatePSW(selectedShipment.poNumber);
+        break;
+      case 'update-psw':
+        // Handle Update PSW navigation
+        if (onNavigate && selectedShipment.pswWebSeqId) {
+          onNavigate(`/create-psw?update=${selectedShipment.pswWebSeqId}&po=${selectedShipment.poNumber}`);
+        } else {
+          console.warn('Cannot update PSW: Missing onNavigate function or pswWebSeqId');
+          // Fallback to create PSW
+          onCreatePSW(selectedShipment.poNumber);
+        }
         break;
       case 'completed':
       case 'none':

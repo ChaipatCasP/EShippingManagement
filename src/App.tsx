@@ -1364,7 +1364,13 @@ pswWebSeqId
           onOpenChange={setIsPanelOpen}
           selectedShipment={selectedShipment}
           onCreatePST={handleCreatePST}
+          onUpdatePST={(pstWebSeqId) => {
+            if (selectedShipment) {
+              handleUpdatePST(pstWebSeqId, selectedShipment);
+            }
+          }}
           onCreatePSW={handleCreatePSW}
+          onNavigate={navigate}
           onViewDocs={handleViewDocs}
         />
       </div>
