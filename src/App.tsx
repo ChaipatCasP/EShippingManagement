@@ -1370,6 +1370,7 @@ pswWebSeqId
             }
           }}
           onCreatePSW={handleCreatePSW}
+          onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
           onNavigate={navigate}
           onViewDocs={handleViewDocs}
         />

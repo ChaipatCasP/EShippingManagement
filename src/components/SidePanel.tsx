@@ -46,6 +46,7 @@ interface SidePanelProps {
   onCreatePST: (poNumber: string) => void;
   onUpdatePST?: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
+  onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onNavigate?: (path: string) => void;
   onViewDocs: () => void;
 }
@@ -57,13 +58,63 @@ export function SidePanel({
   onCreatePST,
   onUpdatePST,
   onCreatePSW,
+  onCreatePSTWithConfirmation,
   onNavigate,
   onViewDocs 
 }: SidePanelProps) {
+  // State for PST confirmation
+  const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
+  const [selectedPstShipment, setSelectedPstShipment] = useState<Shipment | null>(null);
+  const [isPstCreating, setIsPstCreating] = useState(false);
+
   // State for PSW confirmation
   const [pswConfirmationOpen, setPswConfirmationOpen] = useState(false);
   const [selectedPswShipment, setSelectedPswShipment] = useState<Shipment | null>(null);
   const [isPswCreating, setIsPswCreating] = useState(false);
+
+  // Handler for PST creation with confirmation
+  const handleCreatePSTWithConfirmation = (shipment: Shipment) => {
+    console.log('🚀 SidePanel - handleCreatePSTWithConfirmation called with:', shipment.poNumber);
+    
+    // ปิด SidePanel ก่อน
+    onOpenChange(false);
+    
+    // ใช้ setTimeout เพื่อให้ SidePanel ปิดเสร็จก่อน แล้วค่อยแสดง popup
+    setTimeout(() => {
+      setSelectedPstShipment(shipment);
+      setPstConfirmationOpen(true);
+    }, 300); // รอ 300ms ให้ animation ของ SidePanel เสร็จ
+  };
+
+  // Handler for PST confirmation
+  const handleConfirmCreatePST = async () => {
+    console.log('✅ SidePanel - handleConfirmCreatePST called with:', selectedPstShipment?.poNumber);
+
+    if (!selectedPstShipment) {
+      console.log("❌ No selectedPstShipment found");
+      return;
+    }
+
+    try {
+      setIsPstCreating(true);
+
+      if (onCreatePSTWithConfirmation) {
+        await onCreatePSTWithConfirmation(
+          selectedPstShipment.poNumber,
+          selectedPstShipment
+        );
+      } else {
+        onCreatePST(selectedPstShipment.poNumber);
+      }
+
+      setPstConfirmationOpen(false);
+      setSelectedPstShipment(null);
+    } catch (error) {
+      console.error("❌ Error creating PST:", error);
+    } finally {
+      setIsPstCreating(false);
+    }
+  };
 
   // Handler for PSW creation with confirmation
   const handleCreatePSWWithConfirmation = (shipment: Shipment) => {
@@ -217,7 +268,8 @@ export function SidePanel({
     
     switch (actionConfig.action) {
       case 'create-pst':
-        onCreatePST(selectedShipment.poNumber);
+        // Show confirmation dialog for PST creation
+        handleCreatePSTWithConfirmation(selectedShipment);
         break;
       case 'edit-pst':
         if (onUpdatePST && selectedShipment.pstWebSeqId) {
@@ -744,6 +796,24 @@ export function SidePanel({
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* PSW Confirmation Dialog */}
+    {/* PST Confirmation Dialog */}
+    {selectedPstShipment && (
+      <CreatePSTConfirmation
+        isOpen={pstConfirmationOpen}
+        onClose={() => setPstConfirmationOpen(false)}
+        onConfirm={handleConfirmCreatePST}
+        isLoading={isPstCreating}
+        type="PST"
+        poNo={selectedPstShipment.poNumber || ""}
+        poBook={selectedPstShipment.originalPOData?.poBook || ""}
+        shipmentNo={
+          selectedPstShipment.blAwbNumber || selectedPstShipment.id || ""
+        }
+        portOfDestination={selectedPstShipment.destinationPort || ""}
+      />
+    )}
 
     {/* PSW Confirmation Dialog */}
     {selectedPswShipment && (
