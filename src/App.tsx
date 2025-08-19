@@ -930,9 +930,15 @@ export default function ShippingDashboard() {
     }
   };
 
-  const handleCreatePSW = (poNumber?: string) => {
+  const handleCreatePSW = (poNumber?: string, shipment?: Shipment) => {
     setIsTransitioning(true);
     setSelectedPOForPSW(poNumber || null);
+    
+    // Store the shipment data if provided for header information
+    if (shipment) {
+      setSelectedShipment(shipment);
+    }
+    
     setCurrentView('create-psw');
     // Reset transition state after animation
     setTimeout(() => setIsTransitioning(false), 400);
@@ -1238,14 +1244,46 @@ pswWebSeqId
 
   // Render PSW Form if currentView is 'create-psw'
   if (currentView === 'create-psw') {
+    // Helper function to format date from ISO string to YYYY-MM-DD
+    const formatDate = (dateString: string) => {
+      if (!dateString) return "";
+      try {
+        return dateString.split("T")[0]; // Extract YYYY-MM-DD part
+      } catch {
+        return dateString; // Return as-is if already in correct format
+      }
+    };
+
+    // Convert selected shipment to header data for PSW
+    const dashboardHeaderDataForPSW = selectedShipment ? {
+      supplierName: selectedShipment.supplierName,
+      poBook: selectedShipment.originalPOData?.poBook || selectedShipment.pstBook || "",
+      poNo: (selectedShipment.originalPOData?.poNo || selectedShipment.poNumber)?.toString() || "",
+      poDate: formatDate(selectedShipment.poDate),
+      etd: formatDate(selectedShipment.etd),
+      eta: formatDate(selectedShipment.eta),
+      wrDate: formatDate(selectedShipment.dateClear),
+      invoiceNo: selectedShipment.invoiceNumber,
+      invoiceDate: formatDate(selectedShipment.invoiceDate),
+      awbNo: selectedShipment.blAwbNumber,
+      importEntryNo: selectedShipment.importEntryNo,
+      portOfOrigin: selectedShipment.originPort,
+      portOfDestination: selectedShipment.destinationPort,
+      status: selectedShipment.poType,
+      pstBook: selectedShipment.pstBook || "",
+      pstNo: selectedShipment.pstNo?.toString() || "",
+    } : undefined;
+
     return (
       <CreatePSWForm
         poNumber={selectedPOForPSW || undefined}
         pstNumber={createdPSTNumber || "PST-2025-001"}
         pswWebSeqId={pswWebSeqId ?? undefined}
         pswData={pswData}
+        dashboardHeaderData={dashboardHeaderDataForPSW}
         onClose={handleClosePSWForm}
         onSubmit={handlePSWSubmit}
+        user={user}
       />
     );
   }

@@ -44,7 +44,7 @@ interface ShipmentTimelineProps {
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
   onUpdatePST: (pstWebSeqId: number) => void;
-  onCreatePSW: (poNumber: string) => void;
+  onCreatePSW: (poNumber: string, shipment?: Shipment) => void;
   onUpdatePSW?: (pswWebSeqId: number) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   isLoading?: boolean;
@@ -132,7 +132,7 @@ export function ShipmentTimeline({
 
     try {
       setIsPswCreating(true);
-      onCreatePSW(selectedPswShipment.poNumber);
+      onCreatePSW(selectedPswShipment.poNumber, selectedPswShipment);
       setPswConfirmationOpen(false);
       setSelectedPswShipment(null);
     } catch (error) {
@@ -163,7 +163,7 @@ export function ShipmentTimeline({
         }
         break;
       case "create-psw":
-        onCreatePSW(shipment.poNumber);
+        onCreatePSW(shipment.poNumber, shipment);
         break;
       case "create-psw-with-confirmation":
         handleCreatePSWWithConfirmation(shipment);

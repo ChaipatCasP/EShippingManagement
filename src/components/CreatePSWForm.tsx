@@ -49,17 +49,42 @@ interface User {
   name: string;
 }
 
+// Interface for header data from dashboard
+interface HeaderData {
+  supplierName: string;
+  poBook: string;
+  poNo: string;
+  poDate: string;
+  etd: string;
+  eta: string;
+  wrDate: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  awbNo: string;
+  importEntryNo: string;
+  portOfOrigin: string;
+  portOfDestination: string;
+  status: string;
+  pstBook: string;
+  pstNo: string;
+  vesselName?: string;
+  referenceCode?: string;
+  taxIdNo?: string;
+  paymentTerm?: string;
+}
+
 interface CreatePSWFormProps {
   poNumber?: string;
   pstNumber?: string;
   pswWebSeqId?: number; // Add this for Update PSW functionality
   pswData?: PSWApiResponse; // PSW data from API
+  dashboardHeaderData?: HeaderData; // Optional header data from dashboard
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
   user?: User | null;
 }
 
-export function CreatePSWForm({ poNumber, pstNumber, pswWebSeqId, pswData, onClose, onSubmit, user }: CreatePSWFormProps) {
+export function CreatePSWForm({ poNumber, pstNumber, pswWebSeqId, pswData, dashboardHeaderData, onClose, onSubmit, user }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([
     {
@@ -114,20 +139,20 @@ export function CreatePSWForm({ poNumber, pstNumber, pswWebSeqId, pswData, onClo
     }
   ]);
 
-  // Header data from API for display
+  // Header data from API for display - initialize with dashboard data if provided
   const [headerData, setHeaderData] = useState({
-    supplierName: '',
-    poBook: '',
-    poNo: '',
-    poDate: '',
-    etd: '',
-    eta: '',
-    wrDate: '',
-    invoiceNo: '',
-    awbNo: '',
-    pstBook: '',
-    pstNo: '',
-    status: '',
+    supplierName: dashboardHeaderData?.supplierName || '',
+    poBook: dashboardHeaderData?.poBook || '',
+    poNo: dashboardHeaderData?.poNo || '',
+    poDate: dashboardHeaderData?.poDate || '',
+    etd: dashboardHeaderData?.etd || '',
+    eta: dashboardHeaderData?.eta || '',
+    wrDate: dashboardHeaderData?.wrDate || '',
+    invoiceNo: dashboardHeaderData?.invoiceNo || '',
+    awbNo: dashboardHeaderData?.awbNo || '',
+    pstBook: dashboardHeaderData?.pstBook || '',
+    pstNo: dashboardHeaderData?.pstNo || '',
+    status: dashboardHeaderData?.status || '',
     pswBook: '',
     pswNo: ''
   });
@@ -189,27 +214,28 @@ export function CreatePSWForm({ poNumber, pstNumber, pswWebSeqId, pswData, onClo
           console.log('PSW data loaded:', data);
           
           // Get supplier name from first invoice in list
-          const supplierName = data.invoiceList && data.invoiceList.length > 0 
+          const apiSupplierName = data.invoiceList && data.invoiceList.length > 0 
             ? data.invoiceList[0].supplierName 
             : '';
           
-          // Update header data with correct field mapping
-          setHeaderData({
-            supplierName: supplierName,
-            poBook: data.poBook || '',
-            poNo: data.poNo?.toString() || '',
-            poDate: data.poDate || '',
-            etd: '', // Not in API response
-            eta: '', // Not in API response
-            wrDate: '', // Not in API response
-            invoiceNo: data.invoiceList?.[0]?.invoiceNo || '',
-            awbNo: data.awbNo || '',
-            pstBook: '', // Not in API response
-            pstNo: '', // Not in API response
-            status: '', // Not in API response  
-            pswBook: '', // Not in API response
-            pswNo: '' // Not in API response
-          });
+          // Update header data with API response, but prefer dashboard data when available
+          setHeaderData(prevData => ({
+            // Prefer dashboard data, fallback to API data, then existing data
+            supplierName: dashboardHeaderData?.supplierName || apiSupplierName || prevData.supplierName,
+            poBook: dashboardHeaderData?.poBook || data.poBook || prevData.poBook,
+            poNo: dashboardHeaderData?.poNo || data.poNo?.toString() || prevData.poNo,
+            poDate: dashboardHeaderData?.poDate || data.poDate || prevData.poDate,
+            etd: dashboardHeaderData?.etd || prevData.etd, // ETD from dashboard only
+            eta: dashboardHeaderData?.eta || prevData.eta, // ETA from dashboard only
+            wrDate: dashboardHeaderData?.wrDate || prevData.wrDate, // WR Date from dashboard only
+            invoiceNo: dashboardHeaderData?.invoiceNo || data.invoiceList?.[0]?.invoiceNo || prevData.invoiceNo,
+            awbNo: dashboardHeaderData?.awbNo || data.awbNo || prevData.awbNo,
+            pstBook: dashboardHeaderData?.pstBook || prevData.pstBook,
+            pstNo: dashboardHeaderData?.pstNo || prevData.pstNo,
+            status: dashboardHeaderData?.status || prevData.status,
+            pswBook: prevData.pswBook, // PSW data from form state
+            pswNo: prevData.pswNo // PSW data from form state
+          }));
         }
       } catch (error) {
         console.error('Error loading PSW data:', error);
@@ -222,7 +248,7 @@ export function CreatePSWForm({ poNumber, pstNumber, pswWebSeqId, pswData, onClo
     } else if (pswWebSeqId) {
       loadPSWData(pswWebSeqId);
     }
-  }, [pswWebSeqId]);
+  }, [pswWebSeqId, dashboardHeaderData]);
 
   // Calculate totals
   const totalSummary = expenses.reduce((acc, expense) => {

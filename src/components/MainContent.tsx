@@ -14,7 +14,7 @@ interface MainContentProps {
   sortOption: SortOption;
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
-  onCreatePSW: (poNumber: string) => void;
+  onCreatePSW: (poNumber: string, shipment?: Shipment) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
   onUpdatePSW?: (pswWebSeqId: number) => void;

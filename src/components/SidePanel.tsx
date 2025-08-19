@@ -45,7 +45,7 @@ interface SidePanelProps {
   selectedShipment: Shipment | null;
   onCreatePST: (poNumber: string) => void;
   onUpdatePST?: (pstWebSeqId: number) => void;
-  onCreatePSW: (poNumber: string) => void;
+  onCreatePSW: (poNumber: string, shipment?: Shipment) => void;
   onUpdatePSW?: (pswWebSeqId: number) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onViewDocs: () => void;
@@ -141,7 +141,7 @@ export function SidePanel({
 
     try {
       setIsPswCreating(true);
-      onCreatePSW(selectedPswShipment.poNumber);
+      onCreatePSW(selectedPswShipment.poNumber, selectedPswShipment);
       setPswConfirmationOpen(false);
       setSelectedPswShipment(null);
     } catch (error) {
@@ -279,7 +279,7 @@ export function SidePanel({
         }
         break;
       case 'create-psw':
-        onCreatePSW(selectedShipment.poNumber);
+        onCreatePSW(selectedShipment.poNumber, selectedShipment);
         break;
       case 'create-psw-with-confirmation':
         // Show confirmation dialog for PSW creation
