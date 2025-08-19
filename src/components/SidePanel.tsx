@@ -68,8 +68,15 @@ export function SidePanel({
   // Handler for PSW creation with confirmation
   const handleCreatePSWWithConfirmation = (shipment: Shipment) => {
     console.log('🚀 SidePanel - handleCreatePSWWithConfirmation called with:', shipment.poNumber);
-    setSelectedPswShipment(shipment);
-    setPswConfirmationOpen(true);
+    
+    // ปิด SidePanel ก่อน
+    onOpenChange(false);
+    
+    // ใช้ setTimeout เพื่อให้ SidePanel ปิดเสร็จก่อน แล้วค่อยแสดง popup
+    setTimeout(() => {
+      setSelectedPswShipment(shipment);
+      setPswConfirmationOpen(true);
+    }, 300); // รอ 300ms ให้ animation ของ SidePanel เสร็จ
   };
 
   // Handler for PSW confirmation

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Button } from './ui/button';
 import { FileText, AlertCircle, X } from 'lucide-react';
 
@@ -34,13 +35,26 @@ export function CreatePSTConfirmation({
 
   if (!isOpen) return null;
   
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 relative">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black bg-opacity-50" 
+      style={{ zIndex: 99999 }}
+      onClick={(e) => {
+        // Close modal when clicking on backdrop
+        if (e.target === e.currentTarget && !isLoading) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 relative" 
+        style={{ zIndex: 100000 }}
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on modal content
+      >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
           disabled={isLoading}
         >
           <X className="w-5 h-5" />
@@ -108,4 +122,7 @@ export function CreatePSTConfirmation({
       </div>
     </div>
   );
+
+  // Use createPortal to render the modal at the document body level
+  return createPortal(modalContent, document.body);
 }
