@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -16,6 +17,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useConsolidatedSuppliers } from '../hooks/useConsolidatedSuppliers';
+import { CreatePSTConfirmation } from './CreatePSTConfirmationModal';
 import type { Shipment } from '../types/shipment';
 import type { ConsolidatedSupplier } from '../api/types';
 
@@ -58,6 +60,39 @@ export function SidePanel({
   onNavigate,
   onViewDocs 
 }: SidePanelProps) {
+  // State for PSW confirmation
+  const [pswConfirmationOpen, setPswConfirmationOpen] = useState(false);
+  const [selectedPswShipment, setSelectedPswShipment] = useState<Shipment | null>(null);
+  const [isPswCreating, setIsPswCreating] = useState(false);
+
+  // Handler for PSW creation with confirmation
+  const handleCreatePSWWithConfirmation = (shipment: Shipment) => {
+    console.log('🚀 SidePanel - handleCreatePSWWithConfirmation called with:', shipment.poNumber);
+    setSelectedPswShipment(shipment);
+    setPswConfirmationOpen(true);
+  };
+
+  // Handler for PSW confirmation
+  const handleConfirmCreatePSW = async () => {
+    console.log('✅ SidePanel - handleConfirmCreatePSW called with:', selectedPswShipment?.poNumber);
+
+    if (!selectedPswShipment) {
+      console.log("❌ No selectedPswShipment found");
+      return;
+    }
+
+    try {
+      setIsPswCreating(true);
+      onCreatePSW(selectedPswShipment.poNumber);
+      setPswConfirmationOpen(false);
+      setSelectedPswShipment(null);
+    } catch (error) {
+      console.error("❌ Error creating PSW:", error);
+    } finally {
+      setIsPswCreating(false);
+    }
+  };
+
   // Use consolidated suppliers API for co-load data
   const {
     suppliers,
@@ -181,26 +216,31 @@ export function SidePanel({
         if (onUpdatePST && selectedShipment.pstWebSeqId) {
           onUpdatePST(selectedShipment.pstWebSeqId);
         } else {
-          onCreatePST(selectedShipment.poNumber);
+          console.error('No pstWebSeqId found for shipment:', selectedShipment);
         }
         break;
       case 'create-psw':
         onCreatePSW(selectedShipment.poNumber);
         break;
       case 'create-psw-with-confirmation':
-        // For now, just call onCreatePSW directly in SidePanel
-        // In the future, could add confirmation dialog here too
-        onCreatePSW(selectedShipment.poNumber);
+        // Show confirmation dialog for PSW creation
+        handleCreatePSWWithConfirmation(selectedShipment);
         break;
       case 'update-psw':
-        // Handle Update PSW navigation
+        console.log("🔄 SidePanel Update PSW - Bypassing API, navigating directly:", {
+          pswWebSeqId: selectedShipment.pswWebSeqId,
+          poNumber: selectedShipment.poNumber,
+        });
+
+        // ใช้ pswWebSeqId bypass ไปที่หน้า create-psw เป็นโหมด update เลย
         if (onNavigate && selectedShipment.pswWebSeqId) {
           onNavigate(`/create-psw?update=${selectedShipment.pswWebSeqId}&po=${selectedShipment.poNumber}`);
         } else {
           console.warn('Cannot update PSW: Missing onNavigate function or pswWebSeqId');
-          // Fallback to create PSW
-          onCreatePSW(selectedShipment.poNumber);
         }
+        break;
+      case 'view-psw':
+        alert(`View PSW ${selectedShipment.pswNumber} - This feature will be implemented`);
         break;
       case 'completed':
       case 'none':
@@ -266,7 +306,8 @@ export function SidePanel({
   const poTypeDisplay = getPOTypeDisplay(selectedShipment.poType);
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+    <>
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent 
         className="w-[600px] sm:w-[600px] overflow-y-auto m-4 rounded-lg border bg-white shadow-lg" 
         style={{ right: '16px', top: '16px', bottom: '16px', height: 'calc(100vh - 32px)' }}
@@ -696,5 +737,23 @@ export function SidePanel({
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* PSW Confirmation Dialog */}
+    {selectedPswShipment && (
+      <CreatePSTConfirmation
+        isOpen={pswConfirmationOpen}
+        onClose={() => setPswConfirmationOpen(false)}
+        onConfirm={handleConfirmCreatePSW}
+        isLoading={isPswCreating}
+        type="PSW"
+        poNo={selectedPswShipment.poNumber || ""}
+        poBook={selectedPswShipment.originalPOData?.poBook || ""}
+        shipmentNo={
+          selectedPswShipment.blAwbNumber || selectedPswShipment.id || ""
+        }
+        portOfDestination={selectedPswShipment.destinationPort || ""}
+      />
+    )}
+    </>
   );
 }
