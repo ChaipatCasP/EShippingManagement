@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogOverlay,
+} from "./ui/alert-dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -18,16 +29,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "./ui/alert-dialog";
 import {
   Command,
   CommandEmpty,
@@ -93,6 +94,56 @@ interface InvoiceItem {
   transportBy: string;
 }
 
+interface BillEntryData {
+  webSeqID: string;
+  poBook: string;
+  poNo: string;
+  poDate: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  contactPerson: string;
+  creditDays: string;
+  creditTerm: string;
+  awbType: string;
+  awbNo: string;
+  awbDate: string;
+  importEntryNo: string;
+  eta: string;
+  paymentTerm: string;
+  vesselName: string;
+  countryOfOrigin: string;
+  requestPaymentDateTime: string;
+  currency: string;
+  remarks: string;
+  billStatus: string;
+  jagotaStatus: string;
+  masterSequenceId: string;
+  childSequenceId: string;
+  dueDate: string;
+  // invoiceNo: string;
+  // contactPerson: string;
+  // transportMode: string; // This is awbType in the API
+  // invoiceDate: string;
+  // creditTerm: string;
+  // awbDate: string;
+  // importEntryNo: string;
+  // currency: string;
+  // referenceCode: string;
+  // eta: string;
+  // vesselName: string;
+  // taxIdNo: string;
+  // paymentTerm: string;
+  // countryOfOrigin: string;
+  // dueDate: string;
+  // requestPaymentDate: string;
+  // requestPaymentTime: string;
+  // remarks: string;
+  // poDate: string;
+  // poBook: string;
+  // poNo: string;
+  // awbNo: string;
+}
+
 // Interface for header data from dashboard
 interface HeaderData {
   supplierName: string;
@@ -123,6 +174,7 @@ interface CreatePSTFormProps {
   dashboardHeaderData?: HeaderData; // Optional header data from dashboard
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
+  onNavigateToPSW?: (data: any) => void; // Add PSW navigation callback
 }
 
 export function CreatePSTForm({
@@ -131,6 +183,7 @@ export function CreatePSTForm({
   dashboardHeaderData,
   onClose,
   onSubmit,
+  onNavigateToPSW,
 }: CreatePSTFormProps) {
   console.log("🚀 Chaipat CreatePSTForm initialized with props:", {
     createdPSTNumber,
@@ -166,25 +219,32 @@ export function CreatePSTForm({
   });
 
   // Bill Entry data - separate from header data
-  const [billEntryData, setBillEntryData] = useState({
+  const [billEntryData, setBillEntryData] = useState<BillEntryData>({
+    webSeqID: "",
+    poBook: "",
+    poNo: "",
+    poDate: "",
     invoiceNo: "",
-    contactPerson: "",
-    transportMode: "",
     invoiceDate: "",
+    contactPerson: "",
+    creditDays: "",
     creditTerm: "",
+    awbType: "",
+    awbNo: "",
     awbDate: "",
     importEntryNo: "",
-    currency: "",
-    referenceCode: "",
     eta: "",
-    vesselName: "",
-    taxIdNo: "",
     paymentTerm: "",
+    vesselName: "",
     countryOfOrigin: "",
-    dueDate: "",
-    requestPaymentDate: "",
-    requestPaymentTime: "",
+    requestPaymentDateTime: "",
+    currency: "",
     remarks: "",
+    billStatus: "",
+    jagotaStatus: "",
+    masterSequenceId: "",
+    childSequenceId: "",
+    dueDate: "",
   });
 
   // Header data from API for display - initialize with dashboard data if provided
@@ -220,19 +280,16 @@ export function CreatePSTForm({
   // Expense list from API
   const [expenseList, setExpenseList] = useState<ExpenseListItem[]>([]);
 
+  // Track original bill entry data to detect changes
+  const [originalBillEntryData, setOriginalBillEntryData] =
+    useState<BillEntryData | null>(null);
+
   // Service provider list from API
   const [serviceProviders, setServiceProviders] = useState<
     ServiceProviderItem[]
   >([]);
 
-  // State for delete confirmation
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{
-    open: boolean;
-    itemId: string | null;
-  }>({
-    open: false,
-    itemId: null,
-  });
+  // Expense Item State
 
   // Expense Item Form State
   const [expenseItemForm, setExpenseItemForm] = useState({
@@ -286,7 +343,6 @@ export function CreatePSTForm({
   useEffect(() => {
     const url = new URL(window.location.href);
     const pstWebSeqIdParam = url.searchParams.get("pstWebSeqId");
-    const modeParam = url.searchParams.get("mode");
 
     if (pstWebSeqIdParam && !pstWebSeqId) {
       const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
@@ -374,11 +430,11 @@ export function CreatePSTForm({
       "🎯 CreatePSTForm useEffect triggered with pstWebSeqId:",
       pstWebSeqId
     );
-    
+
     // Check URL parameters first
     const url = new URL(window.location.href);
     const pstWebSeqIdFromUrl = url.searchParams.get("pstWebSeqId");
-    
+
     if (pstWebSeqIdFromUrl) {
       const id = parseInt(pstWebSeqIdFromUrl);
       if (!isNaN(id)) {
@@ -401,6 +457,20 @@ export function CreatePSTForm({
 
       if (!response.error && response.data) {
         const data = response.data;
+        console.log("API Response Data:", {
+          invoiceDate: data.invoiceDate,
+          contactPerson: data.contactPerson,
+          awbNo: data.awbNo,
+          currency: data.currency,
+          eta: data.eta,
+          webSeqID: data.webSeqID,
+          requestPaymentDateTime: data.requestPaymentDateTime,
+        });
+        console.log("API Response data:", {
+          invoiceDate: data.invoiceDate,
+          invoiceNo: data.invoiceNo,
+          contactPerson: data.contactPerson,
+        });
         // Update step1Data with API response
         setStep1Data({
           invoiceNo: data.invoiceNo || "No Invoice",
@@ -433,7 +503,12 @@ export function CreatePSTForm({
             ? ("Multiple" as const)
             : ("Single" as const),
           pstBook: dashboardHeaderData?.pstBook || data.poBook || "",
-          pstNo: dashboardHeaderData?.pstNo || (data.poNo !== undefined && data.poNo !== null ? String(data.poNo) : "") || "",
+          pstNo:
+            dashboardHeaderData?.pstNo ||
+            (data.poNo !== undefined && data.poNo !== null
+              ? String(data.poNo)
+              : "") ||
+            "",
           vesselName: data.vesselName || "",
           referenceCode: "",
           taxIdNo: "",
@@ -449,10 +524,79 @@ export function CreatePSTForm({
         }));
 
         // Update bill entry data with API response
-        setBillEntryData((prev) => ({
-          ...prev,
-          countryOfOrigin: data.countryOfOrigin || prev.countryOfOrigin || "",
-        }));
+        console.log("Updating bill entry data with:", data);
+        const transformedData: BillEntryData = {
+          webSeqID:
+            data.webSeqID !== undefined && data.webSeqID !== null
+              ? String(data.webSeqID)
+              : "",
+          poBook: data.poBook || "",
+          poNo:
+            data.poNo !== undefined && data.poNo !== null
+              ? String(data.poNo)
+              : "",
+          poDate: data.poDate || "",
+          invoiceNo: data.invoiceNo || "",
+          invoiceDate: data.invoiceDate || "",
+          contactPerson: data.contactPerson || "",
+          creditDays:
+            data.creditDays !== undefined && data.creditDays !== null
+              ? String(data.creditDays)
+              : "",
+          creditTerm: data.creditTerm || "",
+          awbType: data.awbType || "",
+          awbNo: data.awbNo || "",
+          awbDate: data.awbDate || "",
+          importEntryNo: data.importEntryNo || "",
+          eta: data.eta || "",
+          paymentTerm: data.paymentTerm || "",
+          vesselName: data.vesselName || "",
+          countryOfOrigin: data.countryOfOrigin || "",
+          requestPaymentDateTime: data.requestPaymentDateTime || "",
+          currency: data.currency || "",
+          remarks: data.remarks || "",
+          billStatus: data.billStatus || "",
+          jagotaStatus: data.jagotaStatus || "",
+          masterSequenceId:
+            data.masterSequenceId !== undefined &&
+            data.masterSequenceId !== null
+              ? String(data.masterSequenceId)
+              : "",
+          childSequenceId:
+            data.childSequenceId !== undefined && data.childSequenceId !== null
+              ? String(data.childSequenceId)
+              : "",
+          dueDate: "31-Mar-2025", // Default value, can be updated later
+          // poBook: data.poBook ? String(data.poBook) : "",
+          // poNo: data.poNo ? String(data.poNo) : "",
+          // poDate: data.poDate || "",
+          // invoiceDate: data.invoiceDate || "",
+          // invoiceNo: data.invoiceNo || "",
+          // contactPerson: data.contactPerson || "",
+          // awbDate: data.awbDate || "",
+          // awbNo: data.awbNo || "",
+          // importEntryNo: data.importEntryNo || "",
+          // currency: data.currency || "",
+          // eta: data.eta || "",
+          // vesselName: data.vesselName || "",
+          // paymentTerm: data.paymentTerm || "",
+          // transportMode: data.awbType || "",
+          // countryOfOrigin: data.countryOfOrigin || "",
+          // creditTerm: "",
+          // referenceCode: "",
+          // taxIdNo: "",
+          // dueDate: "",
+          // requestPaymentDate: data.requestPaymentDateTime
+          //   ? data.requestPaymentDateTime.split("T")[0]
+          //   : "",
+          // requestPaymentTime: "16:00",
+          // remarks: data.remarks || "",
+        };
+        console.log("Transformed data for bill entry:", transformedData);
+        setBillEntryData(transformedData);
+
+        // Set original data for comparison
+        setOriginalBillEntryData(transformedData);
 
         // Convert expenseList to ExpenseItem format
         const convertedExpenses: ExpenseItem[] = data.expenseList.map(
@@ -746,19 +890,11 @@ export function CreatePSTForm({
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (deleteConfirmation.itemId) {
-      await removeExpenseItem(deleteConfirmation.itemId);
-    }
-    setDeleteConfirmation({ open: false, itemId: null });
-  };
+  const handleDeleteClick = async (itemId: string) => {
+    const confirmed = window.confirm("คุณต้องการลบรายการนี้หรือไม่?");
+    if (!confirmed) return;
 
-  const handleDeleteCancel = () => {
-    setDeleteConfirmation({ open: false, itemId: null });
-  };
-
-  const handleDeleteClick = (itemId: string) => {
-    setDeleteConfirmation({ open: true, itemId });
+    await removeExpenseItem(itemId);
   };
 
   // Handle expense code change for display items
@@ -998,6 +1134,330 @@ export function CreatePSTForm({
           item.rate > 0
       )
     );
+  };
+
+  // State for save confirmation
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+
+  // State for submit bill confirmation
+  const [showSubmitBillConfirmation, setShowSubmitBillConfirmation] =
+    useState(false);
+
+  // State for bill entry collapse
+  const [billEntryCollapsed, setBillEntryCollapsed] = useState(false);
+
+  // State for submit bill success popup
+  const [showSubmitBillSuccess, setShowSubmitBillSuccess] = useState(false);
+  const [submittedPSTNumber, setSubmittedPSTNumber] = useState("");
+
+  // Function to check if bill entry data has changed
+  const hasBillEntryChanged = () => {
+    if (!originalBillEntryData) return false;
+
+    const fieldsToCheck = [
+      "invoiceNo",
+      "contactPerson",
+      "invoiceDate",
+      "creditTerm",
+      "awbDate",
+      "importEntryNo",
+      "eta",
+      "vesselName",
+      "paymentTerm",
+      "countryOfOrigin",
+      "requestPaymentDateTime",
+      "remarks",
+    ];
+
+    return fieldsToCheck.some(
+      (field) =>
+        billEntryData[field as keyof BillEntryData] !==
+        originalBillEntryData[field as keyof BillEntryData]
+    );
+  };
+
+  // Function to reload data after successful save
+  const reloadDataAfterSave = async (newWebSeqId: string) => {
+    try {
+      console.log("Reloading data with new webSeqId:", newWebSeqId);
+
+      // Call getPSTDetails with new webSeqId
+      const data = await pstService.getPSTDetails(Number(newWebSeqId));
+
+      if (data && !data.error) {
+        console.log("Reloaded data:", data.data);
+
+        // Update billEntryData with fresh data from API
+        const freshData = data.data;
+        const formatDateStr = (dateStr: string | null) => {
+          if (!dateStr) return "";
+          try {
+            return new Date(dateStr).toISOString().split("T")[0];
+          } catch (e) {
+            console.error("Error formatting date:", dateStr, e);
+            return "";
+          }
+        };
+
+        const transformedData: BillEntryData = {
+          webSeqID: freshData.webSeqID
+            ? String(freshData.webSeqID)
+            : newWebSeqId,
+          poBook: freshData.poBook || "PST",
+          poNo: freshData.poNo ? String(freshData.poNo) : "",
+          poDate: formatDateStr(freshData.poDate),
+          invoiceNo: freshData.invoiceNo || "",
+          invoiceDate: formatDateStr(freshData.invoiceDate),
+          contactPerson: freshData.contactPerson || "",
+          creditDays: freshData.creditDays ? String(freshData.creditDays) : "",
+          creditTerm: freshData.creditTerm || "",
+          awbType: freshData.awbType || "",
+          awbNo: freshData.awbNo || "",
+          awbDate: formatDateStr(freshData.awbDate),
+          importEntryNo: freshData.importEntryNo || "",
+          eta: formatDateStr(freshData.eta),
+          paymentTerm: freshData.paymentTerm || "",
+          vesselName: freshData.vesselName || "",
+          countryOfOrigin: freshData.countryOfOrigin || "",
+          requestPaymentDateTime: freshData.requestPaymentDateTime
+            ? formatDateStr(freshData.requestPaymentDateTime)
+            : "",
+          currency: freshData.currency || "THB",
+          remarks: freshData.remarks || "",
+          billStatus: freshData.billStatus || "New Entry",
+          jagotaStatus: freshData.jagotaStatus || "New Entry",
+          masterSequenceId: freshData.masterSequenceId
+            ? String(freshData.masterSequenceId)
+            : "",
+          childSequenceId: freshData.childSequenceId
+            ? String(freshData.childSequenceId)
+            : "",
+          dueDate: "",
+        };
+
+        setBillEntryData(transformedData);
+        setOriginalBillEntryData(transformedData);
+
+        // Convert expenseList to ExpenseItem format if exists
+        if (freshData.expenseList && freshData.expenseList.length > 0) {
+          const convertedExpenses: ExpenseItem[] = freshData.expenseList.map(
+            (expense, index) => ({
+              id: expense.rowId || (index + 1).toString(),
+              rowId: expense.rowId,
+              expenseCode: expense.expenseCode,
+              expenseName: expense.expenseName,
+              serviceProvider: expense.serviceProvider,
+              qty: expense.qty,
+              rate: expense.rate,
+              documentNo: expense.documentNo || "",
+              documentDate: expense.documentDate || "",
+              subTotal: expense.subTotal,
+              vatBaseAmount: expense.vatBase,
+              remarks: expense.remarks || "",
+              vatPercent: expense.vatPercent,
+              vatAmount: expense.vatAmount,
+              exciseVatAmount: expense.exciseVat,
+              interiorVat: expense.interiorVat,
+              total: expense.totalAmount,
+              isFromAPI: true,
+            })
+          );
+          setExpenseItems(convertedExpenses);
+
+          // Collapse all expense items from API data
+          const allItemIds = new Set(convertedExpenses.map((item) => item.id));
+          setCollapsedItems(allItemIds);
+        }
+
+        // Convert invoiceList to InvoiceItem format if exists
+        if (freshData.invoiceList && freshData.invoiceList.length > 0) {
+          const convertedInvoices: InvoiceItem[] = freshData.invoiceList.map(
+            (invoice, index) => ({
+              id: (index + 1).toString(),
+              supplierCode: invoice.supplierCode,
+              supplierName: invoice.supplierName,
+              invoiceNo: invoice.invoiceNo,
+              referenceNo: invoice.referenceNo,
+              transportBy: invoice.transportBy,
+            })
+          );
+          setInvoiceItems(convertedInvoices);
+        }
+
+        // Clear any existing changed items when loading fresh data
+        setChangedItems(new Set());
+
+        console.log("Data reloaded successfully");
+      }
+    } catch (error) {
+      console.error("Error reloading data:", error);
+    }
+  };
+
+  // Handle bill entry save
+  const saveBillEntry = () => {
+    setShowSaveConfirmation(true);
+  };
+
+  // Handle confirmed save
+  const handleConfirmedSave = async () => {
+    setShowSaveConfirmation(false);
+
+    try {
+      // Format dates to DD-MMM-YYYY format
+      const formatDate = (dateStr: string) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        return date
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+          .replace(/ /g, "-");
+      };
+
+      // Format time to HH:mm format
+      const formatTime = (dateTimeStr: string) => {
+        if (!dateTimeStr) return "16:00";
+        try {
+          const date = new Date(dateTimeStr);
+          return date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+        } catch (e) {
+          console.error("Error formatting time:", dateTimeStr, e);
+          return "16:00";
+        }
+      };
+
+      const request = {
+        poBook: billEntryData.poBook,
+        poDate: formatDate(billEntryData.poDate),
+        invoiceNo: billEntryData.invoiceNo,
+        invoiceDate: formatDate(billEntryData.invoiceDate),
+        awbNo: billEntryData.awbNo,
+        dueDate: formatDate(billEntryData.dueDate),
+        paymentTerm: billEntryData.paymentTerm,
+        eta: formatDate(billEntryData.eta),
+        webSeqID: pstWebSeqId,
+        contactPerson: billEntryData.contactPerson,
+        remarks: billEntryData.remarks || "",
+        countryOfOrigin: billEntryData.countryOfOrigin,
+        vesselName: billEntryData.vesselName,
+        requestPaymentDate: formatDate(billEntryData.requestPaymentDateTime),
+        requestPaymentTime: formatTime(billEntryData.requestPaymentDateTime),
+        awbDate: formatDate(billEntryData.awbDate),
+        awbType: billEntryData.awbType,
+        importEntryNo: billEntryData.importEntryNo,
+      };
+
+      const result = await pstService.saveBillEntry(request);
+      console.log("Save result:", result);
+
+      // Check if save was successful and extract new webSeqID
+      if (result && !result.error && result.data && result.data.length > 0) {
+        const newWebSeqId = result.data[0].webSeqID;
+        console.log("New webSeqID from save:", newWebSeqId);
+
+        // Update original data to current data (so changes are no longer detected)
+        setOriginalBillEntryData({ ...billEntryData });
+
+        // Reload fresh data with new webSeqID
+        await reloadDataAfterSave(newWebSeqId);
+
+        alert("บันทึกข้อมูลสำเร็จ");
+      } else {
+        alert("บันทึกข้อมูลสำเร็จ");
+      }
+    } catch (error) {
+      console.error("Error saving bill entry:", error);
+      // แสดง error message ที่มีการจัดรูปแบบแล้วจาก service
+      alert(
+        error instanceof Error
+          ? error.message
+          : "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง"
+      );
+    }
+  };
+
+  // Handle submit bill
+  const handleSubmitBill = async () => {
+    // Check if we have webSeqId
+    if (!pstWebSeqId) {
+      alert("ไม่พบ Web Seq ID กรุณาบันทึกข้อมูลก่อน");
+      return;
+    }
+
+    // Show confirmation dialog
+    setShowSubmitBillConfirmation(true);
+  };
+
+  // Handle confirmed submit bill
+  const handleConfirmedSubmitBill = async () => {
+    setShowSubmitBillConfirmation(false);
+
+    try {
+      // Call submit bill API
+      const result = await pstService.submitBill(String(pstWebSeqId));
+
+      if (result && !result.error) {
+        // Generate PST number from billEntryData (poBook + poNo)
+        const pstNumber = `${billEntryData.poBook}-${billEntryData.poNo}`;
+        setSubmittedPSTNumber(pstNumber);
+        
+        // Show success popup instead of alert
+        setShowSubmitBillSuccess(true);
+        
+        console.log("Submit bill result:", result);
+        console.log("Generated PST number:", pstNumber);
+
+        // Reload data to get updated status
+        await reloadDataAfterSave(String(pstWebSeqId));
+      } else {
+        alert("ไม่สามารถส่งบิลได้ กรุณาลองใหม่อีกครั้ง");
+      }
+    } catch (error) {
+      console.error("Error submitting bill:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "ไม่สามารถส่งบิลได้ กรุณาลองใหม่อีกครั้ง"
+      );
+    }
+  };
+
+  // Handle create PSW
+  const handleCreatePSW = async () => {
+    try {
+      setShowSubmitBillSuccess(false);
+      
+      // Call create PSW API
+      const result = await pstService.createPSW(String(pstWebSeqId));
+      
+      if (result && !result.error) {
+        console.log("Create PSW result:", result);
+        
+        // Use callback to navigate to create-psw page
+        if (onNavigateToPSW) {
+          onNavigateToPSW(result);
+        } else {
+          // Fallback to window.location
+          window.location.href = '/create-psw';
+        }
+      } else {
+        alert("ไม่สามารถสร้าง PSW ได้ กรุณาลองใหม่อีกครั้ง");
+      }
+    } catch (error) {
+      console.error("Error creating PSW:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "ไม่สามารถสร้าง PSW ได้ กรุณาลองใหม่อีกครั้ง"
+      );
+    }
   };
 
   // Handle final submission
@@ -1279,202 +1739,259 @@ export function CreatePSTForm({
               {/* Main Content Area - Full Width */}
               <div className="w-full space-y-8">
                 {/* Bill Entry Section */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-6">
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-orange-600" />
-                      Bill Entry (Urgent Request)
-                      <div className="ml-auto flex items-center gap-4 text-sm">
-                        <span className="text-gray-600">
-                          Bill Status:{" "}
-                          <span className="font-medium text-blue-600">
-                            New Entry
-                          </span>
-                        </span>
-                        <span className="text-gray-600">
-                          Jagota Status:{" "}
-                          <span className="font-medium text-blue-600">
-                            New Entry
-                          </span>
-                        </span>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Row 2: Billing By */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">
-                        Billing By
-                      </Label>
-                      <div className="bg-gray-50 border border-gray-300 rounded-md p-3">
-                        <div className="text-sm">
-                          <div className="font-medium text-gray-900">
-                            {headerData.supplierName}
+                <Collapsible
+                  open={!billEntryCollapsed}
+                  onOpenChange={(open) => setBillEntryCollapsed(!open)}
+                >
+                  <Card
+                    className={`shadow-sm transition-all duration-200 ${
+                      billEntryCollapsed
+                        ? "border-gray-200"
+                        : "border-orange-200"
+                    }`}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <CardHeader
+                        className={`pb-6 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          billEntryCollapsed ? "border-b border-gray-200" : ""
+                        }`}
+                      >
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-orange-600" />
+                          Bill Entry (Urgent Request)
+                          {billEntryCollapsed ? (
+                            <ChevronRight className="w-4 h-4 text-gray-500" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                          )}
+                          <div className="ml-auto flex items-center gap-4 text-sm">
+                            {/* Summary info when collapsed */}
+                            {billEntryCollapsed && (
+                              <div className="flex items-center gap-6">
+                                {billEntryData.invoiceNo && (
+                                  <span className="text-gray-600">
+                                    Invoice:{" "}
+                                    <span className="font-medium text-gray-900">
+                                      {billEntryData.invoiceNo}
+                                    </span>
+                                  </span>
+                                )}
+                                {billEntryData.contactPerson && (
+                                  <span className="text-gray-600">
+                                    Contact:{" "}
+                                    <span className="font-medium text-gray-900">
+                                      {billEntryData.contactPerson}
+                                    </span>
+                                  </span>
+                                )}
+                                {billEntryData.eta && (
+                                  <span className="text-gray-600">
+                                    ETA:{" "}
+                                    <span className="font-medium text-gray-900">
+                                      {new Date(
+                                        billEntryData.eta
+                                      ).toLocaleDateString("en-GB")}
+                                    </span>
+                                  </span>
+                                )}
+                                {billEntryData.vesselName && (
+                                  <span className="text-gray-600">
+                                    Vessel:{" "}
+                                    <span className="font-medium text-gray-900">
+                                      {billEntryData.vesselName}
+                                    </span>
+                                  </span>
+                                )}
+                                {hasBillEntryChanged() && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="bg-orange-100 text-orange-800 border-orange-200"
+                                  >
+                                    Changes Pending
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                            {/* Status info always visible */}
+                            <span className="text-gray-600">
+                              Bill Status:{" "}
+                              <span className="font-medium text-blue-600">
+                                {billEntryData.billStatus || "New Entry"}
+                              </span>
+                            </span>
+                            <span className="text-gray-600">
+                              Jagota Status:{" "}
+                              <span className="font-medium text-blue-600">
+                                {billEntryData.jagotaStatus || "New Entry"}
+                              </span>
+                            </span>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="space-y-6">
+                        {/* Row 2: Billing By */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Billing By
+                          </Label>
+                          <div className="bg-gray-50 border border-gray-300 rounded-md p-3">
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">
+                                {headerData.supplierName}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Row 3: Invoice No, Contact Person, Invoice Date, Credit Term */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Invoice No. <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          value={billEntryData.invoiceNo || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              invoiceNo: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Contact Person <span className="text-red-500">*</span>
-                        </Label>
-                        <div className="flex gap-2">
-                          <Select
-                            value={billEntryData.transportMode}
-                            onValueChange={(value) =>
-                              setBillEntryData({
-                                ...billEntryData,
-                                transportMode: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="airway-bill">
-                                Airway Bill
-                              </SelectItem>
-                              <SelectItem value="bill-of-lading">
-                                Bill of Lading
-                              </SelectItem>
-                              <SelectItem value="truck-bill">
-                                Truck Bill
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            className="flex-1"
-                            value={billEntryData.contactPerson || ""}
-                            onChange={(e) =>
-                              setBillEntryData({
-                                ...billEntryData,
-                                contactPerson: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Invoice Date
-                        </Label>
-                        <Input
-                          type="date"
-                          value={billEntryData.invoiceDate || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              invoiceDate: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Credit Term
-                        </Label>
-                        <div className="flex gap-2">
-                          <Select
-                            value={billEntryData.creditTerm}
-                            onValueChange={(value) =>
-                              setBillEntryData({
-                                ...billEntryData,
-                                creditTerm: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="credit-30">
-                                เครดิต 30 วัน
-                              </SelectItem>
-                              <SelectItem value="credit-60">
-                                เครดิต 60 วัน
-                              </SelectItem>
-                              <SelectItem value="credit-90">
-                                เครดิต 90 วัน
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm text-gray-600">
-                              Credit Daysxx
-                            </span>
+                        {/* Row 3: Invoice No, Contact Person, Invoice Date, Credit Term */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Invoice No.{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
                             <Input
-                              value={billEntryData.creditTerm?.split("-")[1]}
-                              readOnly
-                              className="w-20 bg-gray-50"
+                              value={billEntryData.invoiceNo || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  invoiceNo: e.target.value,
+                                })
+                              }
+                              required
                             />
                           </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Contact Person{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                className="flex-1"
+                                value={billEntryData.contactPerson || ""}
+                                onChange={(e) =>
+                                  setBillEntryData({
+                                    ...billEntryData,
+                                    contactPerson: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Invoice Date
+                            </Label>
+                            <Input
+                              type="date"
+                              value={
+                                billEntryData.invoiceDate
+                                  ? new Date(billEntryData.invoiceDate)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  invoiceDate: e.target.value,
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Credit Term
+                            </Label>
+                            <div className="flex gap-2">
+                              <Select
+                                value={billEntryData.creditTerm}
+                                onValueChange={(value) =>
+                                  setBillEntryData({
+                                    ...billEntryData,
+                                    creditTerm: value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="flex-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="credit-30">
+                                    เครดิต 30 วัน
+                                  </SelectItem>
+                                  <SelectItem value="credit-60">
+                                    เครดิต 60 วัน
+                                  </SelectItem>
+                                  <SelectItem value="credit-90">
+                                    เครดิต 90 วัน
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <div className="flex items-center gap-1">
+                                <span className="text-sm text-gray-600">
+                                  Credit Days
+                                </span>
+                                <Input
+                                  style={{ border: "none" }}
+                                  value={
+                                    billEntryData.creditTerm?.split("-")[1]
+                                  }
+                                  readOnly
+                                  className="w-20 bg-gray-50"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Row 4: AWB/BL/Truck Date, Import Entry No, Currency, Reference Code */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          AWB/BL/Truck Date{" "}
-                          <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          type="date"
-                          value={billEntryData.awbDate || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              awbDate: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Import Entry No.(เลขที่ใบขน)
-                        </Label>
-                        <Input
-                          value={billEntryData.importEntryNo || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              importEntryNo: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Currency
-                        </Label>
-                        <Input
-                          value={billEntryData.currency}
-                          readOnly
-                          className="bg-gray-50 border-gray-300"
-                        />
-                      </div>
-                      <div className="space-y-2">
+                        {/* Row 4: AWB/BL/Truck Date, Import Entry No, Currency, Reference Code */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              AWB/BL/Truck Date{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              type="date"
+                              value={billEntryData.awbDate || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  awbDate: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Import Entry No.(เลขที่ใบขน)
+                            </Label>
+                            <Input
+                              value={billEntryData.importEntryNo || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  importEntryNo: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Currency
+                            </Label>
+                            <Input
+                              value={billEntryData.currency}
+                              readOnly
+                              className="bg-gray-50 border-gray-300"
+                            />
+                          </div>
+                          {/* <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
                           Reference Code
                         </Label>
@@ -1487,42 +2004,42 @@ export function CreatePSTForm({
                             })
                           }
                         />
-                      </div>
-                    </div>
+                      </div> */}
+                        </div>
 
-                    {/* Row 5: ETA, Vessel Name, Tax ID No, Payment Term */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          ETA <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          type="date"
-                          value={billEntryData.eta || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              eta: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Vessel Name
-                        </Label>
-                        <Input
-                          value={billEntryData.vesselName || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              vesselName: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
+                        {/* Row 5: ETA, Vessel Name, Tax ID No, Payment Term */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              ETA <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              type="date"
+                              value={billEntryData.eta || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  eta: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Vessel Name
+                            </Label>
+                            <Input
+                              value={billEntryData.vesselName || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  vesselName: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          {/* <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
                           Tax ID No.
                         </Label>
@@ -1535,158 +2052,163 @@ export function CreatePSTForm({
                             })
                           }
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Payment Term
-                        </Label>
-                        <Input
-                          value={billEntryData.paymentTerm || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              paymentTerm: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
+                      </div> */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Payment Term
+                            </Label>
+                            <Input
+                              value={billEntryData.paymentTerm || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  paymentTerm: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
 
-                    {/* Row 6: Country of Origin, Due Date, Request Payment Date */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Country of Origin{" "}
-                          <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          value={billEntryData.countryOfOrigin || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              countryOfOrigin: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Due Date
-                        </Label>
-                        <Input
-                          type="date"
-                          value={billEntryData.dueDate || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              dueDate: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Request Payment Date
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            type="date"
-                            value={billEntryData.requestPaymentDate || ""}
+                        {/* Row 6: Country of Origin, Due Date, Request Payment Date */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Country of Origin{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              value={billEntryData.countryOfOrigin || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  countryOfOrigin: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Due Date
+                            </Label>
+                            <Input
+                              type="date"
+                              value={billEntryData.dueDate || ""}
+                              onChange={(e) =>
+                                setBillEntryData({
+                                  ...billEntryData,
+                                  dueDate: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Request Payment Date
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="date"
+                                value={
+                                  billEntryData.requestPaymentDateTime || ""
+                                }
+                                onChange={(e) =>
+                                  setBillEntryData({
+                                    ...billEntryData,
+                                    requestPaymentDateTime: e.target.value,
+                                  })
+                                }
+                              />
+                              <Select
+                                value={billEntryData.requestPaymentDateTime}
+                                onValueChange={(value) =>
+                                  setBillEntryData({
+                                    ...billEntryData,
+                                    requestPaymentDateTime: value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="w-24">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="08:00">08:00</SelectItem>
+                                  <SelectItem value="09:00">09:00</SelectItem>
+                                  <SelectItem value="10:00">10:00</SelectItem>
+                                  <SelectItem value="11:00">11:00</SelectItem>
+                                  <SelectItem value="12:00">12:00</SelectItem>
+                                  <SelectItem value="13:00">13:00</SelectItem>
+                                  <SelectItem value="14:00">14:00</SelectItem>
+                                  <SelectItem value="15:00">15:00</SelectItem>
+                                  <SelectItem value="16:00">16:00</SelectItem>
+                                  <SelectItem value="17:00">17:00</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 7: Remarks */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Remarks
+                          </Label>
+                          <Textarea
+                            value={billEntryData.remarks || ""}
                             onChange={(e) =>
                               setBillEntryData({
                                 ...billEntryData,
-                                requestPaymentDate: e.target.value,
+                                remarks: e.target.value,
                               })
                             }
+                            className="min-h-20"
+                            rows={3}
                           />
-                          <Select
-                            value={billEntryData.requestPaymentTime}
-                            onValueChange={(value) =>
-                              setBillEntryData({
-                                ...billEntryData,
-                                requestPaymentTime: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger className="w-24">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="08:00">08:00</SelectItem>
-                              <SelectItem value="09:00">09:00</SelectItem>
-                              <SelectItem value="10:00">10:00</SelectItem>
-                              <SelectItem value="11:00">11:00</SelectItem>
-                              <SelectItem value="12:00">12:00</SelectItem>
-                              <SelectItem value="13:00">13:00</SelectItem>
-                              <SelectItem value="14:00">14:00</SelectItem>
-                              <SelectItem value="15:00">15:00</SelectItem>
-                              <SelectItem value="16:00">16:00</SelectItem>
-                              <SelectItem value="17:00">17:00</SelectItem>
-                            </SelectContent>
-                          </Select>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Row 7: Remarks */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">
-                        Remarks
-                      </Label>
-                      <Textarea
-                        value={billEntryData.remarks || ""}
-                        onChange={(e) =>
-                          setBillEntryData({
-                            ...billEntryData,
-                            remarks: e.target.value,
-                          })
-                        }
-                        className="min-h-20"
-                        rows={3}
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="bg-gray-600 text-white hover:bg-gray-700"
-                      >
-                        Save Changes
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="bg-gray-600 text-white hover:bg-gray-700"
-                      >
-                        Cancel Bill
-                      </Button>
-                      <Button
-                        type="button"
-                        className="bg-green-600 text-white hover:bg-green-700"
-                      >
-                        Submit Bill
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                          {/* Show Save Changes button only if there are changes */}
+                          {hasBillEntryChanged() && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="bg-gray-600 text-white hover:bg-gray-700"
+                              onClick={saveBillEntry}
+                            >
+                              Save Changes
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="bg-gray-600 text-white hover:bg-gray-700"
+                          >
+                            Cancel Bill
+                          </Button>
+                          <Button
+                            type="button"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                            onClick={handleSubmitBill}
+                          >
+                            Submit Bill
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
 
                 <form onSubmit={handleFinalSubmit} className="space-y-8">
                   {/* Step 2 Information */}
                   <Card className="shadow-sm">
-                    <CardHeader className="pb-6">
+                    <CardHeader className="pb-0">
                       <CardTitle className="flex items-center gap-2">
                         <Key className="w-5 h-5 text-amber-600" />
                         PST Details
                       </CardTitle>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Fill in the Ref Key, request payment date, and expense
-                        items to complete your PST request.
-                      </p>
                     </CardHeader>
-                    <CardContent className="space-y-8">
+                    <CardContent className="space-y-2">
                       {/* Enhanced Ref Key and Payment Date Grid */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                         <div className="space-y-2" style={{ display: "none" }}>
@@ -1726,37 +2248,11 @@ export function CreatePSTForm({
                             </p>
                           )}
                         </div>
-
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="requestPaymentDate"
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            Request Payment Date{" "}
-                            <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="requestPaymentDate"
-                            type="date"
-                            value={formData.requestPaymentDate}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "requestPaymentDate",
-                                e.target.value
-                              )
-                            }
-                            required
-                            className="border-amber-200 focus:border-amber-500 transition-colors duration-200"
-                            disabled={isSubmitting}
-                          />
-                        </div>
                       </div>
-
-                      <Separator />
 
                       {/* Invoice Items Section */}
                       {invoiceItems.length > 0 && (
-                        <div className="space-y-6">
+                        <div className="space-y-4 mt-5">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium text-gray-900 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
@@ -1822,10 +2318,12 @@ export function CreatePSTForm({
                         </div>
                       )}
 
-                      {invoiceItems.length > 0 && <Separator />}
+                      {invoiceItems.length > 0 && (
+                        <Separator className="my-5" />
+                      )}
 
                       {/* Expense Items Section */}
-                      <div className="space-y-6">
+                      <div className="space-y-6 mt-5">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-gray-900 flex items-center gap-2">
                             <Calculator className="w-4 h-4" />
@@ -2729,40 +3227,152 @@ export function CreatePSTForm({
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Save Confirmation Dialog */}
       <AlertDialog
-        open={deleteConfirmation.open}
-        onOpenChange={(open) => setDeleteConfirmation({ open, itemId: null })}
+        open={showSaveConfirmation}
+        onOpenChange={setShowSaveConfirmation}
       >
-        <AlertDialogContent>
+        <AlertDialogOverlay className="fixed inset-0 z-50 bg-black bg-opacity-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-600" />
-              Delete Expense Item
-            </AlertDialogTitle>
+            <AlertDialogTitle>ยืนยันการบันทึก</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense item? This action
-              cannot be undone.
-              {deleteConfirmation.itemId &&
-                expenseItems.find(
-                  (item) => item.id === deleteConfirmation.itemId
-                )?.isFromAPI &&
-                " This will also remove the item from the server."}
+              คุณต้องการบันทึกข้อมูลหรือไม่?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+              onClick={handleConfirmedSave}
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
-              Delete
+              บันทึก
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Submit Bill Confirmation Dialog */}
+      <AlertDialog
+        open={showSubmitBillConfirmation}
+        onOpenChange={setShowSubmitBillConfirmation}
+      >
+        <AlertDialogOverlay className="fixed inset-0 z-50 bg-black bg-opacity-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการส่งบิล</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการส่งบิลหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmedSubmitBill}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              ส่งบิล
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Submit Bill Success Dialog */}
+      <AlertDialog open={showSubmitBillSuccess} onOpenChange={setShowSubmitBillSuccess}>
+        <AlertDialogOverlay className="fixed inset-0 z-50 bg-black bg-opacity-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <AlertDialogContent className="bg-white max-w-md mx-auto">
+          <div className="text-center p-6">
+            {/* Success Icon */}
+            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              PST Created Successfully!
+            </h2>
+            
+            {/* Description */}
+            <p className="text-gray-600 mb-1">
+              Your PST request <span className="font-semibold text-green-600">{submittedPSTNumber}</span> has been created successfully.
+            </p>
+            
+            {/* Next Steps Question */}
+            <p className="text-sm text-gray-500 mb-6">
+              What would you like to do next?
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {/* Create PSW - Recommended */}
+              <button
+                className="w-full p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-left group"
+                onClick={handleCreatePSW}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">Create PSW</span>
+                        <Badge className="bg-blue-500 text-white text-xs px-2 py-1">
+                          Recommended
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">Continue to create Payment Shipping Worksheet</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+                </div>
+              </button>
+              
+              {/* Go to Dashboard */}
+              <button
+                className="w-full p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors text-left group"
+                onClick={() => {
+                  setShowSubmitBillSuccess(false);
+                  onClose(); // Close the form and return to dashboard
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Building className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">Go to Dashboard</span>
+                      <p className="text-sm text-gray-600">Return to main dashboard</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                </div>
+              </button>
+            </div>
+            
+            {/* Next Steps Info */}
+            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
+                <div className="text-left">
+                  <p className="text-sm font-medium text-green-800 mb-1">Next Steps</p>
+                  <p className="text-sm text-green-700">
+                    Creating a PSW allows you to manage payment details and complete the shipping process. You can always create a PSW later from the dashboard.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer Note */}
+            <p className="text-xs text-gray-500 mt-4">
+              Your PST has been saved and can be accessed from the dashboard
+            </p>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Form content */}
     </div>
   );
 }

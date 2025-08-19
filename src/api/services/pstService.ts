@@ -1,5 +1,14 @@
 import { env } from '../../config/env';
 
+// Function to get token with error handling
+const getToken = () => {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+  return token;
+};
+
 export interface CreatePSTRequest {
   transType: string;
   poBook: string;
@@ -14,6 +23,27 @@ export interface CreatePSTResponse {
   }>;
   rowsAffected: number;
   query: string;
+}
+
+export interface SaveBillEntryRequest {
+  poBook: string;
+  poDate: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  awbNo: string;
+  dueDate: string;
+  paymentTerm: string;
+  eta: string;
+  webSeqID: number | undefined;
+  contactPerson: string;
+  remarks: string;
+  countryOfOrigin: string;
+  vesselName: string;
+  requestPaymentDate: string;
+  requestPaymentTime: string;
+  awbDate: string;
+  awbType: string;
+  importEntryNo: string;
 }
 
 export interface PSTDetailResponse {
@@ -280,9 +310,10 @@ export const pstService = {
 
   // Save expense item
   async saveExpenseItem(expenseData: SaveExpenseRequest): Promise<SaveExpenseResponse> {
+    const token = getToken();
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    headers.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0");
+    headers.append("Authorization", `Bearer ${token}`);
 
     const requestBody = JSON.stringify({
       webSeqId: expenseData.webSeqId,
@@ -303,7 +334,7 @@ export const pstService = {
     });
 
     const res = await fetch(
-      "https://jnodeapi-staging.jagota.com/v1/es/eshipping/expense",
+      `${env.jagotaApi.baseUrl}/v1/es/eshipping/expense`,
       {
         method: "POST",
         headers,
@@ -317,5 +348,148 @@ export const pstService = {
 
     const data: SaveExpenseResponse = await res.json();
     return data;
+  },
+
+  // Save bill entry
+  async saveBillEntry(request: SaveBillEntryRequest): Promise<any> {
+    const token = getToken();
+    const res = await fetch(
+      `${env.jagotaApi.baseUrl}/v1/es/eshipping/pst-psw`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(request),
+      }
+    );
+
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Response is not JSON:", text);
+      data = text;
+    }
+
+    if (!res.ok) {
+      console.error("API Error Response:", data);
+      
+      // Check if we have validation errors
+      if (data && Array.isArray(data.errors)) {
+        const errorMessages = data.errors
+          .map((error: { field: string; message: string }) => {
+            // แปลงชื่อ field เป็นภาษาไทย
+            const fieldNames: { [key: string]: string } = {
+              invoiceNo: "เลขที่ใบแจ้งหนี้",
+              dueDate: "วันครบกำหนด",
+              eta: "วันที่คาดว่าจะมาถึง",
+              countryOfOrigin: "ประเทศต้นทาง",
+              vesselName: "ชื่อเรือ",
+              importEntryNo: "เลขที่ใบขนสินค้า"
+            };
+            const fieldName = fieldNames[error.field] || error.field;
+            return `${fieldName}: ${error.message}`;
+          })
+          .join("\n");
+
+        throw new Error(`กรุณากรอกข้อมูลให้ครบถ้วน:\n${errorMessages}`);
+      }
+
+      // ถ้าไม่ใช่ validation error ให้แสดงข้อความ error ทั่วไป
+      throw new Error(typeof data === 'object' ? data.message || "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง" : "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+    }
+
+    return data;
+  },
+
+  // Submit Bill API
+  async submitBill(webSeqId: string): Promise<{ error: boolean; message: string; data?: any }> {
+    try {
+      // Use the same Bearer token as other APIs
+      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+      
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Authorization", bearerToken);
+
+      const raw = JSON.stringify({
+        "webSeqId": webSeqId
+      });
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+      };
+
+      const response = await fetch(`${env.jagotaApi.baseUrl}/v1/es/eshipping/submit-bill`, requestOptions);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.message || "ไม่สามารถส่งบิลได้ กรุณาลองใหม่อีกครั้ง");
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Submit bill error:', error);
+      
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error("ไม่สามารถส่งบิลได้ กรุณาลองใหม่อีกครั้ง");
+    }
+  },
+
+  // Create PSW API
+  async createPSW(pstWebSeqId: string): Promise<{ error: boolean; message: string; data?: any }> {
+    try {
+      // Use the same Bearer token as other APIs
+      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+      
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Authorization", bearerToken);
+
+      const raw = JSON.stringify({
+        "pstWebSeqId": parseInt(pstWebSeqId)
+      });
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+      };
+
+      const response = await fetch(`${env.jagotaApi.baseUrl}/v1/es/eshipping/psw`, requestOptions);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.message || "ไม่สามารถสร้าง PSW ได้ กรุณาลองใหม่อีกครั้ง");
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Create PSW error:', error);
+      
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error("ไม่สามารถสร้าง PSW ได้ กรุณาลองใหม่อีกครั้ง");
+    }
   }
 };

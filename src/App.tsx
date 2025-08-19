@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LoginScreen } from './components/LoginScreen';
 import { OTPVerification } from './components/OTPVerification';
 import { CreatePSTForm } from './components/CreatePSTForm';
@@ -35,6 +36,8 @@ interface LoginCredentials {
 }
 
 export default function ShippingDashboard() {
+  const navigate = useNavigate();
+  
   // URL and navigation handling
   useEffect(() => {
     const handlePopState = () => {
@@ -123,6 +126,7 @@ export default function ShippingDashboard() {
   const [createdPSTNumber, setCreatedPSTNumber] = useState<string | null>(null);
   const [createdPSWNumber, setCreatedPSWNumber] = useState<string | null>(null);
   const [pstWebSeqId, setPstWebSeqId] = useState<number | null>(null); // For Update PST functionality
+  const [pswData, setPswData] = useState<any>(null); // PSW data from API
 
   // Confirmation dialog state
   const [showPSTConfirmDialog, setShowPSTConfirmDialog] = useState(false);
@@ -927,11 +931,7 @@ export default function ShippingDashboard() {
     
     window.history.pushState({}, '', currentUrl.toString());
     
-    // Clear URL parameters
-    const url = new URL(window.location.href);
-    url.searchParams.delete('pstWebSeqId');
-    url.searchParams.delete('mode');
-    window.history.pushState({}, '', url.toString());
+    // URL parameters are already cleared in the code above
     
     // Keep PST completed status and number for dashboard display
     // Don't reset these when just closing the form
@@ -944,6 +944,19 @@ export default function ShippingDashboard() {
     setSelectedPOForPSW(null);
     // Keep PSW completed status and number for dashboard display
     // Don't reset these when just closing the form
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleNavigateToPSW = (pswDataFromAPI: any) => {
+    console.log('Navigating to PSW with data:', pswDataFromAPI);
+    
+    // Store PSW data from API
+    setPswData(pswDataFromAPI);
+    
+    setIsTransitioning(true);
+    setCurrentView('create-psw');
+    // Set any PSW-related data if needed
+    setSelectedPOForPSW(pswDataFromAPI?.poNumber || null);
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
@@ -1115,6 +1128,7 @@ pswWebSeqId
           dashboardHeaderData={dashboardHeaderData}
           onClose={handleClosePSTForm}
           onSubmit={handlePSTSubmit}
+          onNavigateToPSW={handleNavigateToPSW}
         />
         
         {/* PST Confirmation Dialog */}
@@ -1195,6 +1209,7 @@ pswWebSeqId
       <CreatePSWForm
         poNumber={selectedPOForPSW || undefined}
         pstNumber={createdPSTNumber || "PST-2025-001"}
+        pswData={pswData}
         onClose={handleClosePSWForm}
         onSubmit={handlePSWSubmit}
       />
@@ -1336,6 +1351,7 @@ pswWebSeqId
               onCreatePSW={handleCreatePSW}
               onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
               onUpdatePST={handleUpdatePST}
+              onNavigate={navigate}
               onSortOptionChange={setSortOption}
               isLoading={isDataLoading || isAPILoading}
             />

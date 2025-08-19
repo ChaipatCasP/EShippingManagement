@@ -10,6 +10,7 @@ interface CreatePSTConfirmationProps {
   poBook?: string;
   shipmentNo?: string;
   portOfDestination?: string;
+  type?: 'PST' | 'PSW'; // เพิ่ม type เพื่อแยกการแสดงผล
 }
 
 export function CreatePSTConfirmation({
@@ -20,7 +21,8 @@ export function CreatePSTConfirmation({
   poNo = '',
   poBook = '',
   shipmentNo = '',
-  portOfDestination = ''
+  portOfDestination = '',
+  type = 'PST' // default เป็น PST
 }: CreatePSTConfirmationProps) {
   console.log('🎭 CreatePSTConfirmation rendered:', { 
     isOpen, 
@@ -46,16 +48,16 @@ export function CreatePSTConfirmation({
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <FileText className="w-5 h-5 text-green-600" />
+          <div className={`w-10 h-10 ${type === 'PSW' ? 'bg-blue-100' : 'bg-green-100'} rounded-full flex items-center justify-center`}>
+            <FileText className={`w-5 h-5 ${type === 'PSW' ? 'text-blue-600' : 'text-green-600'}`} />
           </div>
-          <h2 className="text-lg font-semibold">Create PST</h2>
+          <h2 className="text-lg font-semibold">Create {type}</h2>
         </div>
 
         {/* Content */}
         <div className="text-sm text-gray-600 space-y-3 mb-6">
           <div className="space-y-2">
-            <p>You are about to create a PST for shipment:</p>
+            <p>You are about to create a {type} for shipment:</p>
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
@@ -80,29 +82,26 @@ export function CreatePSTConfirmation({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
+                <div className="flex justify-end gap-3">
+          <Button 
+            variant="outline" 
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1"
           >
             Cancel
           </Button>
-          <Button
-            type="button"
+          <Button 
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            className={type === 'PSW' ? 'bg-blue-600 hover:bg-blue-700' : ''}
           >
             {isLoading ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating...
-              </span>
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                Creating {type}...
+              </>
             ) : (
-              'Create PST'
+              `Create ${type}`
             )}
           </Button>
         </div>

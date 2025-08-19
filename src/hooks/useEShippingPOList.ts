@@ -73,7 +73,6 @@ export function useEShippingPOList({
         finalParams.pstStatus,
         finalParams.pswStatus
       );
-      
       setData(result.data || []);
       setTotal(result.rowsAffected || 0);
     } catch (err) {

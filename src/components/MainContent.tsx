@@ -17,6 +17,7 @@ interface MainContentProps {
   onCreatePSW: (poNumber: string) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
+  onNavigate?: (path: string) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
 }
@@ -32,6 +33,7 @@ export function MainContent({
   onCreatePSW,
   onCreatePSTWithConfirmation,
   onUpdatePST,
+  onNavigate,
   onSortOptionChange,
   isLoading = false
 }: MainContentProps) {
@@ -55,14 +57,15 @@ export function MainContent({
             onShipmentClick={onShipmentClick}
             onCreatePST={onCreatePST}
             onUpdatePST={(pstWebSeqId) => {
-              const shipment = filteredShipments.find(s => s.pstWebSeqId === pstWebSeqId);
+              const shipment = filteredShipments.find(s => s.pstWebSeqId === Number(pstWebSeqId));
               if (shipment && onUpdatePST) {
-                onUpdatePST(pstWebSeqId, shipment);
+                onUpdatePST(Number(pstWebSeqId), shipment);
               } else {
               }
             }}
             onCreatePSW={onCreatePSW}
             onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}
+            onNavigate={onNavigate}
             isLoading={isLoading}
           />
         </div>

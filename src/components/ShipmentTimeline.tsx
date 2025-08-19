@@ -37,6 +37,7 @@ interface ShipmentTimelineProps {
   onUpdatePST: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
+  onNavigate?: (path: string) => void;
   isLoading?: boolean;
 }
 
@@ -47,11 +48,23 @@ export function ShipmentTimeline({
   onCreatePST, 
   onUpdatePST,
   onCreatePSW,
-  onCreatePSTWithConfirmation
+  onCreatePSTWithConfirmation,
+  onNavigate
 }: ShipmentTimelineProps) {
   // console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
-  // console.log('onUpdatePST function available:', !!onUpdatePST);
-  // console.log('onCreatePSTWithConfirmation function available:', !!onCreatePSTWithConfirmation);
+  const handleUpdatePSW = (shipment: Shipment) => {
+    console.log('🔄 Update PSW - Bypassing API, navigating directly:', {
+      pswWebSeqId: shipment.pswWebSeqId,
+      poNumber: shipment.poNumber
+    });
+    
+    // ใช้ pswWebSeqId bypass ไปที่หน้า create-psw เป็นโหมด update เลย
+    if (onNavigate && shipment.pswWebSeqId) {
+      onNavigate(`/create-psw?update=${shipment.pswWebSeqId}&po=${shipment.poNumber}`);
+    } else {
+      console.warn('Cannot update PSW: Missing onNavigate function or pswWebSeqId');
+    }
+  };
   
   // State for PST confirmation
   const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
@@ -124,6 +137,9 @@ export function ShipmentTimeline({
         break;
       case 'create-psw':
         onCreatePSW(shipment.poNumber);
+        break;
+      case 'update-psw':
+        handleUpdatePSW(shipment);
         break;
       case 'view-psw':
         alert(`View PSW ${shipment.pswNumber} - This feature will be implemented`);
@@ -252,6 +268,18 @@ export function ShipmentTimeline({
         color: 'bg-green-600 hover:bg-green-700 text-white',
         enabled: true,
         tooltip: 'Create PSW document',
+        icon: <Calendar className="w-3 h-3" />
+      };
+    }
+    
+    // ถ้า pstStatus เป็น Y และ pswStatus เป็น N (มี pswWebSeqId แล้ว) ให้แสดงปุ่ม Update PSW  
+    if (pstStatus === 'Y' && pswStatus === 'N' && shipment.pswWebSeqId) {
+      return {
+        text: 'Update PSW',
+        action: 'update-psw',
+        color: 'bg-orange-600 hover:bg-orange-700 text-white',
+        enabled: true,
+        tooltip: 'Update PSW document',
         icon: <Calendar className="w-3 h-3" />
       };
     }

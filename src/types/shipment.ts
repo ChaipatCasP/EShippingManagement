@@ -3,6 +3,14 @@ export interface Shipment {
   supplierName: string;
   supplierCode: string; // Add supplier code for API matching
   referenceKey: string;
+  insurance?: boolean;
+  agentContact?: string;
+  trackingNumber?: string;
+  customsDeclaration?: string;
+  priority?: 'High' | 'Medium' | 'Low';
+  remarks?: string;
+  specialInstructions?: string;
+  documents?: string[];
   poNumber: string;
   poDate: string;
   invoiceNumber: string;
@@ -33,7 +41,11 @@ export interface Shipment {
   pstJagotaStatus?: 'N' | 'Y' | 'Z' | string;
   pswStatus?: 'N' | 'Y' | 'Z' | string;
   pswNumber: string | null;
+  pswBook?: string | null; // PSW Book จาก po-list API
+  pswNo?: number | null;   // PSW Number จาก po-list API
   pswJagotaStatus?: 'N' | 'Y' | 'Z' | string;
+  // PSW Web Sequence ID สำหรับ Update PSW functionality
+  pswWebSeqId?: number;
   supplierContact: string;
   supplierEmail: string;
   supplierAddress: string;
@@ -98,3 +110,28 @@ export interface Notification {
 export type SortOption = 'none' | 'clearDate-asc' | 'clearDate-desc' | 'status-asc' | 'status-desc';
 export type CurrentView = 'dashboard' | 'create-pst' | 'create-psw' | 'inbox' | 'history';
 export type DateFilterMode = 'today' | 'last7days' | 'custom';
+
+// PSW API Response interface
+export interface PSWApiResponse {
+  pswWebSeqId?: number;
+  pswBook?: string | null;
+  pswNo?: number | null;
+  pstWebSeqId?: number;
+  supplierName?: string;
+  poNumber?: string;
+  invoiceNo?: string;
+  currency?: string;
+  transportMode?: string;
+  importEntryNo?: string;
+  // Tax and financial data
+  importTaxRate?: number;
+  importTaxAmount?: number;
+  vatRate?: number;
+  vatAmount?: number;
+  dutyRate?: number;
+  dutyAmount?: number;
+  totalTaxDuty?: number;
+  invoiceValue?: number;
+  // Additional PSW specific data
+  [key: string]: any; // For any additional fields from API
+}

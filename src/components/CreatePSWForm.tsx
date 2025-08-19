@@ -10,6 +10,7 @@ import { StepProgress } from './StepProgress';
 import { CommunicationPanel, CommunicationMessage } from './CommunicationPanel';
 import { X, ArrowLeft, Plus, Trash2, Upload, FileText, Calculator, DollarSign } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { PSWApiResponse } from '../types/shipment';
 
 interface ExpenseItem {
   id: string;
@@ -37,12 +38,13 @@ interface User {
 interface CreatePSWFormProps {
   poNumber?: string;
   pstNumber?: string;
+  pswData?: PSWApiResponse; // PSW data from API
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
   user?: User | null;
 }
 
-export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: CreatePSWFormProps) {
+export function CreatePSWForm({ poNumber, pstNumber, pswData, onClose, onSubmit, user }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([
     {
@@ -97,24 +99,27 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
     }
   ]);
 
-  // PST Reference Data (ข้อมูลย่อจาก PST)
+  // PST Reference Data (ข้อมูลย่อจาก PST หรือ API)
   const pstReferenceData = {
     pstNumber: pstNumber || 'PST-2025-001',
     poNumber: poNumber || 'PO-2025-001',
-    supplierName: 'Global Foods Ltd.',
-    transportMode: 'SEA',
-    invoiceNo: 'INV-2025-001',
-    currency: 'THB',
-    importEntryNo: 'IE-2025-7890',
+    supplierName: pswData?.supplierName || 'Global Foods Ltd.',
+    transportMode: pswData?.transportMode || 'SEA',
+    invoiceNo: pswData?.invoiceNo || 'INV-2025-001',
+    currency: pswData?.currency || 'THB',
+    importEntryNo: pswData?.importEntryNo || 'IE-2025-7890',
+    // PSW specific data from API
+    pswBook: pswData?.pswBook || null,
+    pswNo: pswData?.pswNo || null,
     // Import Tax Information
-    importTaxRate: 12.5, // %
-    importTaxAmount: 15780.50, // THB
-    vatRate: 7, // %
-    vatAmount: 3245.20, // THB
-    dutyRate: 8.5, // %
-    dutyAmount: 8920.75, // THB
-    totalTaxDuty: 27946.45, // THB
-    invoiceValue: 125000.00 // THB
+    importTaxRate: pswData?.importTaxRate || 12.5, // %
+    importTaxAmount: pswData?.importTaxAmount || 15780.50, // THB
+    vatRate: pswData?.vatRate || 7, // %
+    vatAmount: pswData?.vatAmount || 3245.20, // THB
+    dutyRate: pswData?.dutyRate || 8.5, // %
+    dutyAmount: pswData?.dutyAmount || 8920.75, // THB
+    totalTaxDuty: pswData?.totalTaxDuty || 27946.45, // THB
+    invoiceValue: pswData?.invoiceValue || 125000.00 // THB
   };
 
   const serviceProviders = [
@@ -339,6 +344,21 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
                 <span className="font-semibold text-gray-900">{pstReferenceData.pstNumber}</span>
               </div>
               <div className="w-px h-4 bg-gray-300" />
+              {/* PSW Info (if available) */}
+              {(pstReferenceData.pswBook || pstReferenceData.pswNo) && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">PSW:</span>
+                    <span className="font-semibold text-green-900">
+                      {pstReferenceData.pswBook && pstReferenceData.pswNo 
+                        ? `${pstReferenceData.pswBook}-${pstReferenceData.pswNo}`
+                        : pstReferenceData.pswBook || pstReferenceData.pswNo
+                      }
+                    </span>
+                  </div>
+                  <div className="w-px h-4 bg-gray-300" />
+                </>
+              )}
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">PO:</span>
                 <span className="font-semibold text-gray-900">{pstReferenceData.poNumber}</span>
@@ -354,7 +374,7 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
             <div className="flex items-center gap-3">
               <span className="text-gray-600">JAGOTA Tax Liability:</span>
               <div className="bg-red-100 text-red-800 px-3 py-1 rounded-md font-semibold">
-                {pstReferenceData.totalTaxDuty.toLocaleString()} {pstReferenceData.currency}
+                {(pstReferenceData.totalTaxDuty || 0).toLocaleString()} {pstReferenceData.currency || 'THB'}
               </div>
             </div>
           </div>
@@ -686,7 +706,7 @@ export function CreatePSWForm({ poNumber, pstNumber, onClose, onSubmit, user }: 
                       
                       <div className="flex justify-between">
                         <span className="font-semibold text-gray-900 text-sm">Grand Total</span>
-                        <span className="text-lg font-bold text-green-600">{totalSummary.total.toFixed(2)} {pstReferenceData.currency}</span>
+                        <span className="text-lg font-bold text-green-600">{(totalSummary.total || 0).toFixed(2)} {pstReferenceData.currency || 'THB'}</span>
                       </div>
                     </div>
                     

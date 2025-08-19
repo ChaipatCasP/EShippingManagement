@@ -78,6 +78,7 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       qualityContainer: `QC-${item.supCode || 'SUP'}`,
       // Map PST web seq id from API for Update PST
       pstWebSeqId: item.pstWebSeqId,
+      pswWebSeqId: item.pswWebSeqId,
       taxStatus: true,
       etd: formatDateForDisplay(item.etd || ''),
       eta: formatDateForDisplay(item.eta || ''),
@@ -91,6 +92,8 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       pstNo: item.pstNo || null, // ใช้ pstNo จาก API
       pswStatus: item.pswStatus || '', // ใช้ pswStatus จาก API  
       pswNumber: item.pswNumber || null, // ใช้ pswNumber จาก API โดยตรง
+      pswBook: item.pswBook || null, // ใช้ pswBook จาก API
+      pswNo: item.pswNo || null, // ใช้ pswNo จาก API
       pstJagotaStatus: item.pstJagotaStatus || '', // ใช้ pstJagotaStatus จาก API
       pswJagotaStatus: item.pswJagotaStatus || '', // ใช้ pswJagotaStatus จาก API
       // Required fields with default values
