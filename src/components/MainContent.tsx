@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { ShipmentTimeline } from './ShipmentTimeline';
-import { ShipmentTable } from './ShipmentTable';
-import { LoadingSpinner } from './ui/loading';
-import type { Shipment, SortOption } from '../types/shipment';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { ShipmentTimeline } from "./ShipmentTimeline";
+import { ShipmentTable } from "./ShipmentTable";
+import { LoadingSpinner } from "./ui/loading";
+import type { Shipment, SortOption } from "../types/shipment";
 
 interface MainContentProps {
   activePOTypeTab: string;
-  viewMode: 'timeline' | 'table';
+  viewMode: "timeline" | "table";
   filteredShipments: Shipment[];
   selectedShipment: Shipment | null;
   sortOption: SortOption;
@@ -17,7 +17,7 @@ interface MainContentProps {
   onCreatePSW: (poNumber: string) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
-  onUpdatePSW?: (pswWebSeqId: number, shipment: Shipment) => void;
+  onUpdatePSW?: (pswWebSeqId: number) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
 }
@@ -35,7 +35,7 @@ export function MainContent({
   onUpdatePST,
   onUpdatePSW,
   onSortOptionChange,
-  isLoading = false
+  isLoading = false,
 }: MainContentProps) {
   // console.log('MainContent rendered with viewMode:', viewMode, 'shipments count:', filteredShipments.length);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -47,9 +47,13 @@ export function MainContent({
     return () => clearTimeout(timer);
   }, [viewMode, activePOTypeTab]);
   return (
-    <div className={`space-y-6 transition-all duration-300 ${isTransitioning ? 'opacity-75' : 'opacity-100'}`}>
+    <div
+      className={`space-y-6 transition-all duration-300 ${
+        isTransitioning ? "opacity-75" : "opacity-100"
+      }`}
+    >
       {/* Timeline View */}
-      {viewMode === 'timeline' && (
+      {viewMode === "timeline" && (
         <div className="animate-fadeInUp">
           <ShipmentTimeline
             shipments={filteredShipments}
@@ -57,21 +61,27 @@ export function MainContent({
             onShipmentClick={onShipmentClick}
             onCreatePST={onCreatePST}
             onUpdatePST={(pstWebSeqId) => {
-              const shipment = filteredShipments.find(s => s.pstWebSeqId === Number(pstWebSeqId));
+              const shipment = filteredShipments.find(
+                (s) => s.pstWebSeqId === Number(pstWebSeqId)
+              );
               if (shipment && onUpdatePST) {
                 onUpdatePST(Number(pstWebSeqId), shipment);
               }
             }}
             onCreatePSW={onCreatePSW}
-            onUpdatePSW={onUpdatePSW}
+            onUpdatePSW={(pswWebSeqId) => {
+              if (onUpdatePSW) {
+                onUpdatePSW(pswWebSeqId);
+              }
+            }}
             onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}
             isLoading={isLoading}
           />
         </div>
       )}
-      
+
       {/* Table View */}
-      {viewMode === 'table' && (
+      {viewMode === "table" && (
         <Card className="shadow-sm border border-gray-200/70 animate-fadeInUp">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between text-lg">
@@ -83,22 +93,36 @@ export function MainContent({
                     <span className="text-sm text-gray-500">Loading...</span>
                   </div>
                 ) : (
-                  activePOTypeTab !== 'all' && (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-sm animate-bounceIn">
+                  activePOTypeTab !== "all" && (
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-50 text-blue-700 border-blue-200 text-sm animate-bounceIn"
+                    >
                       {activePOTypeTab} PO ({filteredShipments.length})
                     </Badge>
                   )
                 )}
               </div>
-              {!isLoading && sortOption !== 'none' && (
+              {!isLoading && sortOption !== "none" && (
                 <div className="flex items-center gap-2 text-sm text-gray-600 animate-slideInRight">
                   <span>Sorted by:</span>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 border-blue-200"
+                  >
                     <div className="flex items-center gap-1">
-                      {sortOption === 'clearDate-asc' && <>Clear Date (Nearest First)</>}
-                      {sortOption === 'clearDate-desc' && <>Clear Date (Furthest First)</>}
-                      {sortOption === 'status-asc' && <>Status (Pending → Completed)</>}
-                      {sortOption === 'status-desc' && <>Status (Completed → Pending)</>}
+                      {sortOption === "clearDate-asc" && (
+                        <>Clear Date (Nearest First)</>
+                      )}
+                      {sortOption === "clearDate-desc" && (
+                        <>Clear Date (Furthest First)</>
+                      )}
+                      {sortOption === "status-asc" && (
+                        <>Status (Pending → Completed)</>
+                      )}
+                      {sortOption === "status-desc" && (
+                        <>Status (Completed → Pending)</>
+                      )}
                     </div>
                   </Badge>
                 </div>

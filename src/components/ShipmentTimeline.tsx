@@ -151,9 +151,6 @@ export function ShipmentTimeline({
   }
 
   const handleActionClick = (shipment: Shipment, action: string) => {
-    alert(action);
-    console.log("shipment : chaiapat ", shipment);
-
     switch (action) {
       case "create-pst":
         handleCreatePSTWithConfirmation(shipment);

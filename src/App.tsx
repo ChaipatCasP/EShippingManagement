@@ -801,19 +801,24 @@ export default function ShippingDashboard() {
   };
 
   const handleUpdatePSW = (pswWebSeqId: number) => {
-    alert(pswWebSeqId)
-    setIsTransitioning(true);
+    console.log('App.tsx - handleUpdatePSW called:', { pswWebSeqId });
+    
     // Store pswWebSeqId for Update mode
     setPswWebSeqId(pswWebSeqId);
-    console.log('App.tsx - Setting pswWebSeqId to:', pswWebSeqId);
     
-    // Navigate to create-psw with pswWebSeqId parameter
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set('pswWebSeqId', pswWebSeqId.toString());
-    newUrl.searchParams.set('mode', 'update');
-    window.history.pushState({}, '', newUrl.toString());
+    // Create clean URL with only PSW parameters
+    const newUrl = `${window.location.origin}/create-psw?pswWebSeqId=${pswWebSeqId}&mode=update`;
     
+    setIsTransitioning(true);
+    
+    // Set view first
     setCurrentView('create-psw');
+    
+    // Use replace instead of pushState to force URL change
+    setTimeout(() => {
+      window.history.replaceState({}, '', newUrl);
+    }, 100);
+    
     // Reset transition state after animation
     setTimeout(() => setIsTransitioning(false), 400);
   };
