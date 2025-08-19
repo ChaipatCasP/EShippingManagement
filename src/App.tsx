@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { LoginScreen } from './components/LoginScreen';
 import { OTPVerification } from './components/OTPVerification';
 import { CreatePSTForm } from './components/CreatePSTForm';
@@ -36,8 +35,6 @@ interface LoginCredentials {
 }
 
 export default function ShippingDashboard() {
-  const navigate = useNavigate();
-  
   // URL and navigation handling
   useEffect(() => {
     const handlePopState = () => {
@@ -790,6 +787,22 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
+  const handleUpdatePSW = (pswWebSeqId: number) => {
+    console.log('App.tsx - handleUpdatePSW called:', { pswWebSeqId });
+
+    setIsTransitioning(true);
+    
+    // Navigate to create-psw with pswWebSeqId parameter
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('pswWebSeqId', pswWebSeqId.toString());
+    newUrl.searchParams.set('mode', 'update');
+    window.history.pushState({}, '', newUrl.toString());
+    
+    setCurrentView('create-psw');
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
   const handleCreatePSTWithConfirmation = async (poNumber: string, shipment: Shipment) => {
     console.log('🚀 handleCreatePSTWithConfirmation called with:', { poNumber, shipment: shipment.poNumber });
     
@@ -1351,7 +1364,7 @@ pswWebSeqId
               onCreatePSW={handleCreatePSW}
               onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
               onUpdatePST={handleUpdatePST}
-              onNavigate={navigate}
+              onUpdatePSW={handleUpdatePSW}
               onSortOptionChange={setSortOption}
               isLoading={isDataLoading || isAPILoading}
             />
@@ -1370,8 +1383,8 @@ pswWebSeqId
             }
           }}
           onCreatePSW={handleCreatePSW}
+          onUpdatePSW={handleUpdatePSW}
           onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
-          onNavigate={navigate}
           onViewDocs={handleViewDocs}
         />
       </div>

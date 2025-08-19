@@ -45,8 +45,8 @@ interface ShipmentTimelineProps {
   onCreatePST: (poNumber: string) => void;
   onUpdatePST: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
+  onUpdatePSW?: (pswWebSeqId: number) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
-  onNavigate?: (path: string) => void;
   isLoading?: boolean;
 }
 
@@ -57,29 +57,11 @@ export function ShipmentTimeline({
   onCreatePST,
   onUpdatePST,
   onCreatePSW,
+  onUpdatePSW,
   onCreatePSTWithConfirmation,
-  onNavigate,
 }: ShipmentTimelineProps) {
   // console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
   
-  const handleUpdatePSW = (shipment: Shipment) => {
-    console.log("🔄 Update PSW - Bypassing API, navigating directly:", {
-      pswWebSeqId: shipment.pswWebSeqId,
-      poNumber: shipment.poNumber,
-    });
-
-    // ใช้ pswWebSeqId bypass ไปที่หน้า create-psw เป็นโหมด update เลย
-    if (onNavigate && shipment.pswWebSeqId) {
-      onNavigate(
-        `/create-psw?update=${shipment.pswWebSeqId}&po=${shipment.poNumber}`
-      );
-    } else {
-      console.warn(
-        "Cannot update PSW: Missing onNavigate function or pswWebSeqId"
-      );
-    }
-  };
-
   // State for PST confirmation
   const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
   const [selectedPstShipment, setSelectedPstShipment] = useState<Shipment | null>(null);
@@ -179,7 +161,11 @@ export function ShipmentTimeline({
         handleCreatePSWWithConfirmation(shipment);
         break;
       case "update-psw":
-        handleUpdatePSW(shipment);
+        if (shipment.pswWebSeqId && onUpdatePSW) {
+          onUpdatePSW(shipment.pswWebSeqId);
+        } else {
+          console.error("No pswWebSeqId found for shipment or onUpdatePSW not provided:", shipment);
+        }
         break;
       case "view-psw":
         alert(`View PSW ${shipment.pswNumber} - This feature will be implemented`);

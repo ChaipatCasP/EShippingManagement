@@ -46,8 +46,8 @@ interface SidePanelProps {
   onCreatePST: (poNumber: string) => void;
   onUpdatePST?: (pstWebSeqId: number) => void;
   onCreatePSW: (poNumber: string) => void;
+  onUpdatePSW?: (pswWebSeqId: number) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
-  onNavigate?: (path: string) => void;
   onViewDocs: () => void;
 }
 
@@ -58,8 +58,8 @@ export function SidePanel({
   onCreatePST,
   onUpdatePST,
   onCreatePSW,
+  onUpdatePSW,
   onCreatePSTWithConfirmation,
-  onNavigate,
   onViewDocs 
 }: SidePanelProps) {
   // State for PST confirmation
@@ -286,16 +286,18 @@ export function SidePanel({
         handleCreatePSWWithConfirmation(selectedShipment);
         break;
       case 'update-psw':
-        console.log("🔄 SidePanel Update PSW - Bypassing API, navigating directly:", {
-          pswWebSeqId: selectedShipment.pswWebSeqId,
-          poNumber: selectedShipment.poNumber,
-        });
-
-        // ใช้ pswWebSeqId bypass ไปที่หน้า create-psw เป็นโหมด update เลย
-        if (onNavigate && selectedShipment.pswWebSeqId) {
-          onNavigate(`/create-psw?update=${selectedShipment.pswWebSeqId}&po=${selectedShipment.poNumber}`);
+        if (onUpdatePSW && selectedShipment.pswWebSeqId) {
+          // Close SidePanel before navigating
+          onOpenChange(false);
+          
+          // Use setTimeout to let SidePanel close animation complete
+          setTimeout(() => {
+            if (selectedShipment.pswWebSeqId) {
+              onUpdatePSW(selectedShipment.pswWebSeqId);
+            }
+          }, 300);
         } else {
-          console.warn('Cannot update PSW: Missing onNavigate function or pswWebSeqId');
+          console.error('No pswWebSeqId found for shipment:', selectedShipment);
         }
         break;
       case 'view-psw':
