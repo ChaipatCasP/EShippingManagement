@@ -40,6 +40,7 @@ export default function ShippingDashboard() {
     const handlePopState = () => {
       const currentUrl = new URL(window.location.href);
       const pstWebSeqId = currentUrl.searchParams.get('pstWebSeqId');
+      const pswWebSeqId = currentUrl.searchParams.get('pswWebSeqId');
       
       if (pstWebSeqId) {
         const id = parseInt(pstWebSeqId);
@@ -47,8 +48,15 @@ export default function ShippingDashboard() {
           setPstWebSeqId(id);
           setCurrentView('create-pst');
         }
+      } else if (pswWebSeqId) {
+        const id = parseInt(pswWebSeqId);
+        if (!isNaN(id)) {
+          setPswWebSeqId(id);
+          setCurrentView('create-psw');
+        }
       } else {
         setPstWebSeqId(null);
+        setPswWebSeqId(null);
         setCurrentView('dashboard');
       }
     };
@@ -61,12 +69,19 @@ export default function ShippingDashboard() {
   useEffect(() => {
     const currentUrl = new URL(window.location.href);
     const pstWebSeqId = currentUrl.searchParams.get('pstWebSeqId');
+    const pswWebSeqId = currentUrl.searchParams.get('pswWebSeqId');
     
     if (pstWebSeqId) {
       const id = parseInt(pstWebSeqId);
       if (!isNaN(id)) {
         setPstWebSeqId(id);
         setCurrentView('create-pst');
+      }
+    } else if (pswWebSeqId) {
+      const id = parseInt(pswWebSeqId);
+      if (!isNaN(id)) {
+        setPswWebSeqId(id);
+        setCurrentView('create-psw');
       }
     }
   }, []);
@@ -123,6 +138,7 @@ export default function ShippingDashboard() {
   const [createdPSTNumber, setCreatedPSTNumber] = useState<string | null>(null);
   const [createdPSWNumber, setCreatedPSWNumber] = useState<string | null>(null);
   const [pstWebSeqId, setPstWebSeqId] = useState<number | null>(null); // For Update PST functionality
+  const [pswWebSeqId, setPswWebSeqId] = useState<number | null>(null); // For Update PSW functionality
   const [pswData, setPswData] = useState<any>(null); // PSW data from API
 
   // Confirmation dialog state
@@ -765,9 +781,6 @@ export default function ShippingDashboard() {
   };
 
   const handleUpdatePST = (pstWebSeqId: number, shipment: Shipment) => {
-    console.log('App.tsx - handleUpdatePST called:', { pstWebSeqId, shipment: shipment.poNumber });
-    console.log('App.tsx - handleUpdatePST called:', { pstWebSeqId, shipment: shipment });
-
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPST(shipment.poNumber);
@@ -788,9 +801,11 @@ export default function ShippingDashboard() {
   };
 
   const handleUpdatePSW = (pswWebSeqId: number) => {
-    console.log('App.tsx - handleUpdatePSW called:', { pswWebSeqId });
-
+    alert(pswWebSeqId)
     setIsTransitioning(true);
+    // Store pswWebSeqId for Update mode
+    setPswWebSeqId(pswWebSeqId);
+    console.log('App.tsx - Setting pswWebSeqId to:', pswWebSeqId);
     
     // Navigate to create-psw with pswWebSeqId parameter
     const newUrl = new URL(window.location.href);
@@ -1222,6 +1237,7 @@ pswWebSeqId
       <CreatePSWForm
         poNumber={selectedPOForPSW || undefined}
         pstNumber={createdPSTNumber || "PST-2025-001"}
+        pswWebSeqId={pswWebSeqId ?? undefined}
         pswData={pswData}
         onClose={handleClosePSWForm}
         onSubmit={handlePSWSubmit}

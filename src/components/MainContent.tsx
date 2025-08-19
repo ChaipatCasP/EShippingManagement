@@ -17,7 +17,7 @@ interface MainContentProps {
   onCreatePSW: (poNumber: string) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
-  onUpdatePSW?: (pswWebSeqId: number) => void;
+  onUpdatePSW?: (pswWebSeqId: number, shipment: Shipment) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
 }
@@ -60,7 +60,6 @@ export function MainContent({
               const shipment = filteredShipments.find(s => s.pstWebSeqId === Number(pstWebSeqId));
               if (shipment && onUpdatePST) {
                 onUpdatePST(Number(pstWebSeqId), shipment);
-              } else {
               }
             }}
             onCreatePSW={onCreatePSW}

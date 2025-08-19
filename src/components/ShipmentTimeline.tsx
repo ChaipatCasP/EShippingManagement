@@ -61,15 +61,17 @@ export function ShipmentTimeline({
   onCreatePSTWithConfirmation,
 }: ShipmentTimelineProps) {
   // console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
-  
+
   // State for PST confirmation
   const [pstConfirmationOpen, setPstConfirmationOpen] = useState(false);
-  const [selectedPstShipment, setSelectedPstShipment] = useState<Shipment | null>(null);
+  const [selectedPstShipment, setSelectedPstShipment] =
+    useState<Shipment | null>(null);
   const [isPstCreating, setIsPstCreating] = useState(false);
 
   // State for PSW confirmation
   const [pswConfirmationOpen, setPswConfirmationOpen] = useState(false);
-  const [selectedPswShipment, setSelectedPswShipment] = useState<Shipment | null>(null);
+  const [selectedPswShipment, setSelectedPswShipment] =
+    useState<Shipment | null>(null);
   const [isPswCreating, setIsPswCreating] = useState(false);
 
   // Handler for PST creation with confirmation
@@ -108,14 +110,20 @@ export function ShipmentTimeline({
 
   // Handler for PSW creation with confirmation
   const handleCreatePSWWithConfirmation = (shipment: Shipment) => {
-    console.log('🚀 Timeline - handleCreatePSWWithConfirmation called with:', shipment.poNumber);
+    console.log(
+      "🚀 Timeline - handleCreatePSWWithConfirmation called with:",
+      shipment.poNumber
+    );
     setSelectedPswShipment(shipment);
     setPswConfirmationOpen(true);
   };
 
   // Handler for PSW confirmation
   const handleConfirmCreatePSW = async () => {
-    console.log('✅ Timeline - handleConfirmCreatePSW called with:', selectedPswShipment?.poNumber);
+    console.log(
+      "✅ Timeline - handleConfirmCreatePSW called with:",
+      selectedPswShipment?.poNumber
+    );
 
     if (!selectedPswShipment) {
       console.log("❌ No selectedPswShipment found");
@@ -143,6 +151,9 @@ export function ShipmentTimeline({
   }
 
   const handleActionClick = (shipment: Shipment, action: string) => {
+    alert(action);
+    console.log("shipment : chaiapat ", shipment);
+
     switch (action) {
       case "create-pst":
         handleCreatePSTWithConfirmation(shipment);
@@ -161,6 +172,11 @@ export function ShipmentTimeline({
         handleCreatePSWWithConfirmation(shipment);
         break;
       case "update-psw":
+        // if (shipment.pswWebSeqId && onUpdatePSW) {
+        //   onUpdatePSW(shipment.pswWebSeqId);
+        // } else {
+        //   console.error("No pswWebSeqId found for shipment or onUpdatePSW not provided:", shipment);
+        // }
         if (shipment.pswWebSeqId && onUpdatePSW) {
           onUpdatePSW(shipment.pswWebSeqId);
         } else {
@@ -168,7 +184,9 @@ export function ShipmentTimeline({
         }
         break;
       case "view-psw":
-        alert(`View PSW ${shipment.pswNumber} - This feature will be implemented`);
+        alert(
+          `View PSW ${shipment.pswNumber} - This feature will be implemented`
+        );
         break;
       case "completed":
         break;
@@ -333,7 +351,7 @@ export function ShipmentTimeline({
           textColor: "text-blue-700",
           borderColor: "border-blue-200",
           icon: <Layers className="w-3 h-3" />,
-          label: "Co-load"
+          label: "Co-load",
         };
       case "FCL":
         return {
@@ -341,7 +359,7 @@ export function ShipmentTimeline({
           textColor: "text-green-700",
           borderColor: "border-green-200",
           icon: <Package2 className="w-3 h-3" />,
-          label: "FCL"
+          label: "FCL",
         };
       case "LCL":
         return {
@@ -349,7 +367,7 @@ export function ShipmentTimeline({
           textColor: "text-orange-700",
           borderColor: "border-orange-200",
           icon: <Package2 className="w-3 h-3" />,
-          label: "LCL"
+          label: "LCL",
         };
       default:
         return {
@@ -357,7 +375,7 @@ export function ShipmentTimeline({
           textColor: "text-gray-700",
           borderColor: "border-gray-200",
           icon: <Package2 className="w-3 h-3" />,
-          label: "Single"
+          label: "Single",
         };
     }
   };
@@ -374,7 +392,9 @@ export function ShipmentTimeline({
           <Card
             key={shipment.id}
             className={`border-l-4 ${borderColor} cursor-pointer hover:shadow-md transition-all relative ${
-              selectedShipment?.id === shipment.id ? 'ring-2 ring-blue-500 bg-blue-50/30' : ''
+              selectedShipment?.id === shipment.id
+                ? "ring-2 ring-blue-500 bg-blue-50/30"
+                : ""
             }`}
             onClick={() => onShipmentClick(shipment)}
           >
@@ -382,26 +402,42 @@ export function ShipmentTimeline({
               {/* Status badges positioned at top-right corner */}
               <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
                 {/* PST Status Badge - Show only if pstStatus has value */}
-                {(shipment.pstStatus && shipment.pstStatus !== '' && shipment.pstStatus !== null) && (
-                  <Badge className={`text-xs ${getPSTStatusColor(shipment.pstStatus)}`}>
-                    <div className="flex items-center gap-1">
-                      <Flag className="w-2 h-2" />
-                      <span className="text-xs opacity-75">PST:</span>
-                      <span className="font-medium">{getPSTStatusText(shipment.pstStatus)}</span>
-                    </div>
-                  </Badge>
-                )}
+                {shipment.pstStatus &&
+                  shipment.pstStatus !== "" &&
+                  shipment.pstStatus !== null && (
+                    <Badge
+                      className={`text-xs ${getPSTStatusColor(
+                        shipment.pstStatus
+                      )}`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <Flag className="w-2 h-2" />
+                        <span className="text-xs opacity-75">PST:</span>
+                        <span className="font-medium">
+                          {getPSTStatusText(shipment.pstStatus)}
+                        </span>
+                      </div>
+                    </Badge>
+                  )}
 
                 {/* PSW Status Badge - Show only if pswStatus has value */}
-                {(shipment.pswStatus && shipment.pswStatus !== '' && shipment.pswStatus !== null) && (
-                  <Badge className={`text-xs ${getPSWStatusColor(shipment.pswStatus)}`}>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-2 h-2" />
-                      <span className="text-xs opacity-75">PSW:</span>
-                      <span className="font-medium">{getPSWStatusText(shipment.pswStatus)}</span>
-                    </div>
-                  </Badge>
-                )}
+                {shipment.pswStatus &&
+                  shipment.pswStatus !== "" &&
+                  shipment.pswStatus !== null && (
+                    <Badge
+                      className={`text-xs ${getPSWStatusColor(
+                        shipment.pswStatus
+                      )}`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-2 h-2" />
+                        <span className="text-xs opacity-75">PSW:</span>
+                        <span className="font-medium">
+                          {getPSWStatusText(shipment.pswStatus)}
+                        </span>
+                      </div>
+                    </Badge>
+                  )}
               </div>
 
               {/* Content area with space for right-aligned action button */}
@@ -414,13 +450,15 @@ export function ShipmentTimeline({
                       <div className="w-7 h-7 bg-blue-50 rounded border border-blue-200 flex items-center justify-center">
                         {getTypeIcon(shipment.type)}
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900">{shipment.supplierName}</h3>
-                      
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {shipment.supplierName}
+                      </h3>
+
                       {/* Co-load Suppliers Display */}
-                      {shipment.poType === 'Co-load' && totalSuppliers > 1 && (
+                      {shipment.poType === "Co-load" && totalSuppliers > 1 && (
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button 
+                            <button
                               className={`text-xs px-2 py-1 rounded transition-colors cursor-pointer hover:opacity-80 ${poTypeStyle.textColor}`}
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -438,47 +476,59 @@ export function ShipmentTimeline({
                                   {shipment.poType} Container - All Suppliers
                                 </span>
                               </div>
-                              
+
                               <div className="space-y-3">
-                                <div className={`p-3 rounded-lg border ${poTypeStyle.bgColor} ${poTypeStyle.borderColor}`}>
+                                <div
+                                  className={`p-3 rounded-lg border ${poTypeStyle.bgColor} ${poTypeStyle.borderColor}`}
+                                >
                                   <div className="flex items-center justify-between mb-2">
-                                    <div className={`font-semibold ${poTypeStyle.textColor}`}>
+                                    <div
+                                      className={`font-semibold ${poTypeStyle.textColor}`}
+                                    >
                                       {shipment.supplierName}
                                     </div>
-                                    <span className={`text-xs px-2 py-1 rounded border bg-white ${poTypeStyle.textColor} ${poTypeStyle.borderColor}`}>
+                                    <span
+                                      className={`text-xs px-2 py-1 rounded border bg-white ${poTypeStyle.textColor} ${poTypeStyle.borderColor}`}
+                                    >
                                       Current
                                     </span>
                                   </div>
                                   <div className="text-sm text-gray-600 mb-1">
-                                    {shipment.pstNo 
-                                      ? (shipment.pstBook && shipment.pstNo 
-                                          ? `${shipment.pstBook}-${shipment.pstNo}` 
-                                          : shipment.pstNo.toString())
-                                      : shipment.referenceKey
-                                    }
+                                    {shipment.pstNo
+                                      ? shipment.pstBook && shipment.pstNo
+                                        ? `${shipment.pstBook}-${shipment.pstNo}`
+                                        : shipment.pstNo.toString()
+                                      : shipment.referenceKey}
                                   </div>
                                   <div className="text-sm font-medium text-gray-800">
                                     {shipment.poNumber}
                                   </div>
                                 </div>
 
-                                {shipment.relatedSuppliers && shipment.relatedSuppliers.map((supplier, index) => (
-                                  <div key={index} className="p-3 bg-gray-50 rounded-lg border">
-                                    <div className="font-medium text-gray-800 mb-1">
-                                      {supplier.name}
-                                    </div>
-                                    <div className="text-sm text-gray-600 mb-1">
-                                      {supplier.referenceKey}
-                                    </div>
-                                    <div className="text-sm font-medium text-gray-800">
-                                      {supplier.poNumber}
-                                    </div>
-                                  </div>
-                                ))}
+                                {shipment.relatedSuppliers &&
+                                  shipment.relatedSuppliers.map(
+                                    (supplier, index) => (
+                                      <div
+                                        key={index}
+                                        className="p-3 bg-gray-50 rounded-lg border"
+                                      >
+                                        <div className="font-medium text-gray-800 mb-1">
+                                          {supplier.name}
+                                        </div>
+                                        <div className="text-sm text-gray-600 mb-1">
+                                          {supplier.referenceKey}
+                                        </div>
+                                        <div className="text-sm font-medium text-gray-800">
+                                          {supplier.poNumber}
+                                        </div>
+                                      </div>
+                                    )
+                                  )}
                               </div>
 
                               <div className="pt-2 border-t text-sm text-gray-500 text-center">
-                                Total: {totalSuppliers} suppliers in this {shipment.poType.toLowerCase()} container
+                                Total: {totalSuppliers} suppliers in this{" "}
+                                {shipment.poType.toLowerCase()} container
                               </div>
                             </div>
                           </PopoverContent>
@@ -486,7 +536,9 @@ export function ShipmentTimeline({
                       )}
 
                       {/* PO Type Label */}
-                      <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-xs ${poTypeStyle.bgColor} ${poTypeStyle.borderColor} ${poTypeStyle.textColor}`}>
+                      <div
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-xs ${poTypeStyle.bgColor} ${poTypeStyle.borderColor} ${poTypeStyle.textColor}`}
+                      >
                         {poTypeStyle.icon}
                         <span className="font-medium">{poTypeStyle.label}</span>
                       </div>
@@ -654,7 +706,9 @@ export function ShipmentTimeline({
                     >
                       <div className="flex items-center gap-2">
                         {customActionConfig.icon}
-                        <span className="text-sm font-medium">{customActionConfig.text}</span>
+                        <span className="text-sm font-medium">
+                          {customActionConfig.text}
+                        </span>
                       </div>
                     </Button>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -38,13 +38,14 @@ interface User {
 interface CreatePSWFormProps {
   poNumber?: string;
   pstNumber?: string;
+  pswWebSeqId?: number; // Add this for Update PSW functionality
   pswData?: PSWApiResponse; // PSW data from API
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
   user?: User | null;
 }
 
-export function CreatePSWForm({ poNumber, pstNumber, pswData, onClose, onSubmit, user }: CreatePSWFormProps) {
+export function CreatePSWForm({ poNumber, pstNumber, pswWebSeqId, pswData, onClose, onSubmit, user }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([
     {
@@ -140,6 +141,22 @@ export function CreatePSWForm({ poNumber, pstNumber, pswData, onClose, onSubmit,
     'CUS - Customs Fee',
     'OTH - Other Charges'
   ];
+
+  // Read URL parameters and handle pswWebSeqId
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const pswWebSeqIdParam = url.searchParams.get("pswWebSeqId");
+    const modeParam = url.searchParams.get("mode");
+
+    if (pswWebSeqIdParam && modeParam === 'update') {
+      console.log('PSW Update mode detected:', { pswWebSeqId: pswWebSeqIdParam });
+      // TODO: Load PSW data from API using pswWebSeqId
+      // This will be implemented when we have the PSW update API
+    } else if (pswWebSeqId) {
+      console.log('PSW Update mode via prop:', { pswWebSeqId });
+      // TODO: Load PSW data from API using pswWebSeqId prop
+    }
+  }, [pswWebSeqId]);
 
   // Communication Message Actions
   const handleSendMessage = (content: string, type: 'general' | 'urgent') => {
