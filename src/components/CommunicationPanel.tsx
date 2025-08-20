@@ -18,6 +18,15 @@ import {
 } from "lucide-react";
 
 export interface CommunicationMessage {
+  // API Properties (from actual API response)
+  seqId: number;
+  source: "WEB" | "JAGOTA";
+  message: string;
+  createdBy: string;
+  createdOn: string;
+  readFlag: "Y" | "N";
+  
+  // UI Properties (derived for display)
   id: string;
   content: string;
   sender: "shipping" | "jagota";
@@ -175,21 +184,32 @@ export function CommunicationPanel({
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    // Handle timezone issues - if timestamp is significantly in the future, 
-    // it's likely a timezone conversion problem, treat as recent
+    // Debug logging
+    console.log("⏰ formatTimestamp debug:", {
+      timestamp: timestamp.toISOString(),
+      now: now.toISOString(),
+      diffMs: diffMs,
+      diffMins: diffMins,
+      diffHours: diffHours,
+      diffDays: diffDays
+    });
+
+    // Handle future timestamps (clock skew, network delays)
     if (diffMs < 0) {
       const hoursDiff = Math.abs(diffMs) / (1000 * 60 * 60);
-      if (hoursDiff > 6 && hoursDiff < 24) {
-        // This is likely a timezone issue - treat as recent message
-        return "Just now";
-      } else if (hoursDiff < 1) {
-        // Small future timestamp (network delay)
-        return "Just now";
+      if (hoursDiff < 1) {
+        return "Just now"; // Small clock skew
       }
-      // For other future timestamps, show as recent
-      return "Just now";
+      // For significant future timestamps, show the actual time
+      return timestamp.toLocaleString('th-TH', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
 
+    // Normal past timestamps
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -226,7 +246,23 @@ export function CommunicationPanel({
   const unreadCount = messages.filter(
     (m) => !m.read && m.sender === "jagota"
   ).length;
-  const currentUserName = user?.name || "User";
+  
+  // Get user data from localStorage
+  const getUserFromStorage = () => {
+    try {
+      const userData = localStorage.getItem('user_data');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        return parsed;
+      }
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+    }
+    return null;
+  };
+  
+  const storedUser = getUserFromStorage();
+  const currentUserName = storedUser?.name || user?.name || "Test User";
   const currentUserInitials = getAvatarInitials(currentUserName);
   const currentUserBgColor = getAvatarBgColor(currentUserName);
 
@@ -266,7 +302,8 @@ export function CommunicationPanel({
               </div>
             ) : (
               <div className="space-y-3">
-                {messages.map((message) => (
+                {messages
+                  .map((message) => (
                   <div
                     key={message.id}
                     className={`flex gap-3 ${
@@ -381,7 +418,7 @@ export function CommunicationPanel({
             </div>
 
             {/* Message Type Selector */}
-            <div className="flex items-center gap-1 ml-auto">
+            {/* <div className="flex items-center gap-1 ml-auto">
               <Button
                 type="button"
                 variant={messageType === "general" ? "default" : "outline"}
@@ -403,7 +440,7 @@ export function CommunicationPanel({
                 <AlertCircle className="w-3 h-3 mr-1" />
                 Urgent
               </Button>
-            </div>
+            </div> */}
           </div>
 
           <div className="flex gap-3">
@@ -419,13 +456,19 @@ export function CommunicationPanel({
               type="button"
               onClick={handleSendMessage}
               disabled={!newMessage.trim() || disabled || isSending}
-              className="self-end h-12 w-12 p-0"
+              className="self-end h-[72px] w-16 p-0 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg border-0"
               size="sm"
             >
               {isSending ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-[10px] text-white font-medium">Sending</span>
+                </div>
               ) : (
-                <Send className="w-4 h-4" />
+                <div className="flex flex-col items-center gap-1">
+                  <Send className="w-5 h-5 text-white" />
+                  <span className="text-[10px] text-white font-medium">Send</span>
+                </div>
               )}
             </Button>
           </div>
