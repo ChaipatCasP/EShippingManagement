@@ -401,3 +401,22 @@ export interface ApiErrorResponse {
   errors?: ValidationError[];
   code?: string;
 }
+
+// PSW และ Expense Request Types
+export interface SaveExpenseRequest {
+  webSeqId: number;
+  podRowId: string;
+  productCode: string;
+  serviceProvider: string;
+  qty: number;
+  rate: number;
+  vatBaseAmount: number;
+  vatPercent: number;
+  vatAmount: number;
+  exciseVatAmount: number;
+  interiorVatAmount: number;
+  total: number;
+  documentNo: string;
+  documentDate: string;
+  remarks: string;
+}

@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
+
+// UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Separator } from "./ui/separator";
+import { Badge } from "./ui/badge";
 import {
   Select,
   SelectContent,
@@ -10,29 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Separator } from "./ui/separator";
-import { CommunicationPanel, CommunicationMessage } from "./CommunicationPanel";
-import {
-  ArrowRight,
-  X,
-  ArrowLeft,
-  Plus,
-  Trash2,
-  FileText,
-  Calculator,
-  DollarSign,
-  Building,
-  Package2,
-  FileDigit,
-  Key,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  ChevronsUpDown,
-  Check,
-  MapPin,
-} from "lucide-react";
-import { Badge } from "./ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
@@ -46,17 +27,44 @@ import {
   CommandInput,
   CommandItem,
 } from "./ui/command";
-import { PSWApiResponse } from "../types/shipment";
+
+// Icons
+import {
+  X,
+  ArrowLeft,
+  ArrowRight,
+  Plus,
+  Trash2,
+  FileText,
+  Calculator,
+  DollarSign,
+  Building,
+  Package2,
+  FileDigit,
+  Key,
+  ChevronDown,
+  ChevronRight,
+  ChevronsUpDown,
+  Check,
+  MapPin,
+} from "lucide-react";
+
+// Custom Components & Types
+import { CommunicationPanel, CommunicationMessage } from "./CommunicationPanel";
+import { SaveExpenseRequest } from "../api/types";
 import {
   pstService,
   type ExpenseListItem,
   type ServiceProviderItem,
-  type SaveExpenseRequest,
 } from "../api/services/pstService";
+
+// ============================================================================
+// INTERFACES & TYPES
+// ============================================================================
 
 interface ExpenseItem {
   id: string;
-  rowId?: string; // API rowId for expense from API
+  rowId?: string;
   expenseCode: string;
   expenseName?: string;
   serviceProvider: string;
@@ -72,7 +80,7 @@ interface ExpenseItem {
   exciseVatAmount: number;
   interiorVat: number;
   total: number;
-  isFromAPI?: boolean; // Flag to indicate if this item came from API
+  isFromAPI?: boolean;
 }
 
 interface User {
@@ -80,7 +88,6 @@ interface User {
   name: string;
 }
 
-// Interface for header data from dashboard
 interface HeaderData {
   supplierName: string;
   poBook: string;
@@ -105,10 +112,7 @@ interface HeaderData {
 }
 
 interface CreatePSWFormProps {
-  poNumber?: string;
-  pstNumber?: string;
   pswWebSeqId?: number; // Add this for Update PSW functionality
-  pswData?: PSWApiResponse; // PSW data from API
   dashboardHeaderData?: HeaderData; // Optional header data from dashboard
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
@@ -125,10 +129,7 @@ interface InvoiceItem {
 }
 
 export function CreatePSWForm({
-  poNumber,
-  pstNumber,
   pswWebSeqId,
-  pswData,
   dashboardHeaderData,
   onClose,
   onSubmit,
@@ -144,30 +145,7 @@ export function CreatePSWForm({
   const [serviceProviders, setServiceProviders] = useState<
     ServiceProviderItem[]
   >([]);
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [editingExpenseIndex, setEditingExpenseIndex] = useState<number | null>(
-    null
-  );
   const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
-
-  // Expense Item Form State for adding/editing
-  const [expenseItemForm, setExpenseItemForm] = useState({
-    expenseCode: "",
-    expenseName: "",
-    serviceProvider: "",
-    qty: "",
-    rate: "",
-    subTotal: 0,
-    vatBase: 0,
-    vatPercent: 0,
-    vatAmount: 0,
-    exciseVat: "",
-    interiorVat: "",
-    total: 0,
-    documentNo: "",
-    documentDate: "",
-    remarks: "",
-  });
 
   // Communication Messages State
   const [messages, setMessages] = useState<CommunicationMessage[]>([
@@ -278,8 +256,6 @@ export function CreatePSWForm({
 
     // Only initialize if we don't have pstWebSeqId (no API data expected)
     if (!pswWebSeqId && expenseItems.length === 0) {
-      setShowExpenseForm(true);
-
       // Only set default header data if no dashboard data was provided
       if (!dashboardHeaderData) {
         setHeaderData({
@@ -673,155 +649,15 @@ export function CreatePSWForm({
   );
 
   // PST Details expense form handlers
-  const handleExpenseFormChange = (field: string, value: string | number) => {
-    setExpenseItemForm((prev) => {
-      const updated = { ...prev, [field]: value };
 
-      // Auto-calculate when qty or rate changes
-      if (field === "qty" || field === "rate") {
-        const qty =
-          parseFloat(field === "qty" ? value.toString() : updated.qty) || 0;
-        const rate =
-          parseFloat(field === "rate" ? value.toString() : updated.rate) || 0;
-        const subTotal = qty * rate;
 
-        updated.subTotal = subTotal;
-        updated.vatBase = subTotal;
-        updated.vatAmount = subTotal * (updated.vatPercent / 100);
 
-        const exciseVat = parseFloat(updated.exciseVat) || 0;
-        const interiorVat = parseFloat(updated.interiorVat) || 0;
-        updated.total = subTotal + updated.vatAmount + exciseVat + interiorVat;
-      }
 
-      // Auto-calculate when excise or interior VAT changes
-      if (field === "exciseVat" || field === "interiorVat") {
-        const exciseVat =
-          parseFloat(
-            field === "exciseVat" ? value.toString() : updated.exciseVat
-          ) || 0;
-        const interiorVat =
-          parseFloat(
-            field === "interiorVat" ? value.toString() : updated.interiorVat
-          ) || 0;
-        updated.total =
-          updated.subTotal + updated.vatAmount + exciseVat + interiorVat;
-      }
 
-      return updated;
-    });
-  };
 
-  const handleExpenseCodeSelect = (expenseCode: string) => {
-    const expense = expenseList.find((e) => e.expenseCode === expenseCode);
-    if (expense) {
-      const vatPercent = parseFloat(expense.taxRate) || 0;
-      const qty = parseFloat(expenseItemForm.qty) || 0;
-      const rate = parseFloat(expenseItemForm.rate) || 0;
-      const subTotal = qty * rate;
-      const vatBase = subTotal;
-      const vatAmount = vatBase * (vatPercent / 100);
-      const exciseVat = parseFloat(expenseItemForm.exciseVat) || 0;
-      const interiorVat = parseFloat(expenseItemForm.interiorVat) || 0;
-      const total = subTotal + vatAmount + exciseVat + interiorVat;
 
-      setExpenseItemForm((prev) => ({
-        ...prev,
-        expenseCode,
-        expenseName: expense.expenseName,
-        vatPercent,
-        subTotal,
-        vatBase,
-        vatAmount,
-        total,
-      }));
-    }
-  };
 
-  const handleServiceProviderSelect = (providerName: string) => {
-    setExpenseItemForm((prev) => ({
-      ...prev,
-      serviceProvider: providerName,
-    }));
-  };
 
-  const resetExpenseForm = () => {
-    setExpenseItemForm({
-      expenseCode: "",
-      expenseName: "",
-      serviceProvider: "",
-      qty: "",
-      rate: "",
-      subTotal: 0,
-      vatBase: 0,
-      vatPercent: 0,
-      vatAmount: 0,
-      exciseVat: "",
-      interiorVat: "",
-      total: 0,
-      documentNo: "",
-      documentDate: "",
-      remarks: "",
-    });
-    setEditingExpenseIndex(null);
-  };
-
-  const handleSaveExpenseItem = () => {
-    // Validate required fields
-    if (
-      !expenseItemForm.expenseCode ||
-      !expenseItemForm.serviceProvider ||
-      !expenseItemForm.qty ||
-      !expenseItemForm.rate
-    ) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    const newExpenseItem: ExpenseItem = {
-      id:
-        editingExpenseIndex !== null
-          ? expenses[editingExpenseIndex].id
-          : Date.now().toString(),
-      expenseCode: expenseItemForm.expenseCode,
-      expenseName: expenseItemForm.expenseName,
-      serviceProvider: expenseItemForm.serviceProvider,
-      qty: parseFloat(expenseItemForm.qty),
-      rate: parseFloat(expenseItemForm.rate),
-      documentNo: expenseItemForm.documentNo,
-      documentDate: expenseItemForm.documentDate,
-      subTotal: expenseItemForm.subTotal,
-      vatBaseAmount: expenseItemForm.vatBase,
-      remarks: expenseItemForm.remarks,
-      vatPercent: expenseItemForm.vatPercent,
-      vatAmount: expenseItemForm.vatAmount,
-      exciseVatAmount: parseFloat(expenseItemForm.exciseVat) || 0,
-      interiorVat: parseFloat(expenseItemForm.interiorVat) || 0,
-      total: expenseItemForm.total,
-      isFromAPI: false,
-    };
-
-    if (editingExpenseIndex !== null) {
-      // Update existing item
-      const updatedItems = [...expenses];
-      updatedItems[editingExpenseIndex] = newExpenseItem;
-      setExpenses(updatedItems);
-      setExpenseItems(updatedItems);
-    } else {
-      // Add new item
-      const newItems = [...expenses, newExpenseItem];
-      setExpenses(newItems);
-      setExpenseItems(newItems);
-    }
-
-    setShowExpenseForm(false);
-    resetExpenseForm();
-  };
-
-  const handleCancelExpenseForm = () => {
-    setShowExpenseForm(false);
-    resetExpenseForm();
-  };
 
   const addExpenseItem = () => {
     const newItem: ExpenseItem = {
