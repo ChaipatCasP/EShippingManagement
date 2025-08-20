@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
+import { env } from "../config/env";
 import {
   MessageSquare,
   Send,
@@ -36,6 +37,8 @@ interface CommunicationPanelProps {
   messages: CommunicationMessage[];
   onSendMessage: (content: string, type: "general" | "urgent") => void;
   onMarkAsRead: (messageId: string) => void;
+  webSeqId?: number;
+  onRefreshMessages?: () => void;
   disabled?: boolean;
   title?: string;
   placeholder?: string;
@@ -81,6 +84,8 @@ export function CommunicationPanel({
   messages,
   onSendMessage,
   onMarkAsRead,
+  webSeqId,
+  onRefreshMessages,
   disabled = false,
   title = "Communication Messages",
   placeholder = "Type your message to JAGOTA...",
@@ -91,9 +96,60 @@ export function CommunicationPanel({
     "general"
   );
   const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && !disabled) {
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && !disabled && !isSending && webSeqId) {
+      setIsSending(true);
+      
+      try {
+        // Call API to save message
+        const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+        
+        const response = await fetch(
+          `${env.jagotaApi.baseUrl}/v1/es/eshipping/message`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': bearerToken,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              webSeqId: webSeqId,
+              message: newMessage.trim()
+            })
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("✅ Message sent successfully:", result);
+
+        // Clear the message input
+        setNewMessage("");
+        setMessageType("general");
+        setIsTyping(false);
+
+        // Call onSendMessage for any additional handling
+        onSendMessage(newMessage.trim(), messageType);
+
+        // Refresh messages after successful send
+        if (onRefreshMessages) {
+          onRefreshMessages();
+        }
+        
+      } catch (error) {
+        console.error("❌ Failed to send message:", error);
+        // Show error to user
+        alert("ไม่สามารถส่งข้อความได้ กรุณาลองใหม่อีกครั้ง");
+      } finally {
+        setIsSending(false);
+      }
+    } else if (!webSeqId) {
+      // Fallback to original behavior if no webSeqId
       onSendMessage(newMessage.trim(), messageType);
       setNewMessage("");
       setMessageType("general");
@@ -333,16 +389,20 @@ export function CommunicationPanel({
             <Button
               type="button"
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || disabled}
+              disabled={!newMessage.trim() || disabled || isSending}
               className="self-end h-12 w-12 p-0"
               size="sm"
             >
-              <Send className="w-4 h-4" />
+              {isSending ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </Button>
           </div>
 
           {/* Typing Indicator */}
-          {isTyping && (
+          {(isTyping || isSending) && (
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <div className="flex space-x-1">
                 <div className="w-1 h-1 bg-gray-400 rounded-full animate-dotsLoading"></div>
@@ -355,7 +415,9 @@ export function CommunicationPanel({
                   style={{ animationDelay: "0.4s" }}
                 ></div>
               </div>
-              <span>Sending message to JAGOTA...</span>
+              <span>
+                {isSending ? "Sending message to JAGOTA..." : "Typing..."}
+              </span>
             </div>
           )}
         </div>

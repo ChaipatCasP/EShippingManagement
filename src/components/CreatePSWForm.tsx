@@ -1918,6 +1918,8 @@ export function CreatePSWForm({
                   messages={messages}
                   onSendMessage={handleSendMessage}
                   onMarkAsRead={handleMarkMessageAsRead}
+                  webSeqId={pswWebSeqId}
+                  onRefreshMessages={() => loadMessages(pswWebSeqId)}
                   disabled={isSubmitting || isLoadingMessages}
                   title={`Communication Messages - PSW Creation ${isLoadingMessages ? '(Loading...)' : ''}`}
                   placeholder="Send a message to JAGOTA about expenses, charges, or billing details..."
