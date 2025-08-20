@@ -69,11 +69,24 @@ export function MainContent({
               }
             }}
             onCreatePSW={onCreatePSW}
+            // onUpdatePSW={(pswWebSeqId) => {
+            //   if (onUpdatePSW) {
+            //     onUpdatePSW(pswWebSeqId);
+            //   }
+            // }}
+
+
             onUpdatePSW={(pswWebSeqId) => {
-              if (onUpdatePSW) {
-                onUpdatePSW(pswWebSeqId);
+              const shipment = filteredShipments.find(
+                (s) => s.pswWebSeqId === Number(pswWebSeqId)
+              );
+              if (shipment && onUpdatePSW) {
+                onUpdatePSW(Number(pswWebSeqId), shipment);
               }
             }}
+
+
+
             onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}
             isLoading={isLoading}
           />

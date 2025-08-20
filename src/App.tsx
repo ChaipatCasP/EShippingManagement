@@ -800,28 +800,48 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleUpdatePSW = (pswWebSeqId: number) => {
-    console.log('App.tsx - handleUpdatePSW called:', { pswWebSeqId });
-    
-    // Store pswWebSeqId for Update mode
-    setPswWebSeqId(pswWebSeqId);
-    
-    // Create clean URL with only PSW parameters
-    const newUrl = `${window.location.origin}/create-psw?pswWebSeqId=${pswWebSeqId}&mode=update`;
-    
+
+    const handleUpdatePSW= (pstWebSeqId: number, shipment: Shipment) => {
     setIsTransitioning(true);
+    setSelectedShipment(shipment);
+    setSelectedPOForPST(shipment.poNumber);
     
-    // Set view first
-    setCurrentView('create-psw');
+    // Store pstWebSeqId for Update mode
+    setPstWebSeqId(pstWebSeqId);
+    console.log('App.tsx - Setting pstWebSeqId to:', pstWebSeqId);
     
-    // Use replace instead of pushState to force URL change
-    setTimeout(() => {
-      window.history.replaceState({}, '', newUrl);
-    }, 100);
+    // Navigate to create-pst with pstWebSeqId parameter
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('pstWebSeqId', pstWebSeqId.toString());
+    newUrl.searchParams.set('mode', 'update');
+    window.history.pushState({}, '', newUrl.toString());
     
+    setCurrentView('create-pst');
     // Reset transition state after animation
     setTimeout(() => setIsTransitioning(false), 400);
   };
+  // const handleUpdatePSW = (pswWebSeqId: number) => {
+  //   console.log('App.tsx - handleUpdatePSW called:', { pswWebSeqId });
+    
+  //   // Store pswWebSeqId for Update mode
+  //   setPswWebSeqId(pswWebSeqId);
+    
+  //   // Create clean URL with only PSW parameters
+  //   const newUrl = `${window.location.origin}/create-psw?pswWebSeqId=${pswWebSeqId}&mode=update`;
+    
+  //   setIsTransitioning(true);
+    
+  //   // Set view first
+  //   setCurrentView('create-psw');
+    
+  //   // Use replace instead of pushState to force URL change
+  //   setTimeout(() => {
+  //     window.history.replaceState({}, '', newUrl);
+  //   }, 100);
+    
+  //   // Reset transition state after animation
+  //   setTimeout(() => setIsTransitioning(false), 400);
+  // };
 
   const handleCreatePSTWithConfirmation = async (poNumber: string, shipment: Shipment) => {
     console.log('🚀 handleCreatePSTWithConfirmation called with:', { poNumber, shipment: shipment.poNumber });
