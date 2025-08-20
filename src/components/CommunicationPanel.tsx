@@ -155,10 +155,6 @@ export function CommunicationPanel({
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-gray-400" />
-            <span className="text-xs text-gray-500">Real-time communication</span>
-          </div>
         </div>
         <p className="text-sm text-gray-600 mt-1">
           Real-time communication with JAGOTA Import Division

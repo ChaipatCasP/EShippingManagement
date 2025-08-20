@@ -67,6 +67,7 @@ import {
   type ExpenseListItem,
   type ServiceProviderItem,
 } from "../api/services/pstService";
+import { env } from "../config/env";
 
 // ============================================================================
 // INTERFACES & TYPES
@@ -125,6 +126,21 @@ interface InvoiceItem {
   transportBy: string;
 }
 
+interface MessageApiResponse {
+  error: boolean;
+  message: string;
+  data: Array<{
+    seqId: number;
+    source: string;
+    message: string;
+    createdBy: string;
+    createdOn: string;
+    readFlag: string;
+  }>;
+  rowsAffected: number;
+  query: string;
+}
+
 interface CreatePSWFormProps {
   pswWebSeqId?: number; // Add this for Update PST functionality
   dashboardHeaderData?: HeaderData; // Optional header data from dashboard
@@ -151,18 +167,8 @@ export function CreatePSWForm({
   const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
 
   // Communication Messages State
-  const [messages, setMessages] = useState<CommunicationMessage[]>([
-    {
-      id: "1",
-      content:
-        "PSW creation initiated for PST-2025-101. Payment worksheet is ready for expense details input.",
-      sender: "jagota",
-      senderName: "JAGOTA Payment Team",
-      timestamp: new Date("2025-01-30T11:15:00"),
-      read: true,
-      type: "general",
-    },
-  ]);
+  const [messages, setMessages] = useState<CommunicationMessage[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   // Header data from API for display - initialize with dashboard data if provided
   const [headerData, setHeaderData] = useState({
@@ -248,9 +254,11 @@ export function CreatePSWForm({
       const id = parseInt(pswWebSeqIdFromUrl);
       if (!isNaN(id)) {
         loadPSTDetails(id);
+        loadMessages(id); // Load messages when PST details are loaded
       }
     } else if (pswWebSeqId) {
       loadPSTDetails(pswWebSeqId);
+      loadMessages(pswWebSeqId); // Load messages when PST details are loaded
     }
   }, [pswWebSeqId]);
 
@@ -471,6 +479,65 @@ export function CreatePSWForm({
       }
       return newSet;
     });
+  };
+
+  // Load messages from API
+  const loadMessages = async (webSeqId?: number) => {
+    const idToUse = webSeqId || pswWebSeqId;
+    if (!idToUse) {
+      return;
+    }
+
+    setIsLoadingMessages(true);
+    try {
+      // Using the same bearer token pattern as other APIs
+      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+      
+      const response = await fetch(
+        `${env.jagotaApi.baseUrl}/v1/es/eshipping/message?webSeqId=${idToUse}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': bearerToken,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: MessageApiResponse = await response.json();
+      
+      if (!data.error && data.data) {
+        // Convert API data to CommunicationMessage format
+        const convertedMessages: CommunicationMessage[] = data.data.map((msg) => ({
+          id: msg.seqId.toString(),
+          content: msg.message,
+          sender: msg.source === "WEB" ? "shipping" : "jagota",
+          senderName: msg.createdBy,
+          timestamp: new Date(msg.createdOn),
+          read: msg.readFlag === "Y",
+          type: "general" as const,
+        }));
+
+        // Sort messages by timestamp (newest first)
+        convertedMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        
+        setMessages(convertedMessages);
+        console.log("📨 Loaded messages from API:", convertedMessages);
+      } else {
+        // If no messages or error, set empty array
+        setMessages([]);
+        console.log("📨 No messages found from API");
+      }
+    } catch (error) {
+      console.error("❌ Failed to load messages:", error);
+      // Keep existing messages or show empty array on error
+    } finally {
+      setIsLoadingMessages(false);
+    }
   };
 
   // Load expense list and service providers on component mount
@@ -1851,8 +1918,8 @@ export function CreatePSWForm({
                   messages={messages}
                   onSendMessage={handleSendMessage}
                   onMarkAsRead={handleMarkMessageAsRead}
-                  disabled={isSubmitting}
-                  title="Communication Messages - PSW Creation"
+                  disabled={isSubmitting || isLoadingMessages}
+                  title={`Communication Messages - PSW Creation ${isLoadingMessages ? '(Loading...)' : ''}`}
                   placeholder="Send a message to JAGOTA about expenses, charges, or billing details..."
                   user={{ email: "test@example.com", name: "Test User" }}
                 />
