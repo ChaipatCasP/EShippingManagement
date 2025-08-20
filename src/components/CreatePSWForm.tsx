@@ -895,16 +895,16 @@ export function CreatePSWForm({
 
         console.log("🚀 Submitting bill with pswWebSeqId:", pswWebSeqId);
         const result = await pstService.submitBill(pswWebSeqId.toString());
-        
+
         if (result.error) {
           throw new Error(result.message || "Failed to submit bill");
         }
 
         console.log("✅ Bill submitted successfully:", result);
-        
+
         // Show success message or redirect
         alert("บิลถูกส่งเรียบร้อยแล้ว");
-        
+
         // Call the original onSubmit to handle any additional logic (like closing the form)
         const pswData = {
           action,
@@ -954,12 +954,16 @@ export function CreatePSWForm({
       }
     } catch (error) {
       console.error(`Error ${action}ing PSW:`, error);
-      
+
       // Show user-friendly error message
       if (error instanceof Error) {
         alert(`เกิดข้อผิดพลาด: ${error.message}`);
       } else {
-        alert(`ไม่สามารถ${action === "submit" ? "ส่งบิล" : "บันทึก"}ได้ กรุณาลองใหม่อีกครั้ง`);
+        alert(
+          `ไม่สามารถ${
+            action === "submit" ? "ส่งบิล" : "บันทึก"
+          }ได้ กรุณาลองใหม่อีกครั้ง`
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -1810,44 +1814,7 @@ export function CreatePSWForm({
                     </CardContent>
                   </Card>
 
-                  {/* Form Actions */}
-                  <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={onClose}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={!isFormValid() || isSubmitting}
-                      className="min-w-40 relative overflow-hidden"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                          <LoadingSpinner
-                            size="sm"
-                            className="border-white border-t-white/50"
-                          />
-                          <span>Submitting...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>Submit PST Request</span>
-                          <FileText className="w-4 h-4" />
-                        </div>
-                      )}
-                      {isSubmitting && (
-                        <div
-                          className="absolute bottom-0 left-0 h-1 bg-white/30 transition-all duration-300 ease-out"
-                          style={{ width: `${submitProgress}%` }}
-                        />
-                      )}
-                    </Button>
-                  </div>
-
+                
                   {/* Submit Progress Overlay */}
                   {isSubmitting && (
                     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -1981,13 +1948,17 @@ export function CreatePSWForm({
                       {/* Quick Actions in Summary */}
                       <div className="pt-3 border-t border-gray-200 space-y-2">
                         <Button
+                          style={{
+                            backgroundColor: "oklch(.627 .194 149.214)",
+                            color: "white",
+                          }}
                           size="sm"
                           variant="outline"
                           className="w-full"
                           onClick={() => handleAction("submit")}
                           disabled={isSubmitting}
                         >
-                          Submit Bill
+                          Submit PSW for Approval
                         </Button>
                         {/* <Button
                           size="sm"
@@ -2008,7 +1979,10 @@ export function CreatePSWForm({
       </div>
 
       {/* Submit Bill Confirmation Dialog */}
-      <AlertDialog open={showSubmitConfirmDialog} onOpenChange={setShowSubmitConfirmDialog}>
+      <AlertDialog
+        open={showSubmitConfirmDialog}
+        onOpenChange={setShowSubmitConfirmDialog}
+      >
         <AlertDialogContent className="max-w-lg bg-white">
           <AlertDialogHeader className="space-y-3">
             <AlertDialogTitle className="flex items-center gap-3 text-xl">
@@ -2021,34 +1995,43 @@ export function CreatePSWForm({
               คุณต้องการส่งบิลหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
+
           {/* Bill Summary */}
           <div className="my-6">
             <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
-              <h4 className="font-medium text-gray-900 text-sm mb-3">รายละเอียดการส่งบิล</h4>
-              
+              <h4 className="font-medium text-gray-900 text-sm mb-3">
+                รายละเอียดการส่งบิล
+              </h4>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">จำนวนรายการ:</span>
-                  <span className="font-medium text-gray-900">{expenseItems.length} รายการ</span>
+                  <span className="font-medium text-gray-900">
+                    {expenseItems.length} รายการ
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">ยอดรวมทั้งสิ้น:</span>
                   <span className="font-bold text-lg text-green-600">
-                    ฿{grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                    ฿
+                    {grandTotal.toLocaleString("th-TH", {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
-                
+
                 {pswWebSeqId && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">PSW ID:</span>
-                    <span className="font-medium text-gray-900">{pswWebSeqId}</span>
+                    <span className="font-medium text-gray-900">
+                      {pswWebSeqId}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
-            
+
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-start gap-2">
                 <div className="w-5 h-5 text-amber-600 mt-0.5">⚠️</div>
@@ -2060,7 +2043,7 @@ export function CreatePSWForm({
           </div>
 
           <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel 
+            <AlertDialogCancel
               onClick={() => setShowSubmitConfirmDialog(false)}
               className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             >
