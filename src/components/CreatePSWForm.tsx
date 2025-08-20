@@ -519,6 +519,7 @@ export function CreatePSWForm({
 
             if (msg.createdOn) {
               // Convert API timestamp to proper Date object
+              // API ส่งมาเป็น UTC time, ต้องแปลงเป็น Thailand timezone (+7)
               const apiTime = new Date(msg.createdOn);
               
               // Check if the timestamp is valid
@@ -526,21 +527,17 @@ export function CreatePSWForm({
                 console.warn("⚠️ Invalid timestamp from API:", msg.createdOn);
                 timestamp = new Date(); // fallback to current time
               } else {
-                // For demonstration, let's create some varied timestamps
-                // In production, use the actual API time: timestamp = apiTime;
-                
-                // Temporary: create varied timestamps for testing
-                const baseTime = new Date();
-                const randomOffset = Math.floor(Math.random() * 180); // 0-180 minutes ago
-                timestamp = new Date(baseTime.getTime() - (randomOffset * 60 * 1000));
+                // แปลง UTC เป็น Thailand time (+1 hour)
+                const thailandOffset = 60 * 60 * 1000; // 1 hour in milliseconds
+                timestamp = new Date(apiTime.getTime() + thailandOffset);
                 
                 // Log for debugging
                 console.log("📅 Message timestamp:", {
                   seqId: msg.seqId,
                   original: msg.createdOn,
-                  apiTime: apiTime.toISOString(),
-                  testTime: timestamp.toISOString(),
-                  local: timestamp.toLocaleString('th-TH'),
+                  utcTime: apiTime.toISOString(),
+                  thailandTime: timestamp.toISOString(),
+                  local: timestamp.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
                   diffFromNow: Math.floor((new Date().getTime() - timestamp.getTime()) / (1000 * 60)) + " minutes ago"
                 });
               }
@@ -690,22 +687,6 @@ export function CreatePSWForm({
       console.error("❌ Error saving expense item:", error);
       alert("An error occurred while saving. Please try again.");
     }
-  };
-
-  // Validation
-  const isFormValid = () => {
-    return (
-      formData.refKey.trim() !== "" &&
-      formData.requestPaymentDate !== "" &&
-      expenseItems.length > 0 &&
-      expenseItems.every(
-        (item) =>
-          item.expenseCode !== "" &&
-          item.serviceProvider !== "" &&
-          item.qty > 0 &&
-          item.rate > 0
-      )
-    );
   };
 
   // LoadingSpinner component

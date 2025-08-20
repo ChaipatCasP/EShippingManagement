@@ -178,6 +178,7 @@ export function CommunicationPanel({
       return "Invalid date";
     }
 
+    // สร้าง current time ให้สอดคล้องกับ timezone ที่ใช้
     const now = new Date();
     const diffMs = now.getTime() - timestamp.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -187,7 +188,9 @@ export function CommunicationPanel({
     // Debug logging
     console.log("⏰ formatTimestamp debug:", {
       timestamp: timestamp.toISOString(),
+      timestampLocal: timestamp.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
       now: now.toISOString(),
+      nowLocal: now.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
       diffMs: diffMs,
       diffMins: diffMins,
       diffHours: diffHours,
@@ -200,8 +203,9 @@ export function CommunicationPanel({
       if (hoursDiff < 1) {
         return "Just now"; // Small clock skew
       }
-      // For significant future timestamps, show the actual time
+      // For significant future timestamps, show the actual time in Thailand timezone
       return timestamp.toLocaleString('th-TH', {
+        timeZone: 'Asia/Bangkok',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -215,8 +219,9 @@ export function CommunicationPanel({
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     
-    // For older messages, show actual date and time
+    // For older messages, show actual date and time in Thailand timezone
     return timestamp.toLocaleString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       year: 'numeric',
       month: 'short',
       day: 'numeric',

@@ -1368,7 +1368,7 @@ export default function ShippingDashboard() {
         status: selectedShipment.poType,
         pstBook: selectedShipment.pstBook || "",
         pstNo: selectedShipment.pstNo?.toString() || "",
-        vesselName: selectedShipment.vesselName || "",
+        vesselName: "",
       };
     }
 
