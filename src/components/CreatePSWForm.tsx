@@ -138,12 +138,6 @@ interface CreatePSWFormProps {
 }
 
 export function CreatePSWForm({
-  // pswWebSeqId,
-  // dashboardHeaderData,
-  // onClose,
-  // onSubmit,
-  // user,
-
   createdPSTNumber,
   pswWebSeqId,
   dashboardHeaderData,

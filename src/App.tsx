@@ -1122,15 +1122,6 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleClosePSWForm = () => {
-    setIsTransitioning(true);
-    setCurrentView("dashboard");
-    setSelectedPOForPSW(null);
-    // Keep PSW completed status and number for dashboard display
-    // Don't reset these when just closing the form
-    setTimeout(() => setIsTransitioning(false), 400);
-  };
-
   const handleNavigateToPSW = (pswDataFromAPI: any) => {
     console.log("Navigating to PSW with data:", pswDataFromAPI);
 
@@ -1184,20 +1175,6 @@ export default function ShippingDashboard() {
   const handlePSTConfirmCancel = () => {
     setShowPSTConfirmDialog(false);
     setPendingPSTData(null);
-  };
-
-  const handlePSWSubmit = async (data: any) => {
-    console.log("PSW Form submitted:", data);
-
-    // Generate PSW number
-    const newPSWNumber = generatePSWNumber();
-    setCreatedPSWNumber(newPSWNumber);
-
-    // Here you would typically send the data to your API
-    // For now, we'll just simulate success
-    setPswCompleted(true);
-
-    return Promise.resolve();
   };
 
   const handleViewDocs = () => {

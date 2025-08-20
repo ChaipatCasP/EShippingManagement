@@ -37,7 +37,6 @@ export function MainContent({
   onSortOptionChange,
   isLoading = false,
 }: MainContentProps) {
-  // console.log('MainContent rendered with viewMode:', viewMode, 'shipments count:', filteredShipments.length);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Handle view mode transitions with micro animations
