@@ -111,13 +111,13 @@ interface HeaderData {
   paymentTerm?: string;
 }
 
-interface CreatePSWFormProps {
-  pswWebSeqId?: number; // Add this for Update PSW functionality
-  dashboardHeaderData?: HeaderData; // Optional header data from dashboard
-  onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
-  user?: User | null;
-}
+// interface CreatePSWFormProps {
+//   pswWebSeqId?: number; // Add this for Update PSW functionality
+//   dashboardHeaderData?: HeaderData; // Optional header data from dashboard
+//   onClose: () => void;
+//   onSubmit: (data: any) => Promise<void>;
+//   user?: User | null;
+// }
 
 interface InvoiceItem {
   id: string;
@@ -128,12 +128,28 @@ interface InvoiceItem {
   transportBy: string;
 }
 
+interface CreatePSWFormProps {
+  createdPSTNumber?: string | null;
+  pswWebSeqId?: number; // Add this for Update PST functionality
+  dashboardHeaderData?: HeaderData; // Optional header data from dashboard
+  onClose: () => void;
+  onSubmit: (data: any) => Promise<void>;
+  onNavigateToPSW?: (data: any) => void; // Add PSW navigation callback
+}
+
 export function CreatePSWForm({
+  // pswWebSeqId,
+  // dashboardHeaderData,
+  // onClose,
+  // onSubmit,
+  // user,
+
+  createdPSTNumber,
   pswWebSeqId,
   dashboardHeaderData,
   onClose,
   onSubmit,
-  user,
+  onNavigateToPSW,
 }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -650,15 +666,6 @@ export function CreatePSWForm({
 
   // PST Details expense form handlers
 
-
-
-
-
-
-
-
-
-
   const addExpenseItem = () => {
     const newItem: ExpenseItem = {
       id: Date.now().toString(),
@@ -925,7 +932,7 @@ export function CreatePSWForm({
       id: Date.now().toString(),
       content: message,
       sender: "shipping",
-      senderName: user?.name || "Sangthongsuk Shipping",
+      senderName: "TEST : Sangthongsuk Shipping",
       timestamp: new Date(),
       read: true,
       type: "general",
@@ -1866,7 +1873,7 @@ export function CreatePSWForm({
                   disabled={isSubmitting}
                   title="Communication Messages - PSW Creation"
                   placeholder="Send a message to JAGOTA about expenses, charges, or billing details..."
-                  user={user}
+                  user={{ email: "test@example.com", name: "Test User" }}
                 />
               </div>
 
