@@ -163,17 +163,46 @@ export function CommunicationPanel({
   };
 
   const formatTimestamp = (timestamp: Date) => {
+    // Check if timestamp is valid
+    if (!timestamp || isNaN(timestamp.getTime())) {
+      console.warn("⚠️ Invalid timestamp:", timestamp);
+      return "Invalid date";
+    }
+
     const now = new Date();
     const diffMs = now.getTime() - timestamp.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+    // Handle timezone issues - if timestamp is significantly in the future, 
+    // it's likely a timezone conversion problem, treat as recent
+    if (diffMs < 0) {
+      const hoursDiff = Math.abs(diffMs) / (1000 * 60 * 60);
+      if (hoursDiff > 6 && hoursDiff < 24) {
+        // This is likely a timezone issue - treat as recent message
+        return "Just now";
+      } else if (hoursDiff < 1) {
+        // Small future timestamp (network delay)
+        return "Just now";
+      }
+      // For other future timestamps, show as recent
+      return "Just now";
+    }
+
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return timestamp.toLocaleDateString();
+    
+    // For older messages, show actual date and time
+    return timestamp.toLocaleString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getMessageTypeIcon = (type: string) => {

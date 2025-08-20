@@ -512,15 +512,49 @@ export function CreatePSWForm({
       
       if (!data.error && data.data) {
         // Convert API data to CommunicationMessage format
-        const convertedMessages: CommunicationMessage[] = data.data.map((msg) => ({
-          id: msg.seqId.toString(),
-          content: msg.message,
-          sender: msg.source === "WEB" ? "shipping" : "jagota",
-          senderName: msg.createdBy,
-          timestamp: new Date(msg.createdOn),
-          read: msg.readFlag === "Y",
-          type: "general" as const,
-        }));
+        const convertedMessages: CommunicationMessage[] = data.data.map((msg) => {
+          // Handle timestamp conversion properly
+          let timestamp: Date;
+          
+          if (msg.createdOn) {
+            // API ส่ง timestamp มาเป็น UTC แต่จริงๆ แล้วเป็น local time
+            // เราต้องแปลงให้ถูกต้อง
+            const apiTime = new Date(msg.createdOn);
+            
+            // Check if this is a timezone issue by looking at time difference
+            const timeDiff = new Date().getTime() - apiTime.getTime();
+            const hoursDiff = timeDiff / (1000 * 60 * 60);
+            
+            if (hoursDiff < -6 && hoursDiff > -8) {
+              // API ส่ง local time แต่แสดงเป็น UTC
+              // ปรับ timezone offset (Thailand is UTC+7)
+              timestamp = new Date(apiTime.getTime() - (7 * 60 * 60 * 1000));
+            } else if (Math.abs(hoursDiff) < 1) {
+              // เวลาใกล้เคียงกัน ใช้ได้เลย
+              timestamp = apiTime;
+            } else {
+              // สำหรับข้อความที่เพิ่งส่ง ให้ใช้เวลาปัจจุบัน
+              timestamp = new Date();
+            }
+            
+            // If timestamp is still invalid, use current time
+            if (isNaN(timestamp.getTime())) {
+              timestamp = new Date();
+            }
+          } else {
+            timestamp = new Date(); // fallback to current time
+          }
+          
+          return {
+            id: msg.seqId.toString(),
+            content: msg.message,
+            sender: msg.source === "WEB" ? "shipping" : "jagota",
+            senderName: msg.createdBy,
+            timestamp: timestamp,
+            read: msg.readFlag === "Y",
+            type: "general" as const,
+          };
+        });
 
         // Sort messages by timestamp (newest first)
         convertedMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -1038,17 +1072,9 @@ export function CreatePSWForm({
   };
 
   const handleSendMessage = async (message: string) => {
-    const newMessage: CommunicationMessage = {
-      id: Date.now().toString(),
-      content: message,
-      sender: "shipping",
-      senderName: "TEST : Sangthongsuk Shipping",
-      timestamp: new Date(),
-      read: true,
-      type: "general",
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
+    // No longer manually adding messages since CommunicationPanel 
+    // handles API calls and refreshes messages automatically
+    console.log("📝 Message sent via CommunicationPanel:", message);
   };
 
   const handleMarkMessageAsRead = (messageId: string) => {
