@@ -280,8 +280,6 @@ export function CreatePSWForm({
   };
 
   useEffect(() => {
-
-
     // Check URL parameters first
     const url = new URL(window.location.href);
     const pswWebSeqIdFromUrl = url.searchParams.get("pswWebSeqId");
@@ -296,38 +294,38 @@ export function CreatePSWForm({
     }
   }, [pswWebSeqId]);
 
-    useEffect(() => {
-      // Only initialize if we don't have pstWebSeqId (no API data expected)
-      if (!pswWebSeqId && expenseItems.length === 0) {
-        setShowExpenseForm(true);
-  
-        // Only set default header data if no dashboard data was provided
-        if (!dashboardHeaderData) {
-          setHeaderData({
-            supplierName: "",
-            poBook: "",
-            poNo: "",
-            poDate: "",
-            etd: "",
-            eta: "",
-            wrDate: "",
-            invoiceNo: "",
-            invoiceDate: "",
-            awbNo: "",
-            importEntryNo: "",
-            portOfOrigin: "",
-            portOfDestination: "",
-            status: "",
-            pstBook: "",
-            pstNo: "",
-            vesselName: "",
-            referenceCode: "",
-            taxIdNo: "",
-            paymentTerm: "",
-          });
-        }
+  useEffect(() => {
+    // Only initialize if we don't have pstWebSeqId (no API data expected)
+    if (!pswWebSeqId && expenseItems.length === 0) {
+      setShowExpenseForm(true);
+
+      // Only set default header data if no dashboard data was provided
+      if (!dashboardHeaderData) {
+        setHeaderData({
+          supplierName: "",
+          poBook: "",
+          poNo: "",
+          poDate: "",
+          etd: "",
+          eta: "",
+          wrDate: "",
+          invoiceNo: "",
+          invoiceDate: "",
+          awbNo: "",
+          importEntryNo: "",
+          portOfOrigin: "",
+          portOfDestination: "",
+          status: "",
+          pstBook: "",
+          pstNo: "",
+          vesselName: "",
+          referenceCode: "",
+          taxIdNo: "",
+          paymentTerm: "",
+        });
       }
-    }, [pswWebSeqId, expenseItems.length, dashboardHeaderData]);
+    }
+  }, [pswWebSeqId, expenseItems.length, dashboardHeaderData]);
 
   const loadPSTDetails = async (webSeqId?: number) => {
     const idToUse = webSeqId || pswWebSeqId;
@@ -396,12 +394,8 @@ export function CreatePSWForm({
         // Convert expenseList to ExpenseItem format
         const convertedExpenses: ExpenseItem[] = data.expenseList.map(
           (expense, index) => ({
-            id:
-              expense.rowId !== undefined && expense.rowId !== null
-                ? expense.rowId.toString()
-                : (index + 1).toString(),
-            rowId:
-              typeof expense.rowId === "number" ? expense.rowId : undefined, // Ensure rowId is a number or undefined
+            id: expense.rowId || (index + 1).toString(),
+            rowId: expense.rowId, // Store API rowId for delete operation
             expenseCode: expense.expenseCode,
             expenseName: expense.expenseName,
             serviceProvider: expense.serviceProvider,
@@ -840,7 +834,7 @@ export function CreatePSWForm({
 
   const removeExpenseItem = async (id: string) => {
     const itemToRemove = expenseItems.find((item) => item.id === id);
-
+    console.log("itemToRemove XXX", itemToRemove);
     if (itemToRemove?.isFromAPI && itemToRemove.rowId && pswWebSeqId) {
       // If item is from API, call DELETE API
       try {
