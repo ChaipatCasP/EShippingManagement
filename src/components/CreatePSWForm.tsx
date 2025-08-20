@@ -129,7 +129,6 @@ export function CreatePSWForm({
   onSubmit,
 }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
 
   const [uploadedFiles] = useState<File[]>([]);
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -469,26 +468,7 @@ export function CreatePSWForm({
     loadServiceProviders();
   }, []);
 
-  // Calculate totals
-  const totalSummary = expenses.reduce(
-    (acc, expense) => {
-      acc.subTotal += expense.subTotal;
-      acc.vatAmount += expense.vatAmount;
-      acc.exciseVatAmount += expense.exciseVatAmount || 0;
-      acc.interiorVat += expense.interiorVat || 0;
-      acc.total += expense.total;
-      return acc;
-    },
-    {
-      subTotal: 0,
-      vatAmount: 0,
-      exciseVatAmount: 0,
-      interiorVat: 0,
-      total: 0,
-    }
-  );
-
-  // Additional calculated values
+  // Additional calculated values from expenseItems
   const totalSubTotal = expenseItems.reduce(
     (sum, item) => sum + (item.subTotal || 0),
     0
@@ -775,7 +755,6 @@ export function CreatePSWForm({
         return updatedItem;
       });
 
-    setExpenses(updateFunction);
     setExpenseItems(updateFunction);
   };
 
@@ -809,7 +788,6 @@ export function CreatePSWForm({
           };
         });
 
-      setExpenses(updateFunction);
       setExpenseItems(updateFunction);
     }
   };
@@ -826,7 +804,6 @@ export function CreatePSWForm({
           : item
       );
 
-    setExpenses(updateFunction);
     setExpenseItems(updateFunction);
   };
 
@@ -890,9 +867,15 @@ export function CreatePSWForm({
 
       const pswData = {
         action,
-        expenses,
+        expenses: expenseItems, // Use expenseItems instead of expenses
         files: uploadedFiles,
-        totalSummary,
+        totalSummary: {
+          subTotal: totalSubTotal,
+          vatAmount: totalVATAmount,
+          exciseVatAmount: expenseItems.reduce((sum, item) => sum + (item.exciseVatAmount || 0), 0),
+          interiorVat: expenseItems.reduce((sum, item) => sum + (item.interiorVat || 0), 0),
+          total: grandTotal,
+        },
         submittedAt: new Date().toISOString(),
       };
 
@@ -1143,12 +1126,8 @@ export function CreatePSWForm({
                 <form onSubmit={handleFinalSubmit} className="space-y-8">
                   {/* Step 2 Information */}
                   <Card className="shadow-sm">
-                    <CardHeader className="pb-0">
-                      <CardTitle className="flex items-center gap-2">
-                        <Key className="w-5 h-5 text-amber-600" />
-                        PST Details
-                      </CardTitle>
-                    </CardHeader>
+                    <Separator className="my-0" />
+
                     <CardContent className="space-y-2">
                       {/* Enhanced Ref Key and Payment Date Grid */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
@@ -1734,27 +1713,6 @@ export function CreatePSWForm({
                           })}
                         </div>
 
-                        {/* Totals Summary */}
-                        <div className="flex justify-end">
-                          <div className="bg-gray-50 rounded-lg p-4 min-w-64">
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>Subtotal:</span>
-                                <span>฿{totalSubTotal.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span>VAT (7%):</span>
-                                <span>฿{totalVATAmount.toLocaleString()}</span>
-                              </div>
-                              <Separator />
-                              <div className="flex justify-between font-medium">
-                                <span>Total:</span>
-                                <span>฿{grandTotal.toLocaleString()}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
                         {/* Add Expense Item Button at Bottom */}
                         <div className="pt-4">
                           <Button
@@ -1868,19 +1826,19 @@ export function CreatePSWForm({
                       {/* Individual Expense Items */}
                       <div className="space-y-2">
                         <Label className="text-xs font-medium text-gray-700">
-                          Items ({expenses.length})
+                          Items ({expenseItems.length})
                         </Label>
                         <div className="max-h-24 overflow-y-auto space-y-1">
-                          {expenses.map((expense, index) => (
+                          {expenseItems.map((expense, index) => (
                             <div
                               key={expense.id}
                               className="flex items-center justify-between text-xs p-1.5 bg-gray-50 rounded"
                             >
                               <span className="text-gray-600">
-                                Item #{index + 1}
+                                {expense.expenseName || expense.expenseCode || `Item #${index + 1}`}
                               </span>
                               <span className="font-medium">
-                                {expense.total.toFixed(2)}
+                                ฿{expense.total.toFixed(2)}
                               </span>
                             </div>
                           ))}
@@ -1894,25 +1852,25 @@ export function CreatePSWForm({
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">Sub Total</span>
                           <span className="font-medium">
-                            {totalSummary.subTotal.toFixed(2)}
+                            ฿{totalSubTotal.toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">VAT Amount</span>
                           <span className="font-medium">
-                            {totalSummary.vatAmount.toFixed(2)}
+                            ฿{totalVATAmount.toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">Excise VAT</span>
                           <span className="font-medium">
-                            {totalSummary.exciseVatAmount.toFixed(2)}
+                            ฿{expenseItems.reduce((sum, item) => sum + (item.exciseVatAmount || 0), 0).toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">Interior VAT</span>
                           <span className="font-medium">
-                            {totalSummary.interiorVat.toFixed(2)}
+                            ฿{expenseItems.reduce((sum, item) => sum + (item.interiorVat || 0), 0).toLocaleString()}
                           </span>
                         </div>
 
@@ -1923,7 +1881,7 @@ export function CreatePSWForm({
                             Grand Total
                           </span>
                           <span className="text-lg font-bold text-green-600">
-                            {(totalSummary.total || 0).toFixed(2)}{" "}
+                            ฿{grandTotal.toLocaleString()}
                           </span>
                         </div>
                       </div>
