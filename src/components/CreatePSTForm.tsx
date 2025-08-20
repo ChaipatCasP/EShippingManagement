@@ -120,28 +120,6 @@ interface BillEntryData {
   masterSequenceId: string;
   childSequenceId: string;
   dueDate: string;
-  // invoiceNo: string;
-  // contactPerson: string;
-  // transportMode: string; // This is awbType in the API
-  // invoiceDate: string;
-  // creditTerm: string;
-  // awbDate: string;
-  // importEntryNo: string;
-  // currency: string;
-  // referenceCode: string;
-  // eta: string;
-  // vesselName: string;
-  // taxIdNo: string;
-  // paymentTerm: string;
-  // countryOfOrigin: string;
-  // dueDate: string;
-  // requestPaymentDate: string;
-  // requestPaymentTime: string;
-  // remarks: string;
-  // poDate: string;
-  // poBook: string;
-  // poNo: string;
-  // awbNo: string;
 }
 
 // Interface for header data from dashboard
@@ -1407,10 +1385,10 @@ export function CreatePSTForm({
         // Generate PST number from billEntryData (poBook + poNo)
         const pstNumber = `${billEntryData.poBook}-${billEntryData.poNo}`;
         setSubmittedPSTNumber(pstNumber);
-        
+
         // Show success popup instead of alert
         setShowSubmitBillSuccess(true);
-        
+
         console.log("Submit bill result:", result);
         console.log("Generated PST number:", pstNumber);
 
@@ -1433,19 +1411,19 @@ export function CreatePSTForm({
   const handleCreatePSW = async () => {
     try {
       setShowSubmitBillSuccess(false);
-      
+
       // Call create PSW API
       const result = await pstService.createPSW(String(pstWebSeqId));
-      
+
       if (result && !result.error) {
         console.log("Create PSW result:", result);
-        
+
         // Use callback to navigate to create-psw page
         if (onNavigateToPSW) {
           onNavigateToPSW(result);
         } else {
           // Fallback to window.location
-          window.location.href = '/create-psw';
+          window.location.href = "/create-psw";
         }
       } else {
         alert("ไม่สามารถสร้าง PSW ได้ กรุณาลองใหม่อีกครั้ง");
@@ -3278,7 +3256,10 @@ export function CreatePSTForm({
       </AlertDialog>
 
       {/* Submit Bill Success Dialog */}
-      <AlertDialog open={showSubmitBillSuccess} onOpenChange={setShowSubmitBillSuccess}>
+      <AlertDialog
+        open={showSubmitBillSuccess}
+        onOpenChange={setShowSubmitBillSuccess}
+      >
         <AlertDialogOverlay className="fixed inset-0 z-50 bg-black bg-opacity-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <AlertDialogContent className="bg-white max-w-md mx-auto">
           <div className="text-center p-6">
@@ -3286,22 +3267,26 @@ export function CreatePSTForm({
             <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            
+
             {/* Title */}
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               PST Created Successfully!
             </h2>
-            
+
             {/* Description */}
             <p className="text-gray-600 mb-1">
-              Your PST request <span className="font-semibold text-green-600">{submittedPSTNumber}</span> has been created successfully.
+              Your PST request{" "}
+              <span className="font-semibold text-green-600">
+                {submittedPSTNumber}
+              </span>{" "}
+              has been created successfully.
             </p>
-            
+
             {/* Next Steps Question */}
             <p className="text-sm text-gray-500 mb-6">
               What would you like to do next?
             </p>
-            
+
             {/* Action Buttons */}
             <div className="space-y-3">
               {/* Create PSW - Recommended */}
@@ -3316,18 +3301,22 @@ export function CreatePSTForm({
                     </div>
                     <div className="text-left">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">Create PSW</span>
+                        <span className="font-medium text-gray-900">
+                          Create PSW
+                        </span>
                         <Badge className="bg-blue-500 text-white text-xs px-2 py-1">
                           Recommended
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600">Continue to create Payment Shipping Worksheet</p>
+                      <p className="text-sm text-gray-600">
+                        Continue to create Payment Shipping Worksheet
+                      </p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
                 </div>
               </button>
-              
+
               {/* Go to Dashboard */}
               <button
                 className="w-full p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors text-left group"
@@ -3342,28 +3331,36 @@ export function CreatePSTForm({
                       <Building className="w-5 h-5 text-gray-600" />
                     </div>
                     <div>
-                      <span className="font-medium text-gray-900">Go to Dashboard</span>
-                      <p className="text-sm text-gray-600">Return to main dashboard</p>
+                      <span className="font-medium text-gray-900">
+                        Go to Dashboard
+                      </span>
+                      <p className="text-sm text-gray-600">
+                        Return to main dashboard
+                      </p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                 </div>
               </button>
             </div>
-            
+
             {/* Next Steps Info */}
             <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="flex items-start gap-2">
                 <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
                 <div className="text-left">
-                  <p className="text-sm font-medium text-green-800 mb-1">Next Steps</p>
+                  <p className="text-sm font-medium text-green-800 mb-1">
+                    Next Steps
+                  </p>
                   <p className="text-sm text-green-700">
-                    Creating a PSW allows you to manage payment details and complete the shipping process. You can always create a PSW later from the dashboard.
+                    Creating a PSW allows you to manage payment details and
+                    complete the shipping process. You can always create a PSW
+                    later from the dashboard.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             {/* Footer Note */}
             <p className="text-xs text-gray-500 mt-4">
               Your PST has been saved and can be accessed from the dashboard

@@ -83,11 +83,6 @@ interface ExpenseItem {
   isFromAPI?: boolean;
 }
 
-interface User {
-  email: string;
-  name: string;
-}
-
 interface HeaderData {
   supplierName: string;
   poBook: string;
@@ -111,14 +106,6 @@ interface HeaderData {
   paymentTerm?: string;
 }
 
-// interface CreatePSWFormProps {
-//   pswWebSeqId?: number; // Add this for Update PSW functionality
-//   dashboardHeaderData?: HeaderData; // Optional header data from dashboard
-//   onClose: () => void;
-//   onSubmit: (data: any) => Promise<void>;
-//   user?: User | null;
-// }
-
 interface InvoiceItem {
   id: string;
   supplierCode: string;
@@ -129,21 +116,17 @@ interface InvoiceItem {
 }
 
 interface CreatePSWFormProps {
-  createdPSTNumber?: string | null;
   pswWebSeqId?: number; // Add this for Update PST functionality
   dashboardHeaderData?: HeaderData; // Optional header data from dashboard
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
-  onNavigateToPSW?: (data: any) => void; // Add PSW navigation callback
 }
 
 export function CreatePSWForm({
-  createdPSTNumber,
   pswWebSeqId,
   dashboardHeaderData,
   onClose,
   onSubmit,
-  onNavigateToPSW,
 }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);

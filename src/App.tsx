@@ -160,7 +160,6 @@ export default function ShippingDashboard() {
   const [selectedPOForPST, setSelectedPOForPST] = useState<string | null>(null);
   const [selectedPOForPSW, setSelectedPOForPSW] = useState<string | null>(null);
   const [pstCompleted, setPstCompleted] = useState<boolean>(false);
-  const [pswCompleted, setPswCompleted] = useState<boolean>(false);
 
   // Loading states
   const [isDataLoading, setIsDataLoading] = useState(false);
@@ -171,7 +170,6 @@ export default function ShippingDashboard() {
   const [createdPSWNumber, setCreatedPSWNumber] = useState<string | null>(null);
   const [pstWebSeqId, setPstWebSeqId] = useState<number | null>(null); // For Update PST functionality
   const [pswWebSeqId, setPswWebSeqId] = useState<number | null>(null); // For Update PSW functionality
-  const [pswData, setPswData] = useState<any>(null); // PSW data from API
 
   // Confirmation dialog state
   const [showPSTConfirmDialog, setShowPSTConfirmDialog] = useState(false);
@@ -255,14 +253,17 @@ export default function ShippingDashboard() {
           }
           break;
         case "create-psw":
-          if (selectedPOForPSW) {
-            window.history.replaceState(
-              null,
-              "",
-              `/create-psw/${selectedPOForPSW}`
-            );
-          } else {
-            window.history.replaceState(null, "", "/create-psw");
+          {
+            const url = new URL(window.location.origin + "/create-psw");
+            if (selectedPOForPSW) {
+              url.pathname = `/create-psw/${selectedPOForPSW}`;
+            }
+            // Add PSW parameters if they exist
+            if (pswWebSeqId) {
+              url.searchParams.set("pswWebSeqId", pswWebSeqId.toString());
+              url.searchParams.set("mode", "update");
+            }
+            window.history.replaceState(null, "", url.toString());
           }
           break;
         default:
@@ -276,6 +277,7 @@ export default function ShippingDashboard() {
     selectedPOForPST,
     selectedPOForPSW,
     pstWebSeqId,
+    pswWebSeqId,
   ]);
 
   // Read URL parameters on component mount
@@ -343,6 +345,23 @@ export default function ShippingDashboard() {
         const poNumber = path.split("/")[2];
         setSelectedPOForPSW(poNumber || null);
         setCurrentView("create-psw");
+        
+        // Handle PSW specific parameters
+        const url = new URL(window.location.href);
+        const pswWebSeqIdParam = url.searchParams.get("pswWebSeqId");
+        const modeParam = url.searchParams.get("mode");
+        
+        if (pswWebSeqIdParam) {
+          const pswWebSeqIdValue = parseInt(pswWebSeqIdParam);
+          if (!isNaN(pswWebSeqIdValue)) {
+            setPswWebSeqId(pswWebSeqIdValue);
+            console.log("App.tsx - Read pswWebSeqId from URL:", pswWebSeqIdValue);
+          }
+        }
+        
+        if (modeParam) {
+          console.log("App.tsx - Read mode from URL:", modeParam);
+        }
       }
     };
 
@@ -392,14 +411,6 @@ export default function ShippingDashboard() {
       .toString()
       .padStart(3, "0");
     return `PST-${new Date().getFullYear()}-${random}`;
-  };
-
-  // Generate PSW number
-  const generatePSWNumber = () => {
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `PSW-${new Date().getFullYear()}-${random}`;
   };
 
   const handleLogin = async (credentials: LoginCredentials) => {
@@ -1083,6 +1094,14 @@ export default function ShippingDashboard() {
       setSelectedShipment(shipment);
     }
 
+    // Update URL with parameters
+    const newUrl = new URL(window.location.origin + "/create-psw");
+    if (poNumber) {
+      newUrl.pathname = `/create-psw/${poNumber}`;
+    }
+    newUrl.searchParams.set("mode", "create");
+    window.history.pushState({}, "", newUrl.toString());
+
     setCurrentView("create-psw");
     // Reset transition state after animation
     setTimeout(() => setIsTransitioning(false), 400);
@@ -1122,16 +1141,61 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
+  const handleClosePSWForm = () => {
+    setIsTransitioning(true);
+    setCurrentView("dashboard");
+    setSelectedPOForPSW(null);
+    setPswWebSeqId(null); // Reset update mode
+
+    // Update URL parameters on close
+    const currentUrl = new URL(window.location.href);
+
+    // Remove PSW-related parameters only
+    currentUrl.searchParams.delete("pswWebSeqId");
+    currentUrl.searchParams.delete("mode");
+
+    // Keep or update date filter parameters
+    if (dateFilterMode === "custom") {
+      currentUrl.searchParams.set("dateFilterMode", dateFilterMode);
+      if (customDateStart)
+        currentUrl.searchParams.set("dateFrom", customDateStart);
+      if (customDateEnd) currentUrl.searchParams.set("dateTo", customDateEnd);
+    } else {
+      currentUrl.searchParams.set("dateFilterMode", dateFilterMode);
+      currentUrl.searchParams.delete("dateFrom");
+      currentUrl.searchParams.delete("dateTo");
+    }
+
+    window.history.pushState({}, "", currentUrl.toString());
+
+    // Keep PSW completed status and number for dashboard display
+    // Don't reset these when just closing the form
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
   const handleNavigateToPSW = (pswDataFromAPI: any) => {
     console.log("Navigating to PSW with data:", pswDataFromAPI);
 
-    // Store PSW data from API
-    setPswData(pswDataFromAPI);
-
     setIsTransitioning(true);
-    setCurrentView("create-psw");
+    
     // Set any PSW-related data if needed
     setSelectedPOForPSW(pswDataFromAPI?.poNumber || null);
+    
+    // Update URL with PSW parameters
+    const newUrl = new URL(window.location.origin + "/create-psw");
+    if (pswDataFromAPI?.pswWebSeqId) {
+      newUrl.searchParams.set("pswWebSeqId", pswDataFromAPI.pswWebSeqId.toString());
+      newUrl.searchParams.set("mode", "update");
+      setPswWebSeqId(pswDataFromAPI.pswWebSeqId);
+    } else {
+      newUrl.searchParams.set("mode", "create");
+    }
+    if (pswDataFromAPI?.poNumber) {
+      newUrl.pathname = `/create-psw/${pswDataFromAPI.poNumber}`;
+    }
+    window.history.pushState({}, "", newUrl.toString());
+    
+    setCurrentView("create-psw");
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
@@ -1401,12 +1465,10 @@ export default function ShippingDashboard() {
     return (
       <>
         <CreatePSWForm
-          createdPSTNumber={createdPSTNumber}
           pswWebSeqId={pswWebSeqId ?? undefined}
           dashboardHeaderData={dashboardHeaderData}
-          onClose={handleClosePSTForm}
+          onClose={handleClosePSWForm}
           onSubmit={handlePSTSubmit}
-          onNavigateToPSW={handleNavigateToPSW}
         />
 
         {/* PST Confirmation Dialog */}
@@ -1577,7 +1639,7 @@ export default function ShippingDashboard() {
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Completion Badges - Show when completed */}
             {(createdPSTNumber && pstCompleted) ||
-            (createdPSWNumber && pswCompleted) ? (
+            createdPSWNumber ? (
               <div className="flex justify-center gap-4">
                 {createdPSTNumber && pstCompleted && (
                   <Badge className="bg-green-50 text-green-700 border-green-200 px-4 py-2 text-sm font-medium">
@@ -1586,7 +1648,7 @@ export default function ShippingDashboard() {
                     <FileText className="w-4 h-4 ml-2" />
                   </Badge>
                 )}
-                {createdPSWNumber && pswCompleted && (
+                {createdPSWNumber && (
                   <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 text-sm font-medium">
                     <CheckCircle className="w-4 h-4 mr-2" />
                     PSW Completed: {createdPSWNumber}
