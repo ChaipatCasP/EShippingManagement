@@ -413,6 +413,48 @@ export default function ShippingDashboard() {
     return `PST-${new Date().getFullYear()}-${random}`;
   };
 
+  // Helper function to format date from ISO string to YYYY-MM-DD
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    try {
+      return dateString.split("T")[0]; // Extract YYYY-MM-DD part
+    } catch {
+      return dateString; // Return as-is if already in correct format
+    }
+  };
+
+  // Helper function to create and store dashboard header data
+  const createAndStoreDashboardHeaderData = (shipment: Shipment, type: 'PST' | 'PSW') => {
+    const dashboardHeaderData = {
+      supplierName: shipment.supplierName,
+      poBook: shipment.originalPOData?.poBook || shipment.pstBook || "",
+      poNo: (shipment.originalPOData?.poNo || shipment.poNumber)?.toString() || "",
+      poDate: formatDate(shipment.poDate),
+      etd: formatDate(shipment.etd),
+      eta: formatDate(shipment.eta),
+      wrDate: formatDate(shipment.dateClear),
+      invoiceNo: shipment.invoiceNumber,
+      invoiceDate: formatDate(shipment.invoiceDate),
+      awbNo: shipment.blAwbNumber,
+      importEntryNo: shipment.importEntryNo,
+      portOfOrigin: shipment.originPort,
+      portOfDestination: shipment.destinationPort,
+      status: shipment.poType,
+      pstBook: shipment.pstBook || "",
+      pstNo: shipment.pstNo?.toString() || "",
+      vesselName: "", // Will be filled from API data if available
+      referenceCode: shipment.referenceKey || "",
+    };
+
+    // Store in localStorage with type prefix
+    const storageKey = type === 'PST' ? 'pst_dashboard_header_data' : 'psw_dashboard_header_data';
+    localStorage.setItem(storageKey, JSON.stringify(dashboardHeaderData));
+    
+    console.log(`📁 Stored ${type} dashboard header data in localStorage:`, dashboardHeaderData);
+    
+    return dashboardHeaderData;
+  };
+
   const handleLogin = async (credentials: LoginCredentials) => {
     try {
       console.log("Attempting login with credentials:", {
@@ -933,6 +975,9 @@ export default function ShippingDashboard() {
     setSelectedShipment(shipment);
     setSelectedPOForPST(shipment.poNumber);
 
+    // Create and store dashboard header data in localStorage
+    createAndStoreDashboardHeaderData(shipment, 'PST');
+
     // Store pstWebSeqId for Update mode
     setPstWebSeqId(pstWebSeqId);
     console.log("App.tsx - Setting pstWebSeqId to:", pstWebSeqId);
@@ -952,6 +997,9 @@ export default function ShippingDashboard() {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPSW(shipment.poNumber);
+
+    // Create and store dashboard header data in localStorage
+    createAndStoreDashboardHeaderData(shipment, 'PSW');
 
     // Store pswWebSeqId for Update mode
     setPswWebSeqId(pswWebSeqId);
@@ -1282,43 +1330,47 @@ export default function ShippingDashboard() {
 
   // Render PST Form if currentView is 'create-pst'
   if (currentView === "create-pst") {
-    // Helper function to format date from ISO string to YYYY-MM-DD
-    const formatDate = (dateString: string) => {
-      if (!dateString) return "";
-      try {
-        return dateString.split("T")[0]; // Extract YYYY-MM-DD part
-      } catch {
-        return dateString; // Return as-is if already in correct format
+    // Try to get dashboard header data from localStorage first, then fallback to selectedShipment
+    let dashboardHeaderData = null;
+    
+    try {
+      const storedData = localStorage.getItem('pst_dashboard_header_data');
+      if (storedData) {
+        dashboardHeaderData = JSON.parse(storedData);
+        console.log("📁 Retrieved PST dashboard header data from localStorage:", dashboardHeaderData);
       }
-    };
+    } catch (error) {
+      console.warn("Failed to parse PST dashboard header data from localStorage:", error);
+    }
 
-    // Convert selected shipment to header data
-    const dashboardHeaderData = selectedShipment
-      ? {
-          supplierName: selectedShipment.supplierName,
-          poBook:
-            selectedShipment.originalPOData?.poBook ||
-            selectedShipment.pstBook ||
-            "",
-          poNo:
-            (
-              selectedShipment.originalPOData?.poNo || selectedShipment.poNumber
-            )?.toString() || "",
-          poDate: formatDate(selectedShipment.poDate),
-          etd: formatDate(selectedShipment.etd),
-          eta: formatDate(selectedShipment.eta),
-          wrDate: formatDate(selectedShipment.dateClear),
-          invoiceNo: selectedShipment.invoiceNumber,
-          invoiceDate: formatDate(selectedShipment.invoiceDate),
-          awbNo: selectedShipment.blAwbNumber,
-          importEntryNo: selectedShipment.importEntryNo,
-          portOfOrigin: selectedShipment.originPort,
-          portOfDestination: selectedShipment.destinationPort,
-          status: selectedShipment.poType,
-          pstBook: selectedShipment.pstBook || "",
-          pstNo: selectedShipment.pstNo?.toString() || "",
-        }
-      : undefined;
+    // Fallback to creating from selectedShipment if no stored data
+    if (!dashboardHeaderData && selectedShipment) {
+      dashboardHeaderData = {
+        supplierName: selectedShipment.supplierName,
+        poBook:
+          selectedShipment.originalPOData?.poBook ||
+          selectedShipment.pstBook ||
+          "",
+        poNo:
+          (
+            selectedShipment.originalPOData?.poNo || selectedShipment.poNumber
+          )?.toString() || "",
+        poDate: formatDate(selectedShipment.poDate),
+        etd: formatDate(selectedShipment.etd),
+        eta: formatDate(selectedShipment.eta),
+        wrDate: formatDate(selectedShipment.dateClear),
+        invoiceNo: selectedShipment.invoiceNumber,
+        invoiceDate: formatDate(selectedShipment.invoiceDate),
+        awbNo: selectedShipment.blAwbNumber,
+        importEntryNo: selectedShipment.importEntryNo,
+        portOfOrigin: selectedShipment.originPort,
+        portOfDestination: selectedShipment.destinationPort,
+        status: selectedShipment.poType,
+        pstBook: selectedShipment.pstBook || "",
+        pstNo: selectedShipment.pstNo?.toString() || "",
+        vesselName: selectedShipment.vesselName || "",
+      };
+    }
 
     return (
       <>
@@ -1422,45 +1474,59 @@ export default function ShippingDashboard() {
     );
   }
 
-  // Render PST Form if currentView is 'create-pst'
+  // Render PSW Form if currentView is 'create-psw'
   if (currentView === "create-psw") {
-    // Helper function to format date from ISO string to YYYY-MM-DD
-    const formatDate = (dateString: string) => {
-      if (!dateString) return "";
-      try {
-        return dateString.split("T")[0]; // Extract YYYY-MM-DD part
-      } catch {
-        return dateString; // Return as-is if already in correct format
+    // Try to get dashboard header data from localStorage first, then fallback to selectedShipment
+    let dashboardHeaderData = null;
+    
+    try {
+      const storedData = localStorage.getItem('psw_dashboard_header_data');
+      if (storedData) {
+        dashboardHeaderData = JSON.parse(storedData);
+        console.log("📁 Retrieved PSW dashboard header data from localStorage:", dashboardHeaderData);
       }
-    };
+    } catch (error) {
+      console.warn("Failed to parse PSW dashboard header data from localStorage:", error);
+    }
 
-    // Convert selected shipment to header data
-    const dashboardHeaderData = selectedShipment
-      ? {
-          supplierName: selectedShipment.supplierName,
-          poBook:
-            selectedShipment.originalPOData?.poBook ||
-            selectedShipment.pstBook ||
-            "",
-          poNo:
-            (
-              selectedShipment.originalPOData?.poNo || selectedShipment.poNumber
-            )?.toString() || "",
-          poDate: formatDate(selectedShipment.poDate),
-          etd: formatDate(selectedShipment.etd),
-          eta: formatDate(selectedShipment.eta),
-          wrDate: formatDate(selectedShipment.dateClear),
-          invoiceNo: selectedShipment.invoiceNumber,
-          invoiceDate: formatDate(selectedShipment.invoiceDate),
-          awbNo: selectedShipment.blAwbNumber,
-          importEntryNo: selectedShipment.importEntryNo,
-          portOfOrigin: selectedShipment.originPort,
-          portOfDestination: selectedShipment.destinationPort,
-          status: selectedShipment.poType,
-          pstBook: selectedShipment.pstBook || "",
-          pstNo: selectedShipment.pstNo?.toString() || "",
+    // Fallback to creating from selectedShipment if no stored data
+    if (!dashboardHeaderData && selectedShipment) {
+      // Helper function to format date from ISO string to YYYY-MM-DD
+      const formatDate = (dateString: string) => {
+        if (!dateString) return "";
+        try {
+          return dateString.split("T")[0]; // Extract YYYY-MM-DD part
+        } catch {
+          return dateString; // Return as-is if already in correct format
         }
-      : undefined;
+      };
+
+      dashboardHeaderData = {
+        supplierName: selectedShipment.supplierName,
+        poBook:
+          selectedShipment.originalPOData?.poBook ||
+          selectedShipment.pstBook ||
+          "",
+        poNo:
+          (
+            selectedShipment.originalPOData?.poNo || selectedShipment.poNumber
+          )?.toString() || "",
+        poDate: formatDate(selectedShipment.poDate),
+        etd: formatDate(selectedShipment.etd),
+        eta: formatDate(selectedShipment.eta),
+        wrDate: formatDate(selectedShipment.dateClear),
+        invoiceNo: selectedShipment.invoiceNumber,
+        invoiceDate: formatDate(selectedShipment.invoiceDate),
+        awbNo: selectedShipment.blAwbNumber,
+        importEntryNo: selectedShipment.importEntryNo,
+        portOfOrigin: selectedShipment.originPort,
+        portOfDestination: selectedShipment.destinationPort,
+        status: selectedShipment.poType,
+        pstBook: selectedShipment.pstBook || "",
+        pstNo: selectedShipment.pstNo?.toString() || "",
+        vesselName: "",
+      };
+    }
 
     return (
       <>
