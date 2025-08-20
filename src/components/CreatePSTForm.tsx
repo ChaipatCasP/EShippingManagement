@@ -531,11 +531,11 @@ export function CreatePSTForm({
           poNo: dashboardHeaderData?.poNo || "",
           poDate: dashboardHeaderData?.poDate || "",
           etd: dashboardHeaderData?.etd || "",
-          eta: dashboardHeaderData?.eta || "",
+          eta: data.eta || dashboardHeaderData?.eta || "", // Prefer API data for ETA
           wrDate: dashboardHeaderData?.wrDate || "",
           invoiceNo: dashboardHeaderData?.invoiceNo || "",
           invoiceDate: dashboardHeaderData?.invoiceDate || "",
-          awbNo: dashboardHeaderData?.awbNo || "",
+          awbNo: data.awbNo || dashboardHeaderData?.awbNo || "", // Prefer API data for AWB
           importEntryNo: dashboardHeaderData?.importEntryNo || "",
           portOfOrigin: dashboardHeaderData?.portOfOrigin || "",
           portOfDestination: dashboardHeaderData?.portOfDestination || "",
@@ -565,6 +565,12 @@ export function CreatePSTForm({
 
         // Update bill entry data with API response
         console.log("Updating bill entry data with:", data);
+        console.log("📅 Date fields from API:", {
+          awbDate: data.awbDate,
+          eta: data.eta,
+          requestPaymentDateTime: data.requestPaymentDateTime,
+        });
+        
         const transformedData: BillEntryData = {
           webSeqID:
             data.webSeqID !== undefined && data.webSeqID !== null
@@ -586,13 +592,13 @@ export function CreatePSTForm({
           creditTerm: data.creditTerm || "",
           awbType: data.awbType || "",
           awbNo: data.awbNo || "",
-          awbDate: data.awbDate || "",
+          awbDate: data.awbDate ? data.awbDate.split('T')[0] : "",
           importEntryNo: data.importEntryNo || "",
-          eta: data.eta || "",
+          eta: data.eta ? data.eta.split('T')[0] : "",
           paymentTerm: data.paymentTerm || "",
           vesselName: data.vesselName || "",
           countryOfOrigin: data.countryOfOrigin || "",
-          requestPaymentDateTime: data.requestPaymentDateTime || "",
+          requestPaymentDateTime: data.requestPaymentDateTime ? data.requestPaymentDateTime.split('T')[0] : "",
           currency: data.currency || "",
           remarks: data.remarks || "",
           billStatus: data.billStatus || "",
@@ -606,7 +612,7 @@ export function CreatePSTForm({
             data.childSequenceId !== undefined && data.childSequenceId !== null
               ? String(data.childSequenceId)
               : "",
-          dueDate: "31-Mar-2025", // Default value, can be updated later
+          dueDate: "", // Default empty, can be filled manually
           // poBook: data.poBook ? String(data.poBook) : "",
           // poNo: data.poNo ? String(data.poNo) : "",
           // poDate: data.poDate || "",
@@ -3242,43 +3248,7 @@ export function CreatePSTForm({
                     </CardContent>
                   </Card>
 
-                  {/* Form Actions */}
-                  <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={onClose}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={!isFormValid() || isSubmitting}
-                      className="min-w-40 relative overflow-hidden"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                          <LoadingSpinner
-                            size="sm"
-                            className="border-white border-t-white/50"
-                          />
-                          <span>Submitting...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>Submit PST Request</span>
-                          <FileText className="w-4 h-4" />
-                        </div>
-                      )}
-                      {isSubmitting && (
-                        <div
-                          className="absolute bottom-0 left-0 h-1 bg-white/30 transition-all duration-300 ease-out"
-                          style={{ width: `${submitProgress}%` }}
-                        />
-                      )}
-                    </Button>
-                  </div>
+                
 
                   {/* Submit Progress Overlay */}
                   {isSubmitting && (
