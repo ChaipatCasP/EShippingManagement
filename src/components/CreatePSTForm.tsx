@@ -63,6 +63,11 @@ import {
   type ServiceProviderItem,
   type SaveExpenseRequest,
 } from "../api/services/pstService";
+import { env } from "../config/env";
+
+interface Country {
+  name: string;
+}
 
 interface ExpenseItem {
   id: string;
@@ -267,6 +272,11 @@ export function CreatePSTForm({
     ServiceProviderItem[]
   >([]);
 
+  // Country list from API
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+
   // Expense Item State
 
   // Expense Item Form State
@@ -315,6 +325,7 @@ export function CreatePSTForm({
   useEffect(() => {
     loadExpenseList();
     loadServiceProviders();
+    loadCountries();
   }, []);
 
   // Read URL parameters and update form data
@@ -399,6 +410,57 @@ export function CreatePSTForm({
       }
     } catch (error) {
       console.error("❌ Error loading service providers:", error);
+    }
+  };
+
+  const loadCountries = async () => {
+    setIsLoadingCountries(true);
+    try {
+      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+
+      const response = await fetch(
+        `${env.jagotaApi.baseUrl}/v1/es/eshipping/country-list`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: bearerToken,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("🌍 Countries API response:", data);
+
+      if (!data.error && data.data) {
+        setCountries(data.data);
+      } else {
+        console.error("❌ Countries API returned error:", data);
+        // Fallback data
+        setCountries([
+          { name: "Thailand" },
+          { name: "China" },
+          { name: "Japan" },
+          { name: "South Korea" },
+          { name: "United States" },
+        ]);
+      }
+    } catch (error) {
+      console.error("❌ Error loading countries:", error);
+      // Fallback data
+      setCountries([
+        { name: "Thailand" },
+        { name: "China" },
+        { name: "Japan" },
+        { name: "South Korea" },
+        { name: "United States" },
+      ]);
+    } finally {
+      setIsLoadingCountries(false);
     }
   };
 
@@ -2054,16 +2116,64 @@ export function CreatePSTForm({
                               Country of Origin{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <Input
-                              value={billEntryData.countryOfOrigin || ""}
-                              onChange={(e) =>
-                                setBillEntryData({
-                                  ...billEntryData,
-                                  countryOfOrigin: e.target.value,
-                                })
-                              }
-                              required
-                            />
+                            <Popover 
+                              open={countryDropdownOpen} 
+                              onOpenChange={setCountryDropdownOpen}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={countryDropdownOpen}
+                                  className="w-full justify-between"
+                                  disabled={isLoadingCountries}
+                                >
+                                  {isLoadingCountries ? (
+                                    "Loading countries..."
+                                  ) : billEntryData.countryOfOrigin ? (
+                                    countries.find(
+                                      (country) => 
+                                        country.name === billEntryData.countryOfOrigin
+                                    )?.name || billEntryData.countryOfOrigin
+                                  ) : (
+                                    "Select country..."
+                                  )}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[400px] p-0">
+                                <Command>
+                                  <CommandInput placeholder="Search countries..." />
+                                  <CommandEmpty>No country found.</CommandEmpty>
+                                  <CommandGroup className="max-h-64 overflow-auto">
+                                    {countries.map((country, index) => (
+                                      <CommandItem
+                                        key={`${country.name}-${index}`}
+                                        value={country.name}
+                                        onSelect={() => {
+                                          setBillEntryData({
+                                            ...billEntryData,
+                                            countryOfOrigin: country.name,
+                                          });
+                                          setCountryDropdownOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            billEntryData.countryOfOrigin === country.name
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          }`}
+                                        />
+                                        <span className="font-medium">
+                                          {country.name}
+                                        </span>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-gray-700">
