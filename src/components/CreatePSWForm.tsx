@@ -21,6 +21,16 @@ import {
 } from "./ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -129,6 +139,7 @@ export function CreatePSWForm({
   onSubmit,
 }: CreatePSWFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmitConfirmDialog, setShowSubmitConfirmDialog] = useState(false);
 
   const [uploadedFiles] = useState<File[]>([]);
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -862,26 +873,94 @@ export function CreatePSWForm({
   };
 
   const handleAction = async (action: "save" | "submit") => {
+    // Show confirmation dialog for submit action
+    if (action === "submit") {
+      setShowSubmitConfirmDialog(true);
+      return;
+    }
+
+    // Handle save action directly
+    await executeAction(action);
+  };
+
+  const executeAction = async (action: "save" | "submit") => {
     try {
       setIsSubmitting(true);
 
-      const pswData = {
-        action,
-        expenses: expenseItems, // Use expenseItems instead of expenses
-        files: uploadedFiles,
-        totalSummary: {
-          subTotal: totalSubTotal,
-          vatAmount: totalVATAmount,
-          exciseVatAmount: expenseItems.reduce((sum, item) => sum + (item.exciseVatAmount || 0), 0),
-          interiorVat: expenseItems.reduce((sum, item) => sum + (item.interiorVat || 0), 0),
-          total: grandTotal,
-        },
-        submittedAt: new Date().toISOString(),
-      };
+      if (action === "submit") {
+        // Call submitBill API when Submit Bill is clicked
+        if (!pswWebSeqId) {
+          throw new Error("PSW Web Sequence ID is required for submission");
+        }
 
-      await onSubmit(pswData);
+        console.log("🚀 Submitting bill with pswWebSeqId:", pswWebSeqId);
+        const result = await pstService.submitBill(pswWebSeqId.toString());
+        
+        if (result.error) {
+          throw new Error(result.message || "Failed to submit bill");
+        }
+
+        console.log("✅ Bill submitted successfully:", result);
+        
+        // Show success message or redirect
+        alert("บิลถูกส่งเรียบร้อยแล้ว");
+        
+        // Call the original onSubmit to handle any additional logic (like closing the form)
+        const pswData = {
+          action,
+          expenses: expenseItems,
+          files: uploadedFiles,
+          totalSummary: {
+            subTotal: totalSubTotal,
+            vatAmount: totalVATAmount,
+            exciseVatAmount: expenseItems.reduce(
+              (sum, item) => sum + (item.exciseVatAmount || 0),
+              0
+            ),
+            interiorVat: expenseItems.reduce(
+              (sum, item) => sum + (item.interiorVat || 0),
+              0
+            ),
+            total: grandTotal,
+          },
+          submittedAt: new Date().toISOString(),
+          submitBillResult: result,
+        };
+
+        await onSubmit(pswData);
+      } else {
+        // Handle save action
+        const pswData = {
+          action,
+          expenses: expenseItems, // Use expenseItems instead of expenses
+          files: uploadedFiles,
+          totalSummary: {
+            subTotal: totalSubTotal,
+            vatAmount: totalVATAmount,
+            exciseVatAmount: expenseItems.reduce(
+              (sum, item) => sum + (item.exciseVatAmount || 0),
+              0
+            ),
+            interiorVat: expenseItems.reduce(
+              (sum, item) => sum + (item.interiorVat || 0),
+              0
+            ),
+            total: grandTotal,
+          },
+          submittedAt: new Date().toISOString(),
+        };
+
+        await onSubmit(pswData);
+      }
     } catch (error) {
       console.error(`Error ${action}ing PSW:`, error);
+      
+      // Show user-friendly error message
+      if (error instanceof Error) {
+        alert(`เกิดข้อผิดพลาด: ${error.message}`);
+      } else {
+        alert(`ไม่สามารถ${action === "submit" ? "ส่งบิล" : "บันทึก"}ได้ กรุณาลองใหม่อีกครั้ง`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1828,7 +1907,7 @@ export function CreatePSWForm({
                         <Label className="text-xs font-medium text-gray-700">
                           Items ({expenseItems.length})
                         </Label>
-                        <div className="max-h-24 overflow-y-auto space-y-1">
+                        {/* <div className="max-h-24 overflow-y-auto space-y-1">
                           {expenseItems.map((expense, index) => (
                             <div
                               key={expense.id}
@@ -1842,7 +1921,7 @@ export function CreatePSWForm({
                               </span>
                             </div>
                           ))}
-                        </div>
+                        </div> */}
                       </div>
 
                       <Separator />
@@ -1864,13 +1943,26 @@ export function CreatePSWForm({
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">Excise VAT</span>
                           <span className="font-medium">
-                            ฿{expenseItems.reduce((sum, item) => sum + (item.exciseVatAmount || 0), 0).toLocaleString()}
+                            ฿
+                            {expenseItems
+                              .reduce(
+                                (sum, item) =>
+                                  sum + (item.exciseVatAmount || 0),
+                                0
+                              )
+                              .toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">Interior VAT</span>
                           <span className="font-medium">
-                            ฿{expenseItems.reduce((sum, item) => sum + (item.interiorVat || 0), 0).toLocaleString()}
+                            ฿
+                            {expenseItems
+                              .reduce(
+                                (sum, item) => sum + (item.interiorVat || 0),
+                                0
+                              )
+                              .toLocaleString()}
                           </span>
                         </div>
 
@@ -1892,19 +1984,19 @@ export function CreatePSWForm({
                           size="sm"
                           variant="outline"
                           className="w-full"
-                          onClick={() => handleAction("save")}
-                          disabled={isSubmitting}
-                        >
-                          Save Draft
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="w-full"
                           onClick={() => handleAction("submit")}
                           disabled={isSubmitting}
                         >
                           Submit Bill
                         </Button>
+                        {/* <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleAction("save")}
+                          disabled={isSubmitting}
+                        >
+                          save
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -1914,6 +2006,86 @@ export function CreatePSWForm({
           </div>
         </div>
       </div>
+
+      {/* Submit Bill Confirmation Dialog */}
+      <AlertDialog open={showSubmitConfirmDialog} onOpenChange={setShowSubmitConfirmDialog}>
+        <AlertDialogContent className="max-w-lg bg-white">
+          <AlertDialogHeader className="space-y-3">
+            <AlertDialogTitle className="flex items-center gap-3 text-xl">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-orange-600" />
+              </div>
+              <span className="text-gray-900">ยืนยันการส่งบิล</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600 text-base leading-relaxed">
+              คุณต้องการส่งบิลหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {/* Bill Summary */}
+          <div className="my-6">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
+              <h4 className="font-medium text-gray-900 text-sm mb-3">รายละเอียดการส่งบิล</h4>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">จำนวนรายการ:</span>
+                  <span className="font-medium text-gray-900">{expenseItems.length} รายการ</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">ยอดรวมทั้งสิ้น:</span>
+                  <span className="font-bold text-lg text-green-600">
+                    ฿{grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                
+                {pswWebSeqId && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">PSW ID:</span>
+                    <span className="font-medium text-gray-900">{pswWebSeqId}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <div className="w-5 h-5 text-amber-600 mt-0.5">⚠️</div>
+                <p className="text-sm text-amber-800">
+                  หลังจากส่งบิลแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel 
+              onClick={() => setShowSubmitConfirmDialog(false)}
+              className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              ยกเลิก
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowSubmitConfirmDialog(false);
+                executeAction("submit");
+              }}
+              className="flex-1 bg-orange-600 text-white hover:bg-orange-700 font-medium"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>กำลังส่ง...</span>
+                </div>
+              ) : (
+                "ยืนยันส่งบิล"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
