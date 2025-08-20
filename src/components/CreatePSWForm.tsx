@@ -13,6 +13,7 @@ import {
 import { Separator } from "./ui/separator";
 import { CommunicationPanel, CommunicationMessage } from "./CommunicationPanel";
 import {
+  ArrowRight,
   X,
   ArrowLeft,
   Plus,
@@ -29,6 +30,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Check,
+  MapPin,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import {
@@ -199,8 +201,8 @@ export function CreatePSWForm({
     status: (dashboardHeaderData?.status || "") as "Single" | "Multiple" | "",
     pstBook: dashboardHeaderData?.pstBook || "",
     pstNo: dashboardHeaderData?.pstNo || "",
-    vesselName: "",
-    referenceCode: "",
+    vesselName: dashboardHeaderData?.vesselName || "",
+    referenceCode: dashboardHeaderData?.referenceCode || "",
     taxIdNo: "",
     paymentTerm: "",
   });
@@ -220,29 +222,6 @@ export function CreatePSWForm({
   });
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([]);
   const [changedItems, setChangedItems] = useState<Set<string>>(new Set());
-
-  // PST Reference Data (ข้อมูลย่อจาก PST หรือ API)
-  const pstReferenceData = {
-    pstNumber: pstNumber || "PST-2025-001",
-    poNumber: poNumber || "PO-2025-001",
-    supplierName: pswData?.supplierName || "Global Foods Ltd.",
-    transportMode: pswData?.transportMode || "SEA",
-    invoiceNo: pswData?.invoiceNo || "INV-2025-001",
-    currency: pswData?.currency || "THB",
-    importEntryNo: pswData?.importEntryNo || "IE-2025-7890",
-    // PSW specific data from API
-    pswBook: pswData?.pswBook || null,
-    pswNo: pswData?.pswNo || null,
-    // Import Tax Information
-    importTaxRate: pswData?.importTaxRate || 12.5, // %
-    importTaxAmount: pswData?.importTaxAmount || 15780.5, // THB
-    vatRate: pswData?.vatRate || 7, // %
-    vatAmount: pswData?.vatAmount || 3245.2, // THB
-    dutyRate: pswData?.dutyRate || 8.5, // %
-    dutyAmount: pswData?.dutyAmount || 8920.75, // THB
-    totalTaxDuty: pswData?.totalTaxDuty || 27946.45, // THB
-    invoiceValue: pswData?.invoiceValue || 125000.0, // THB
-  };
 
   // Load expense list and service providers from API
   const loadExpenseList = async () => {
@@ -295,6 +274,8 @@ export function CreatePSWForm({
   }, [pswWebSeqId]);
 
   useEffect(() => {
+    console.log("dashboardHeaderData : chaipat ", dashboardHeaderData);
+
     // Only initialize if we don't have pstWebSeqId (no API data expected)
     if (!pswWebSeqId && expenseItems.length === 0) {
       setShowExpenseForm(true);
@@ -326,6 +307,37 @@ export function CreatePSWForm({
       }
     }
   }, [pswWebSeqId, expenseItems.length, dashboardHeaderData]);
+
+  // Update headerData when dashboardHeaderData changes
+  useEffect(() => {
+    if (dashboardHeaderData) {
+      setHeaderData((prev) => ({
+        ...prev,
+        supplierName: dashboardHeaderData.supplierName || prev.supplierName,
+        poBook: dashboardHeaderData.poBook || prev.poBook,
+        poNo: dashboardHeaderData.poNo || prev.poNo,
+        poDate: dashboardHeaderData.poDate || prev.poDate,
+        etd: dashboardHeaderData.etd || prev.etd,
+        eta: dashboardHeaderData.eta || prev.eta,
+        wrDate: dashboardHeaderData.wrDate || prev.wrDate,
+        invoiceNo: dashboardHeaderData.invoiceNo || prev.invoiceNo,
+        invoiceDate: dashboardHeaderData.invoiceDate || prev.invoiceDate,
+        awbNo: dashboardHeaderData.awbNo || prev.awbNo,
+        importEntryNo: dashboardHeaderData.importEntryNo || prev.importEntryNo,
+        portOfOrigin: dashboardHeaderData.portOfOrigin || prev.portOfOrigin,
+        portOfDestination:
+          dashboardHeaderData.portOfDestination || prev.portOfDestination,
+        status: (dashboardHeaderData.status || prev.status) as
+          | "Single"
+          | "Multiple"
+          | "",
+        pstBook: dashboardHeaderData.pstBook || prev.pstBook,
+        pstNo: dashboardHeaderData.pstNo || prev.pstNo,
+        vesselName: dashboardHeaderData.vesselName || prev.vesselName,
+        referenceCode: dashboardHeaderData.referenceCode || prev.referenceCode,
+      }));
+    }
+  }, [dashboardHeaderData]);
 
   const loadPSTDetails = async (webSeqId?: number) => {
     const idToUse = webSeqId || pswWebSeqId;
@@ -1058,7 +1070,6 @@ export function CreatePSWForm({
 
       const pswData = {
         action,
-        pstReference: pstReferenceData,
         expenses,
         files: uploadedFiles,
         totalSummary,
@@ -1123,32 +1134,6 @@ export function CreatePSWForm({
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
-          </div>
-        </div>
-
-        {/* Progress section */}
-        <div className="px-6 pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Status Display */}
-              <div className="flex items-center gap-4">
-                {pstReferenceData.pswNo ? (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">
-                      PSW: {pstReferenceData.pswNo}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-                    <Key className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-700">
-                      Ready to Submit
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1242,7 +1227,7 @@ export function CreatePSWForm({
                             <div className="flex items-center gap-1 mb-1">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                               <span className="text-gray-600 text-xs font-medium">
-                                WR Date
+                                Warehouse Receive Date
                               </span>
                             </div>
                             <span className="font-semibold text-gray-900">
@@ -1254,6 +1239,7 @@ export function CreatePSWForm({
 
                       {/* Section 3: Consolidated Document & Route Info */}
                       <div className="space-y-2">
+                        {/* First row - Invoice & AWB */}
                         <div className="flex items-center gap-6 text-sm">
                           {headerData.invoiceNo && (
                             <div className="flex items-center gap-2">
@@ -1267,13 +1253,61 @@ export function CreatePSWForm({
                           {headerData.awbNo && (
                             <div className="flex items-center gap-2">
                               <FileText className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">AWB:</span>
+                              <span className="text-gray-600">B/L:</span>
                               <span className="font-medium text-gray-900">
                                 {headerData.awbNo}
                               </span>
                             </div>
                           )}
+                          {headerData.importEntryNo && (
+                            <div className="flex items-center gap-2">
+                              <FileDigit className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">
+                                Import Entry:
+                              </span>
+                              <span className="font-medium text-gray-900">
+                                {headerData.importEntryNo}
+                              </span>
+                            </div>
+                          )}
                         </div>
+
+                        {/* Second row - Vessel & Route */}
+                        {(headerData.vesselName ||
+                          headerData.portOfOrigin ||
+                          headerData.portOfDestination) && (
+                          <div className="flex items-center gap-6 text-sm">
+                            {headerData.vesselName && (
+                              <div className="flex items-center gap-2">
+                                <Package2 className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-600">Vessel:</span>
+                                <span className="font-medium text-gray-900">
+                                  {headerData.vesselName}
+                                </span>
+                              </div>
+                            )}
+                            {(headerData.portOfOrigin ||
+                              headerData.portOfDestination) && (
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-gray-400" />
+                                  <span className="text-gray-600">From:</span>
+                                  <span className="font-medium text-gray-800">
+                                    {headerData.portOfOrigin || "?"}
+                                  </span>
+                                </div>
+                                <ArrowRight className="w-3 h-3 text-gray-400" />
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-gray-400" />
+                                  <span className="text-gray-600">To:</span>
+                                  <span className="font-medium text-gray-800">
+                                    {headerData.portOfDestination || "?"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2070,7 +2104,6 @@ export function CreatePSWForm({
                           </span>
                           <span className="text-lg font-bold text-green-600">
                             {(totalSummary.total || 0).toFixed(2)}{" "}
-                            {pstReferenceData.currency || "THB"}
                           </span>
                         </div>
                       </div>

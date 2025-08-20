@@ -1123,40 +1123,6 @@ export default function ShippingDashboard() {
       status: selectedShipment.poType,
       pstBook: selectedShipment.pstBook || "",
       pstNo: selectedShipment.pstNo?.toString() || "",
-
-
-
-
-/*
-supCode
-supName
-transType
-poBook
-poNo
-poDate
-eta
-etd
-transportBy
-invoiceNo
-invoiceDate
-portOfOrigin
-portOfDestination
-blNo
-warehouseReceivedDate
-coLoadPOCount
-coLoadSupplierCount
-pstBook
-pstNo
-pstStatus
-pstJagotaStatus
-pstWebSeqId
-pswBook
-pswNo
-pswStatus
-pswJagotaStatus
-pswWebSeqId
-*/
-
     } : undefined;
 
     return (
@@ -1254,8 +1220,28 @@ pswWebSeqId
       }
     };
 
-    // Convert selected shipment to header data for PSW
-    const dashboardHeaderDataForPSW = selectedShipment ? {
+    // // Convert selected shipment to header data for PSW
+    // const dashboardHeaderDataForPSW = selectedShipment ? {
+    //   supplierName: selectedShipment.supplierName,
+    //   poBook: selectedShipment.originalPOData?.poBook || selectedShipment.pstBook || "",
+    //   poNo: (selectedShipment.originalPOData?.poNo || selectedShipment.poNumber)?.toString() || "",
+    //   poDate: formatDate(selectedShipment.poDate),
+    //   etd: formatDate(selectedShipment.etd),
+    //   eta: formatDate(selectedShipment.eta),
+    //   wrDate: formatDate(selectedShipment.dateClear),
+    //   invoiceNo: selectedShipment.invoiceNumber,
+    //   invoiceDate: formatDate(selectedShipment.invoiceDate),
+    //   awbNo: selectedShipment.blAwbNumber,
+    //   importEntryNo: selectedShipment.importEntryNo,
+    //   portOfOrigin: selectedShipment.originPort,
+    //   portOfDestination: selectedShipment.destinationPort,
+    //   status: selectedShipment.poType,
+    //   pstBook: selectedShipment.pstBook || "",
+    //   pstNo: selectedShipment.pstNo?.toString() || "",
+    // } : undefined;
+
+     // Convert selected shipment to header data
+    const dashboardHeaderData = selectedShipment ? {
       supplierName: selectedShipment.supplierName,
       poBook: selectedShipment.originalPOData?.poBook || selectedShipment.pstBook || "",
       poNo: (selectedShipment.originalPOData?.poNo || selectedShipment.poNumber)?.toString() || "",
@@ -1277,10 +1263,10 @@ pswWebSeqId
     return (
       <CreatePSWForm
         poNumber={selectedPOForPSW || undefined}
-        pstNumber={createdPSTNumber || "PST-2025-001"}
+        pstNumber={createdPSTNumber}
         pswWebSeqId={pswWebSeqId ?? undefined}
         pswData={pswData}
-        dashboardHeaderData={dashboardHeaderDataForPSW}
+        dashboardHeaderData={dashboardHeaderData}
         onClose={handleClosePSWForm}
         onSubmit={handlePSWSubmit}
         user={user}
