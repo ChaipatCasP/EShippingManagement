@@ -175,6 +175,9 @@ export default function ShippingDashboard() {
   const [showPSTConfirmDialog, setShowPSTConfirmDialog] = useState(false);
   const [pendingPSTData, setPendingPSTData] = useState<any>(null);
 
+  //Popup Confirm PST Submission
+  const [showPSTSubmissionPopup, setShowPSTSubmissionPopup] = useState(false);
+
   // Use notifications hook
   const {
     notifications,
@@ -1253,11 +1256,13 @@ export default function ShippingDashboard() {
     // Store the pending data and show confirmation dialog
     setPendingPSTData(data);
     setShowPSTConfirmDialog(true);
+    setShowPSTSubmissionPopup(true);
 
     return Promise.resolve();
   };
 
   const handlePSTConfirmSubmit = async () => {
+    // chaipat
     try {
       // Generate PST number
       const newPSTNumber = generatePSTNumber();
@@ -1285,6 +1290,7 @@ export default function ShippingDashboard() {
   };
 
   const handlePSTConfirmCancel = () => {
+    setShowPSTSubmissionPopup(false);
     setShowPSTConfirmDialog(false);
     setPendingPSTData(null);
   };
@@ -1381,6 +1387,7 @@ export default function ShippingDashboard() {
           onClose={handleClosePSTForm}
           onSubmit={handlePSTSubmit}
           onNavigateToPSW={handleNavigateToPSW}
+          showPSTSubmissionPopup={showPSTSubmissionPopup}
         />
 
         {/* PST Confirmation Dialog */}

@@ -163,31 +163,44 @@ interface CreatePSTFormProps {
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
   onNavigateToPSW?: (data: any) => void; // Add PSW navigation callback
+  showPSTSubmissionPopup: boolean;
 }
 
 // Utility function to format date to DD-MMM-YYYY
 const formatDateToDDMMYYYY = (dateString: string): string => {
   if (!dateString) return "";
-  
+
   try {
     const date = new Date(dateString);
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) return "";
-    
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const day = date.getDate().toString().padStart(2, '0');
+
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const day = date.getDate().toString().padStart(2, "0");
     const month = months[date.getMonth()];
     const year = date.getFullYear();
-    
+
     const formatted = `${day}-${month}-${year}`;
     console.log(`Date formatting: ${dateString} => ${formatted}`);
-    
+
     return formatted;
   } catch (error) {
-    console.error('Error formatting date:', error);
+    console.error("Error formatting date:", error);
     return "";
   }
 };
@@ -199,8 +212,8 @@ export function CreatePSTForm({
   onClose,
   onSubmit,
   onNavigateToPSW,
+  showPSTSubmissionPopup,
 }: CreatePSTFormProps) {
-
   // No step management - single form only
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
@@ -466,7 +479,6 @@ export function CreatePSTForm({
 
       const data = await response.json();
 
-
       if (!data.error && data.data) {
         setCountries(data.data);
       } else {
@@ -577,11 +589,9 @@ export function CreatePSTForm({
         );
 
         setMessages(convertedMessages);
-
       } else {
         // If no messages or error, set empty array
         setMessages([]);
-
       }
     } catch (error) {
       console.error("❌ Failed to load messages for PST:", error);
@@ -606,6 +616,10 @@ export function CreatePSTForm({
       loadMessages(pstWebSeqId); // Load messages when PST details are loaded
     }
   }, [pstWebSeqId]);
+
+  useEffect(() => {
+    setIsSubmitting(showPSTSubmissionPopup);
+  }, [showPSTSubmissionPopup]);
 
   const loadPSTDetails = async (webSeqId?: number) => {
     const idToUse = webSeqId || pstWebSeqId;
@@ -789,7 +803,6 @@ export function CreatePSTForm({
 
         // Collapse all expense items from API data
         if (convertedExpenses.length > 0) {
-
           const allItemIds = new Set(convertedExpenses.map((item) => item.id));
           setCollapsedItems(allItemIds);
         }
@@ -808,9 +821,6 @@ export function CreatePSTForm({
 
           return newFormData;
         });
-
-
-
       } else {
         console.error("❌ API returned error or no data:", response);
       }
@@ -1014,7 +1024,6 @@ export function CreatePSTForm({
         );
 
         if (!response.error) {
-
           // Remove from local state after successful API call
           setExpenseItems(expenseItems.filter((item) => item.id !== id));
         } else {
@@ -1231,8 +1240,6 @@ export function CreatePSTForm({
         remarks: item.remarks || "",
       };
 
-
-
       // Call API
       const response = await pstService.saveExpenseItem(expenseData);
 
@@ -1242,7 +1249,6 @@ export function CreatePSTForm({
         response.data[0]?.STATUS === "Saved Succssfully"
       ) {
         alert("Expense item saved successfully!");
-
 
         // Remove item from changed items set
         setChangedItems((prev) => {
@@ -1309,14 +1315,10 @@ export function CreatePSTForm({
   // Function to reload data after successful save
   const reloadDataAfterSave = async (newWebSeqId: string) => {
     try {
-
-
       // Call getPSTDetails with new webSeqId
       const data = await pstService.getPSTDetails(Number(newWebSeqId));
 
       if (data && !data.error) {
-
-
         // Update billEntryData with fresh data from API
         const freshData = data.data;
         const formatDateStr = (dateStr: string | null) => {
@@ -1416,8 +1418,6 @@ export function CreatePSTForm({
 
         // Clear any existing changed items when loading fresh data
         setChangedItems(new Set());
-
-
       }
     } catch (error) {
       console.error("Error reloading data:", error);
@@ -1486,11 +1486,9 @@ export function CreatePSTForm({
 
       const result = await pstService.saveBillEntry(request);
 
-
       // Check if save was successful and extract new webSeqID
       if (result && !result.error && result.data && result.data.length > 0) {
         const newWebSeqId = result.data[0].webSeqID;
-
 
         // Update original data to current data (so changes are no longer detected)
         setOriginalBillEntryData({ ...billEntryData });
@@ -1521,8 +1519,62 @@ export function CreatePSTForm({
       return;
     }
 
+    setIsLoading(true);
+    setIsSubmitting(true);
+    setSubmitProgress(0);
+
+    try {
+      // Simulate progress steps
+      const progressSteps = [
+        { progress: 20, message: "Preparing PST data..." },
+        { progress: 40, message: "Calculating totals..." },
+        { progress: 60, message: "Validating documents..." },
+        { progress: 80, message: "Submitting to system..." },
+        { progress: 100, message: "PST completed successfully!" },
+      ];
+
+      for (const step of progressSteps) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        setSubmitProgress(step.progress);
+      }
+
+      // Calculate totals
+      const totalAmount = expenseItems.reduce(
+        (sum, item) => sum + item.total,
+        0
+      );
+      const totalVAT = expenseItems.reduce(
+        (sum, item) => sum + item.vatAmount,
+        0
+      );
+
+      const submissionData = {
+        ...step1Data,
+        ...formData,
+        expenseItems,
+        totalAmount,
+        totalVAT,
+        submittedAt: new Date().toISOString(),
+      };
+
+      await onSubmit(submissionData);
+      setShowSuccess(true);
+
+      // setTimeout(() => {
+      //   setIsLoading(false);
+      //   setIsSubmitting(false);
+      //   setSubmitProgress(0);
+      //   onClose();
+      // }, 2000);
+    } catch (error) {
+      console.error("Error submitting PST:", error);
+      setIsLoading(false);
+      setIsSubmitting(false);
+      setSubmitProgress(0);
+    }
+
     // Show confirmation dialog
-    setShowSubmitBillConfirmation(true);
+    // setShowSubmitBillConfirmation(true);
   };
 
   // Communication Panel handlers
@@ -1557,9 +1609,6 @@ export function CreatePSTForm({
         // Show success popup instead of alert
         setShowSubmitBillSuccess(true);
 
-
-
-
         // Reload data to get updated status
         await reloadDataAfterSave(String(pstWebSeqId));
       } else {
@@ -1584,8 +1633,6 @@ export function CreatePSTForm({
       const result = await pstService.createPSW(String(pstWebSeqId));
 
       if (result && !result.error) {
-
-
         // Use callback to navigate to create-psw page
         if (onNavigateToPSW) {
           onNavigateToPSW(result);
@@ -3414,7 +3461,7 @@ export function CreatePSTForm({
                 </div>
 
                 {/* Right Column - Sticky Expense Summary (20%) */}
-                 <div className="w-72">
+                <div className="w-72">
                   <div className="sticky top-4">
                     <Card>
                       <CardHeader className="pb-4">
@@ -3427,7 +3474,9 @@ export function CreatePSTForm({
                         {/* Cost Breakdown */}
                         <div className="space-y-3">
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Items ({expenseItems.length})</span>
+                            <span className="text-gray-600">
+                              Items ({expenseItems.length})
+                            </span>
                             {/* <span className="font-medium text-gray-900">
                               {expenseItems.length}
                             </span> */}
@@ -3435,7 +3484,8 @@ export function CreatePSTForm({
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Sub Total</span>
                             <span className="font-medium">
-                              ฿{totalSubTotal.toLocaleString("th-TH", {
+                              ฿
+                              {totalSubTotal.toLocaleString("th-TH", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                               })}
@@ -3444,7 +3494,8 @@ export function CreatePSTForm({
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">VAT Amount</span>
                             <span className="font-medium">
-                              ฿{totalVATAmount.toLocaleString("th-TH", {
+                              ฿
+                              {totalVATAmount.toLocaleString("th-TH", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                               })}
@@ -3462,7 +3513,8 @@ export function CreatePSTForm({
                             <div className="flex justify-between text-base font-semibold">
                               <span className="text-gray-900">Grand Total</span>
                               <span className="text-green-600">
-                                ฿{grandTotal.toLocaleString("th-TH", {
+                                ฿
+                                {grandTotal.toLocaleString("th-TH", {
                                   minimumFractionDigits: 1,
                                   maximumFractionDigits: 1,
                                 })}
@@ -3473,14 +3525,13 @@ export function CreatePSTForm({
 
                         {/* Action Button */}
                         <div className="pt-4">
-                          <button
-                            type="submit"
-                            form="pst-form"
-                            disabled={isLoading}
+                          <Button
+                            type="button"
                             className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                            onClick={handleSubmitBill}
                           >
-                            Submit PSW for Approval
-                          </button>
+                            Submit PST for Approval
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
