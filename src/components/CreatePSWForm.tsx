@@ -521,7 +521,7 @@ export function CreatePSWForm({
               // Convert API timestamp to proper Date object
               // API ส่งมาเป็น UTC time, ต้องแปลงเป็น Thailand timezone (+7)
               const apiTime = new Date(msg.createdOn);
-              
+
               // Check if the timestamp is valid
               if (isNaN(apiTime.getTime())) {
                 console.warn("⚠️ Invalid timestamp from API:", msg.createdOn);
@@ -530,15 +530,20 @@ export function CreatePSWForm({
                 // แปลง UTC เป็น Thailand time (+1 hour)
                 const thailandOffset = 60 * 60 * 1000; // 1 hour in milliseconds
                 timestamp = new Date(apiTime.getTime() + thailandOffset);
-                
+
                 // Log for debugging
                 console.log("📅 Message timestamp:", {
                   seqId: msg.seqId,
                   original: msg.createdOn,
                   utcTime: apiTime.toISOString(),
                   thailandTime: timestamp.toISOString(),
-                  local: timestamp.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
-                  diffFromNow: Math.floor((new Date().getTime() - timestamp.getTime()) / (1000 * 60)) + " minutes ago"
+                  local: timestamp.toLocaleString("th-TH", {
+                    timeZone: "Asia/Bangkok",
+                  }),
+                  diffFromNow:
+                    Math.floor(
+                      (new Date().getTime() - timestamp.getTime()) / (1000 * 60)
+                    ) + " minutes ago",
                 });
               }
             } else {
@@ -553,11 +558,13 @@ export function CreatePSWForm({
               createdBy: msg.createdBy,
               createdOn: msg.createdOn,
               readFlag: msg.readFlag as "Y" | "N",
-              
+
               // UI Properties (สำหรับแสดงผล)
               id: msg.seqId.toString(),
               content: msg.message,
-              sender: (msg.source === "WEB" ? "shipping" : "jagota") as "shipping" | "jagota",
+              sender: (msg.source === "WEB" ? "shipping" : "jagota") as
+                | "shipping"
+                | "jagota",
               senderName: msg.createdBy,
               timestamp: timestamp,
               read: msg.readFlag === "Y",
@@ -1075,7 +1082,11 @@ export function CreatePSWForm({
 
   const handleMarkMessageAsRead = (messageId: string) => {
     setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, read: true, readFlag: "Y" as const } : msg))
+      prev.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, read: true, readFlag: "Y" as const }
+          : msg
+      )
     );
   };
 
@@ -1966,21 +1977,6 @@ export function CreatePSWForm({
                         <Label className="text-xs font-medium text-gray-700">
                           Items ({expenseItems.length})
                         </Label>
-                        {/* <div className="max-h-24 overflow-y-auto space-y-1">
-                          {expenseItems.map((expense, index) => (
-                            <div
-                              key={expense.id}
-                              className="flex items-center justify-between text-xs p-1.5 bg-gray-50 rounded"
-                            >
-                              <span className="text-gray-600">
-                                {expense.expenseName || expense.expenseCode || `Item #${index + 1}`}
-                              </span>
-                              <span className="font-medium">
-                                ฿{expense.total.toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
-                        </div> */}
                       </div>
 
                       {/* <Separator /> */}
@@ -2025,47 +2021,35 @@ export function CreatePSWForm({
                           </span>
                         </div>
 
-                        <Separator />
-
-                        <div className="flex justify-between">
-                          <span className="font-semibold text-gray-900 text-sm">
-                            Grand Total
-                          </span>
-                          <span className="text-lg font-bold text-green-600">
-                            ฿{grandTotal.toLocaleString()}
-                          </span>
+                        <div className="border-t pt-3">
+                          <div className="flex justify-between text-base font-semibold">
+                            <span className="text-gray-900">Grand Total</span>
+                            <span className="text-green-600">
+                              ฿
+                              {grandTotal.toLocaleString("th-TH", {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1,
+                              })}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Quick Actions in Summary */}
-                      <div className="pt-3 border-t border-gray-200 space-y-2">
-                        <Button
-                          style={{
-                            backgroundColor: "oklch(.627 .194 149.214)",
-                            color: "white",
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
+                      {/* Action Button */}
+                      <div className="pt-4">
+                        <button
+                          type="submit"
+                          form="pst-form"
+                          className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                           onClick={() => handleAction("submit")}
-                          disabled={isSubmitting}
                         >
                           Submit PSW for Approval
-                        </Button>
-                        {/* <Button
-                          size="sm"
-                          className="w-full"
-                          onClick={() => handleAction("save")}
-                          disabled={isSubmitting}
-                        >
-                          save
-                        </Button> */}
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
-
             </div>
           </div>
         </div>

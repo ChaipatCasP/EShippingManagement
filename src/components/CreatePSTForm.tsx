@@ -3428,9 +3428,9 @@ export function CreatePSTForm({
                         <div className="space-y-3">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Items ({expenseItems.length})</span>
-                            <span className="font-medium text-gray-900">
+                            {/* <span className="font-medium text-gray-900">
                               {expenseItems.length}
-                            </span>
+                            </span> */}
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Sub Total</span>
