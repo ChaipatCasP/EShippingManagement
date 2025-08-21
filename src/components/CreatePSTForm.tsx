@@ -212,9 +212,7 @@ export function CreatePSTForm({
   dashboardHeaderData,
   onClose,
   onSubmit,
-  onNavigateToPSW,
   showPSTSubmissionPopup,
-  onConfirmSubmitBill,
 }: CreatePSTFormProps) {
   // No step management - single form only
   const [isSubmitting, setIsSubmitting] = useState(false);

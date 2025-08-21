@@ -157,7 +157,6 @@ export function CreatePSWForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmitConfirmDialog, setShowSubmitConfirmDialog] = useState(false);
 
-  const [uploadedFiles] = useState<File[]>([]);
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   // PST Details specific state
   const [expenseList, setExpenseList] = useState<ExpenseListItem[]>([]);
@@ -987,7 +986,6 @@ export function CreatePSWForm({
   };
 
   const executeAction = async (action: "save" | "submit") => {
-
     try {
       setIsSubmitting(true);
 
@@ -1002,55 +1000,13 @@ export function CreatePSWForm({
           throw new Error(result.message || "Failed to submit bill");
         }
 
-        // Show success message or redirect
+        // Show success message
         alert("บิลถูกส่งเรียบร้อยแล้ว");
 
-        // Call the original onSubmit to handle any additional logic (like closing the form)
-        // const pswData = {
-        //   action,
-        //   expenses: expenseItems,
-        //   files: uploadedFiles,
-        //   totalSummary: {
-        //     subTotal: totalSubTotal,
-        //     vatAmount: totalVATAmount,
-        //     exciseVatAmount: expenseItems.reduce(
-        //       (sum, item) => sum + (item.exciseVatAmount || 0),
-        //       0
-        //     ),
-        //     interiorVat: expenseItems.reduce(
-        //       (sum, item) => sum + (item.interiorVat || 0),
-        //       0
-        //     ),
-        //     total: grandTotal,
-        //   },
-        //   submittedAt: new Date().toISOString(),
-        //   submitBillResult: result,
-        // };
+        // Redirect to dashboard after successful submission
+        window.location.href = "/";
 
-        // await onSubmit(pswData);
-      } else {
-        // Handle save action
-        const pswData = {
-          action,
-          expenses: expenseItems, // Use expenseItems instead of expenses
-          files: uploadedFiles,
-          totalSummary: {
-            subTotal: totalSubTotal,
-            vatAmount: totalVATAmount,
-            exciseVatAmount: expenseItems.reduce(
-              (sum, item) => sum + (item.exciseVatAmount || 0),
-              0
-            ),
-            interiorVat: expenseItems.reduce(
-              (sum, item) => sum + (item.interiorVat || 0),
-              0
-            ),
-            total: grandTotal,
-          },
-          submittedAt: new Date().toISOString(),
-        };
-
-        await onSubmit(pswData);
+        return; // Exit early since we're redirecting
       }
     } catch (error) {
       console.error(`Error ${action}ing PSW:`, error);

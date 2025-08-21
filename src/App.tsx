@@ -129,18 +129,30 @@ export default function ShippingDashboard() {
 
   // Date filter state with chip-based approach
   const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>(() => {
+    // Try localStorage first, then URL parameters, then default
+    const savedModeLS = localStorage.getItem("dateFilterMode");
+    if (savedModeLS) return savedModeLS as DateFilterMode;
+    
     const savedMode = new URL(window.location.href).searchParams.get(
       "dateFilterMode"
     ) as DateFilterMode;
     return savedMode || "today";
   });
   const [customDateStart, setCustomDateStart] = useState<string>(() => {
+    // Try localStorage first, then URL parameters, then default
+    const savedStartLS = localStorage.getItem("customDateStart");
+    if (savedStartLS) return savedStartLS;
+    
     const savedStart = new URL(window.location.href).searchParams.get(
       "dateFrom"
     );
     return savedStart || new Date().toISOString().split("T")[0];
   });
   const [customDateEnd, setCustomDateEnd] = useState<string>(() => {
+    // Try localStorage first, then URL parameters, then default
+    const savedEndLS = localStorage.getItem("customDateEnd");
+    if (savedEndLS) return savedEndLS;
+    
     const savedEnd = new URL(window.location.href).searchParams.get("dateTo");
     return savedEnd || new Date().toISOString().split("T")[0];
   });
@@ -186,6 +198,19 @@ export default function ShippingDashboard() {
     handleMarkAllNotificationsAsRead,
     handleDeleteNotification,
   } = useNotifications();
+
+  // Save date filter settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("dateFilterMode", dateFilterMode);
+  }, [dateFilterMode]);
+
+  useEffect(() => {
+    localStorage.setItem("customDateStart", customDateStart);
+  }, [customDateStart]);
+
+  useEffect(() => {
+    localStorage.setItem("customDateEnd", customDateEnd);
+  }, [customDateEnd]);
 
   // ตรวจสอบสถานะการ login เมื่อ component โหลด
   useEffect(() => {
@@ -407,14 +432,6 @@ export default function ShippingDashboard() {
 
   // Calculate KPIs from current shipments data
   const kpis = useMemo(() => calculateKPIs(shipments), [shipments]);
-
-  // Generate PST number
-  const generatePSTNumber = () => {
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `PST-${new Date().getFullYear()}-${random}`;
-  };
 
   // Helper function to format date from ISO string to YYYY-MM-DD
   const formatDate = (dateString: string) => {
@@ -730,39 +747,13 @@ export default function ShippingDashboard() {
     return Promise.resolve();
   };
 
-  // Helper function to update URL with date parameters
-  const updateUrlWithDateParams = (
-    mode: DateFilterMode,
-    start?: string,
-    end?: string
-  ) => {
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("dateFilterMode", mode);
-
-    if (mode === "custom" && start && end) {
-      currentUrl.searchParams.set("dateFrom", start);
-      currentUrl.searchParams.set("dateTo", end);
-    } else if (mode !== "custom") {
-      currentUrl.searchParams.delete("dateFrom");
-      currentUrl.searchParams.delete("dateTo");
-    }
-
-    window.history.pushState({}, "", currentUrl.toString());
-  };
-
   // Helper function to handle custom date changes
   const handleCustomDateChange = (start: string | null, end: string | null) => {
     if (start !== null) {
       setCustomDateStart(start);
-      if (dateFilterMode === "custom") {
-        updateUrlWithDateParams("custom", start, customDateEnd);
-      }
     }
     if (end !== null) {
       setCustomDateEnd(end);
-      if (dateFilterMode === "custom") {
-        updateUrlWithDateParams("custom", customDateStart, end);
-      }
     }
   };
 
@@ -771,14 +762,10 @@ export default function ShippingDashboard() {
     setIsDataLoading(true);
     setDateFilterMode(mode);
 
-    // Update URL parameters
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("dateFilterMode", mode);
-
-    // When switching to custom mode, keep existing dates if they exist
+    // When switching to custom mode, keep existing dates if they exist in localStorage
     if (mode === "custom") {
-      const existingStart = currentUrl.searchParams.get("dateFrom");
-      const existingEnd = currentUrl.searchParams.get("dateTo");
+      const existingStart = localStorage.getItem("customDateStart");
+      const existingEnd = localStorage.getItem("customDateEnd");
 
       if (existingStart && existingEnd) {
         setCustomDateStart(existingStart);
@@ -787,14 +774,9 @@ export default function ShippingDashboard() {
         const currentDate = new Date().toISOString().split("T")[0];
         setCustomDateStart(currentDate);
         setCustomDateEnd(currentDate);
-        currentUrl.searchParams.set("dateFrom", currentDate);
-        currentUrl.searchParams.set("dateTo", currentDate);
       }
     }
     // Don't clear custom dates when switching modes, keep them for when we switch back to custom
-
-    // Update URL
-    window.history.pushState({}, "", currentUrl.toString());
 
     // Simulate data loading delay
     setTimeout(() => setIsDataLoading(false), 300);
