@@ -450,7 +450,8 @@ export default function ShippingDashboard() {
     };
 
     // Store in localStorage with type prefix
-    const storageKey = type === 'PST' ? 'pst_dashboard_header_data' : 'psw_dashboard_header_data';
+    // const storageKey = type === 'PST' ? 'pst_dashboard_header_data' : 'psw_dashboard_header_data';
+    const storageKey = type === 'PST' ? 'pst_dashboard_header_data' : 'pst_dashboard_header_data';
     localStorage.setItem(storageKey, JSON.stringify(dashboardHeaderData));
     
     console.log(`📁 Stored ${type} dashboard header data in localStorage:`, dashboardHeaderData);
@@ -1264,25 +1265,11 @@ export default function ShippingDashboard() {
   const handlePSTConfirmSubmit = async () => {
     // chaipat
     try {
-      // Generate PST number
-      const newPSTNumber = generatePSTNumber();
-      setCreatedPSTNumber(newPSTNumber);
-
-      // Here you would typically send the data to your API
-      console.log("Processing PST data:", pendingPSTData);
-
-      // Mark as completed
-      setPstCompleted(true);
-
-      // Close the confirmation dialog
-      setShowPSTConfirmDialog(false);
-      setPendingPSTData(null);
-
-      // Navigate to dashboard after a short delay to show success message
-      setTimeout(() => {
-        setCurrentView("dashboard");
-        setSelectedPOForPST(null);
-      }, 1500);
+      // Check if handleConfirmedSubmitBillFromPST function is available
+      if ((window as any).handleConfirmedSubmitBillFromPST) {
+        // Call the function from CreatePSTForm component
+        await (window as any).handleConfirmedSubmitBillFromPST();
+      } 
     } catch (error) {
       console.error("Error processing PST:", error);
       // Handle error appropriately
@@ -1388,6 +1375,13 @@ export default function ShippingDashboard() {
           onSubmit={handlePSTSubmit}
           onNavigateToPSW={handleNavigateToPSW}
           showPSTSubmissionPopup={showPSTSubmissionPopup}
+          onConfirmSubmitBill={() => {
+            // This callback will be called after successful submit
+            setShowPSTConfirmDialog(false);
+            setPendingPSTData(null);
+            setCurrentView("dashboard");
+            setSelectedPOForPST(null);
+          }}
         />
 
         {/* PST Confirmation Dialog */}
@@ -1487,7 +1481,9 @@ export default function ShippingDashboard() {
     let dashboardHeaderData = null;
     
     try {
-      const storedData = localStorage.getItem('psw_dashboard_header_data');
+      // const storedData = localStorage.getItem('psw_dashboard_header_data');
+      const storedData = localStorage.getItem('pst_dashboard_header_data');
+
       if (storedData) {
         dashboardHeaderData = JSON.parse(storedData);
         console.log("📁 Retrieved PSW dashboard header data from localStorage:", dashboardHeaderData);

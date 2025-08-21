@@ -164,6 +164,7 @@ interface CreatePSTFormProps {
   onSubmit: (data: any) => Promise<void>;
   onNavigateToPSW?: (data: any) => void; // Add PSW navigation callback
   showPSTSubmissionPopup: boolean;
+  onConfirmSubmitBill?: () => void; // Add callback for handleConfirmedSubmitBill
 }
 
 // Utility function to format date to DD-MMM-YYYY
@@ -213,6 +214,7 @@ export function CreatePSTForm({
   onSubmit,
   onNavigateToPSW,
   showPSTSubmissionPopup,
+  onConfirmSubmitBill,
 }: CreatePSTFormProps) {
   // No step management - single form only
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -350,7 +352,6 @@ export function CreatePSTForm({
 
   // Communication Messages State
   const [messages, setMessages] = useState<CommunicationMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Toggle collapse state for an expense item
   const toggleItemCollapse = (itemId: string) => {
@@ -620,6 +621,17 @@ export function CreatePSTForm({
   useEffect(() => {
     setIsSubmitting(showPSTSubmissionPopup);
   }, [showPSTSubmissionPopup]);
+
+  // Handle external confirm submit bill call
+  useEffect(() => {
+    // Expose handleConfirmedSubmitBill to parent component through global variable
+    (window as any).handleConfirmedSubmitBillFromPST = handleConfirmedSubmitBill;
+    
+    return () => {
+      // Cleanup when component unmounts
+      delete (window as any).handleConfirmedSubmitBillFromPST;
+    };
+  }, []);
 
   const loadPSTDetails = async (webSeqId?: number) => {
     const idToUse = webSeqId || pstWebSeqId;
@@ -1519,7 +1531,6 @@ export function CreatePSTForm({
       return;
     }
 
-    setIsLoading(true);
     setIsSubmitting(true);
     setSubmitProgress(0);
 
@@ -1559,22 +1570,14 @@ export function CreatePSTForm({
 
       await onSubmit(submissionData);
       setShowSuccess(true);
-
-      // setTimeout(() => {
-      //   setIsLoading(false);
-      //   setIsSubmitting(false);
-      //   setSubmitProgress(0);
-      //   onClose();
-      // }, 2000);
+      
+      // Show confirmation dialog
+      // setShowSubmitBillConfirmation(true);
     } catch (error) {
       console.error("Error submitting PST:", error);
-      setIsLoading(false);
       setIsSubmitting(false);
       setSubmitProgress(0);
     }
-
-    // Show confirmation dialog
-    // setShowSubmitBillConfirmation(true);
   };
 
   // Communication Panel handlers
@@ -1610,7 +1613,12 @@ export function CreatePSTForm({
         setShowSubmitBillSuccess(true);
 
         // Reload data to get updated status
-        await reloadDataAfterSave(String(pstWebSeqId));
+        // await reloadDataAfterSave(String(pstWebSeqId));
+
+        // Call the callback if provided
+        // if (onConfirmSubmitBill) {
+        //   onConfirmSubmitBill();
+        // }
       } else {
         alert("ไม่สามารถส่งบิลได้ กรุณาลองใหม่อีกครั้ง");
       }
@@ -1632,14 +1640,20 @@ export function CreatePSTForm({
       // Call create PSW API
       const result = await pstService.createPSW(String(pstWebSeqId));
 
-      if (result && !result.error) {
-        // Use callback to navigate to create-psw page
-        if (onNavigateToPSW) {
-          onNavigateToPSW(result);
-        } else {
-          // Fallback to window.location
-          window.location.href = "/create-psw";
-        }
+      if (result && !result.error && result.data && result.data.length > 0) {
+        // Get webSeqID from API response to use as pswWebSeqId
+        const pswWebSeqId = result.data[0].webSeqID;
+        
+        // Generate PSW number from billEntryData (poBook + poNo)
+        const pswNumber = `${billEntryData.poBook}-${billEntryData.poNo}`;
+        
+        // Create URL in the required format: /create-psw/{pswNumber}?pswWebSeqId={webSeqID}&mode=update
+        const pswUrl = `/create-psw/${pswNumber}?pswWebSeqId=${pswWebSeqId}&mode=update`;
+
+        console.log("🔗 Navigating to PSW URL:", pswUrl);
+        
+        // Navigate to create-psw page with constructed URL
+        window.location.href = pswUrl;
       } else {
         alert("ไม่สามารถสร้าง PSW ได้ กรุณาลองใหม่อีกครั้ง");
       }
@@ -1656,7 +1670,6 @@ export function CreatePSTForm({
   // Handle final submission
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setIsSubmitting(true);
     setSubmitProgress(0);
 
@@ -1697,14 +1710,12 @@ export function CreatePSTForm({
       await onSubmit(submissionData);
       setShowSuccess(true);
       setTimeout(() => {
-        setIsLoading(false);
         setIsSubmitting(false);
         setSubmitProgress(0);
         onClose();
       }, 2000);
     } catch (error) {
       console.error("Error submitting PST:", error);
-      setIsLoading(false);
       setIsSubmitting(false);
       setSubmitProgress(0);
     }
