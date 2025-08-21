@@ -18,6 +18,7 @@ interface MainContentProps {
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
   onUpdatePSW?: (pswWebSeqId: number, shipment: Shipment) => void;
+  onViewCompleted?: (shipment: Shipment) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
 }
@@ -34,6 +35,7 @@ export function MainContent({
   onCreatePSTWithConfirmation,
   onUpdatePST,
   onUpdatePSW,
+  onViewCompleted,
   onSortOptionChange,
   isLoading = false,
 }: MainContentProps) {
@@ -142,6 +144,7 @@ export function MainContent({
               onCreatePSW={onCreatePSW}
               onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}
               onUpdatePST={onUpdatePST}
+              onViewCompleted={onViewCompleted}
               onSortOptionChange={onSortOptionChange}
               isLoading={isLoading}
             />

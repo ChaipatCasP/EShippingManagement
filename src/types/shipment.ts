@@ -108,7 +108,7 @@ export interface Notification {
 }
 
 export type SortOption = 'none' | 'clearDate-asc' | 'clearDate-desc' | 'status-asc' | 'status-desc';
-export type CurrentView = 'dashboard' | 'create-pst' | 'create-psw' | 'inbox' | 'history';
+export type CurrentView = 'dashboard' | 'create-pst' | 'create-psw' | 'inbox' | 'history' | 'completed-view';
 export type DateFilterMode = 'today' | 'last7days' | 'custom';
 
 // PSW API Response interface

@@ -3,6 +3,7 @@ import { LoginScreen } from "./components/LoginScreen";
 import { OTPVerification } from "./components/OTPVerification";
 import { CreatePSTForm } from "./components/CreatePSTForm";
 import { CreatePSWForm } from "./components/CreatePSWForm";
+import { CompletedView } from "./components/CompletedView";
 import { NotificationCenter } from "./components/NotificationCenter";
 import { SidePanel } from "./components/SidePanel";
 import { MainContent } from "./components/MainContent";
@@ -390,6 +391,37 @@ export default function ShippingDashboard() {
         if (modeParam) {
           console.log("App.tsx - Read mode from URL:", modeParam);
         }
+      } else if (path.startsWith("/completed-view") && isAuthenticated) {
+        const pstNumber = path.split("/")[2];
+        setSelectedPOForPST(pstNumber || null);
+        setCurrentView("completed-view");
+        
+        // Handle completed-view specific parameters
+        const url = new URL(window.location.href);
+        const pstWebSeqIdParam = url.searchParams.get("pstWebSeqId");
+        const pswWebSeqIdParam = url.searchParams.get("pswWebSeqId");
+        const modeParam = url.searchParams.get("mode");
+        
+        if (pstWebSeqIdParam) {
+          const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
+          if (!isNaN(pstWebSeqIdValue)) {
+            setPstWebSeqId(pstWebSeqIdValue);
+          }
+        }
+        
+        if (pswWebSeqIdParam) {
+          const pswWebSeqIdValue = parseInt(pswWebSeqIdParam);
+          if (!isNaN(pswWebSeqIdValue)) {
+            setPswWebSeqId(pswWebSeqIdValue);
+          }
+        }
+        
+        console.log("App.tsx - Completed view parameters:", {
+          pstNumber,
+          pstWebSeqIdParam,
+          pswWebSeqIdParam,
+          modeParam
+        });
       }
     };
 
@@ -730,6 +762,18 @@ export default function ShippingDashboard() {
   const handleCloseHistory = () => {
     setIsTransitioning(true);
     setCurrentView("dashboard");
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleCloseCompletedView = () => {
+    setIsTransitioning(true);
+    setCurrentView("dashboard");
+    // Clear selected PO and webSeqIds when closing completed view
+    setSelectedPOForPST(null);
+    setPstWebSeqId(null);
+    setPswWebSeqId(null);
+    // Update URL to dashboard
+    window.history.pushState({}, "", "/");
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
@@ -1138,6 +1182,37 @@ export default function ShippingDashboard() {
 
     setCurrentView("create-psw");
     // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleViewCompleted = (shipment: Shipment) => {
+    setIsTransitioning(true);
+    setSelectedPOForPST(shipment.poNumber);
+    setSelectedShipment(shipment);
+
+    // Update URL with completed-view parameters
+    const newUrl = new URL(window.location.origin + "/completed-view");
+    newUrl.pathname = `/completed-view/${shipment.poNumber}`;
+    
+    // Add parameters for PST and PSW web sequence IDs
+    if (shipment.pstWebSeqId) {
+      newUrl.searchParams.set("pstWebSeqId", shipment.pstWebSeqId.toString());
+    }
+    if (shipment.pswWebSeqId) {
+      newUrl.searchParams.set("pswWebSeqId", shipment.pswWebSeqId.toString());
+    }
+    newUrl.searchParams.set("mode", "view");
+    
+    window.history.pushState({}, "", newUrl.toString());
+    setCurrentView("completed-view");
+    
+    console.log("Navigating to completed view:", {
+      poNumber: shipment.poNumber,
+      pstWebSeqId: shipment.pstWebSeqId,
+      pswWebSeqId: shipment.pswWebSeqId,
+      url: newUrl.toString()
+    });
+    
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
@@ -1655,6 +1730,11 @@ export default function ShippingDashboard() {
     );
   }
 
+  // Render CompletedView if currentView is 'completed-view'
+  if (currentView === "completed-view") {
+    return <CompletedView onClose={handleCloseCompletedView} />;
+  }
+
   // Render HistoryView if currentView is 'history'
   if (currentView === "history") {
     return <HistoryView onBack={handleCloseHistory} />;
@@ -1760,6 +1840,7 @@ export default function ShippingDashboard() {
               onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
               onUpdatePST={handleUpdatePST}
               onUpdatePSW={handleUpdatePSW}
+              onViewCompleted={handleViewCompleted}
               onSortOptionChange={setSortOption}
               isLoading={isDataLoading || isAPILoading}
             />

@@ -349,6 +349,8 @@ export const mockShipments: Shipment[] = [
     permitStatus: true,
     blAwbNumber: 'TR-123456789',
     qualityContainer: 'QC-T003',
+    pstWebSeqId: 152056112, // Mock PST Web Sequence ID for completed view
+    pswWebSeqId: 152123112, // Mock PSW Web Sequence ID for completed view
     taxStatus: true,
     etd: '2025-07-20',
     eta: '2025-07-21',

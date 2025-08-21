@@ -25,6 +25,7 @@ interface ShipmentTableProps {
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
   onCreatePSW: (poNumber: string, shipment?: Shipment) => void;
+  onViewCompleted?: (shipment: Shipment) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
 }
@@ -39,6 +40,7 @@ export function ShipmentTable({
   onCreatePSTWithConfirmation,
   onUpdatePST,
   onCreatePSW, 
+  onViewCompleted,
   onSortOptionChange,
   isLoading = false
 }: ShipmentTableProps) {
@@ -119,6 +121,11 @@ export function ShipmentTable({
       case 'update_pst':
         if (onUpdatePST && shipment.pstWebSeqId) {
           onUpdatePST(shipment.pstWebSeqId, shipment);
+        }
+        break;
+      case 'completed':
+        if (onViewCompleted) {
+          onViewCompleted(shipment);
         }
         break;
       default:

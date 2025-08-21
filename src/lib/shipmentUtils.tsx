@@ -234,13 +234,13 @@ export const getActionButtonConfig = (shipment: Shipment): ActionButtonConfig =>
       
     case 'completed':
       return {
-        text: 'Completed',
-        icon: <CheckCircle className="w-4 h-4" />,
+        text: 'View',
+        icon: <Eye className="w-4 h-4" />,
         action: 'completed',
-        enabled: false,
+        enabled: true,
         variant: 'outline',
-        color: 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed',
-        tooltip: 'Process completed - Both PST and PSW approved'
+        color: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+        tooltip: 'View completed PST/PSW documents'
       };
       
     default:
