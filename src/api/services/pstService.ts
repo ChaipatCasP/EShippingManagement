@@ -74,6 +74,7 @@ export interface PSTDetailResponse {
     jagotaStatus: string;
     masterSequenceId: number | null;
     childSequenceId: number;
+    dueDate: string | null;
     expenseList: Array<{
       rowId: string;
       seq: number;
