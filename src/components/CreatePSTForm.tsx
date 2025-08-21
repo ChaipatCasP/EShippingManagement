@@ -165,6 +165,33 @@ interface CreatePSTFormProps {
   onNavigateToPSW?: (data: any) => void; // Add PSW navigation callback
 }
 
+// Utility function to format date to DD-MMM-YYYY
+const formatDateToDDMMYYYY = (dateString: string): string => {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return "";
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    const formatted = `${day}-${month}-${year}`;
+    console.log(`Date formatting: ${dateString} => ${formatted}`);
+    
+    return formatted;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return "";
+  }
+};
+
 export function CreatePSTForm({
   createdPSTNumber,
   pstWebSeqId,
@@ -1200,7 +1227,7 @@ export function CreatePSTForm({
         interiorVatAmount: item.interiorVat || 0,
         total: item.total,
         documentNo: item.documentNo || "",
-        documentDate: item.documentDate ? item.documentDate.split("T")[0] : "",
+        documentDate: formatDateToDDMMYYYY(item.documentDate),
         remarks: item.remarks || "",
       };
 
@@ -1267,6 +1294,7 @@ export function CreatePSTForm({
       "vesselName",
       "paymentTerm",
       "countryOfOrigin",
+      "dueDate",
       "requestPaymentDateTime",
       "remarks",
     ];
@@ -1855,8 +1883,8 @@ export function CreatePSTForm({
 
               {/* Main Content - 2 Column Layout */}
               <div className="flex gap-6">
-                {/* Left Column - Main Content */}
-                <div className="flex-1 space-y-8">
+                {/* Left Column - Main Content (80%) */}
+                <div className="flex-1 space-y-4">
                   {/* Bill Entry Section */}
                   <Collapsible
                     open={!billEntryCollapsed}
@@ -3384,78 +3412,81 @@ export function CreatePSTForm({
                     user={{ email: "test@example.com", name: "Test User" }}
                   />
                 </div>
+
+                {/* Right Column - Sticky Expense Summary (20%) */}
+                 <div className="w-72">
+                  <div className="sticky top-4">
+                    <Card>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <DollarSign className="w-5 h-5 text-gray-500" />
+                          Expense Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Cost Breakdown */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Items ({expenseItems.length})</span>
+                            <span className="font-medium text-gray-900">
+                              {expenseItems.length}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Sub Total</span>
+                            <span className="font-medium">
+                              ฿{totalSubTotal.toLocaleString("th-TH", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">VAT Amount</span>
+                            <span className="font-medium">
+                              ฿{totalVATAmount.toLocaleString("th-TH", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Excise VAT</span>
+                            <span className="font-medium">฿0</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Interior VAT</span>
+                            <span className="font-medium">฿0</span>
+                          </div>
+                          <div className="border-t pt-3">
+                            <div className="flex justify-between text-base font-semibold">
+                              <span className="text-gray-900">Grand Total</span>
+                              <span className="text-green-600">
+                                ฿{grandTotal.toLocaleString("th-TH", {
+                                  minimumFractionDigits: 1,
+                                  maximumFractionDigits: 1,
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Button */}
+                        <div className="pt-4">
+                          <button
+                            type="submit"
+                            form="pst-form"
+                            disabled={isLoading}
+                            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                          >
+                            Submit PSW for Approval
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Right Column - Sticky Expense Summary */}
-          <div className="w-72">
-            <div className="sticky top-4">
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <DollarSign className="w-5 h-5 text-gray-500" />
-                    Expense Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Cost Breakdown */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">
-                        ฿
-                        {totalSubTotal.toLocaleString("th-TH", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">VAT (7%)</span>
-                      <span className="font-medium">
-                        ฿
-                        {totalVATAmount.toLocaleString("th-TH", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between text-base font-semibold">
-                        <span className="text-gray-900">Total</span>
-                        <span className="text-gray-900">
-                          ฿
-                          {grandTotal.toLocaleString("th-TH", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      form="pst-form"
-                      disabled={isLoading}
-                      className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                    >
-                      {isLoading ? "Submitting..." : "Submit PST for Approval"}
-                    </button>
-                  </div>
-
-                  {/* Additional Info */}
-                  <div className="pt-4 border-t">
-                    <p className="text-xs text-gray-500">
-                      By submitting, you confirm that all information is
-                      accurate and complete.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

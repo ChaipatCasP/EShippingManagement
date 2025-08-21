@@ -1983,7 +1983,7 @@ export function CreatePSWForm({
                         </div> */}
                       </div>
 
-                      <Separator />
+                      {/* <Separator /> */}
 
                       {/* Summary Totals */}
                       <div className="space-y-2">
@@ -2065,6 +2065,7 @@ export function CreatePSWForm({
                   </Card>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
