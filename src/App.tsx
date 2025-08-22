@@ -496,6 +496,8 @@ export default function ShippingDashboard() {
       status: shipment.poType,
       pstBook: shipment.pstBook || "",
       pstNo: shipment.pstNo?.toString() || "",
+      pswBook: shipment.pswBook || "",
+      pswNo: shipment.pswNo?.toString() || "",
       vesselName: "", // Will be filled from API data if available
       referenceCode: shipment.referenceKey || "",
     };
@@ -1466,6 +1468,8 @@ export default function ShippingDashboard() {
         status: selectedShipment.poType,
         pstBook: selectedShipment.pstBook || "",
         pstNo: selectedShipment.pstNo?.toString() || "",
+        pswBook: selectedShipment.pswBook || "",
+        pswNo: selectedShipment.pswNo?.toString() || "",
         vesselName: "",
       };
     }
@@ -1632,6 +1636,8 @@ export default function ShippingDashboard() {
         status: selectedShipment.poType,
         pstBook: selectedShipment.pstBook || "",
         pstNo: selectedShipment.pstNo?.toString() || "",
+        pswBook: selectedShipment.pswBook || "",
+        pswNo: selectedShipment.pswNo?.toString() || "",
         vesselName: "",
       };
     }

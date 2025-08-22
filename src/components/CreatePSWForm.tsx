@@ -112,6 +112,8 @@ interface HeaderData {
   status: string;
   pstBook: string;
   pstNo: string;
+  pswBook: string;
+  pswNo: string;
   vesselName?: string;
   referenceCode?: string;
   taxIdNo?: string;
@@ -188,6 +190,8 @@ export function CreatePSWForm({
     status: (dashboardHeaderData?.status || "") as "Single" | "Multiple" | "",
     pstBook: dashboardHeaderData?.pstBook || "",
     pstNo: dashboardHeaderData?.pstNo || "",
+    pswBook: dashboardHeaderData?.pswBook || "",
+    pswNo: dashboardHeaderData?.pswNo || "",
     vesselName: dashboardHeaderData?.vesselName || "",
     referenceCode: dashboardHeaderData?.referenceCode || "",
     taxIdNo: "",
@@ -286,6 +290,8 @@ export function CreatePSWForm({
           status: "",
           pstBook: "",
           pstNo: "",
+          pswBook: "",
+          pswNo: "",
           vesselName: "",
           referenceCode: "",
           taxIdNo: "",
@@ -320,6 +326,8 @@ export function CreatePSWForm({
           | "",
         pstBook: dashboardHeaderData.pstBook || prev.pstBook,
         pstNo: dashboardHeaderData.pstNo || prev.pstNo,
+        pswBook: dashboardHeaderData.pswBook || prev.pswBook,
+        pswNo: dashboardHeaderData.pswNo || prev.pswNo,
         vesselName: dashboardHeaderData.vesselName || prev.vesselName,
         referenceCode: dashboardHeaderData.referenceCode || prev.referenceCode,
       }));
@@ -370,6 +378,13 @@ export function CreatePSWForm({
           pstBook: dashboardHeaderData?.pstBook || data.poBook || "",
           pstNo:
             dashboardHeaderData?.pstNo ||
+            (data.poNo !== undefined && data.poNo !== null
+              ? String(data.poNo)
+              : "") ||
+            "",
+          pswBook: dashboardHeaderData?.pswBook || data.poBook || "",
+          pswNo:
+            dashboardHeaderData?.pswNo ||
             (data.poNo !== undefined && data.poNo !== null
               ? String(data.poNo)
               : "") ||
@@ -658,7 +673,9 @@ export function CreatePSWForm({
         interiorVatAmount: item.interiorVat || 0,
         total: item.total,
         documentNo: item.documentNo || "",
-        documentDate: item.documentDate ? formatDateForAPI(item.documentDate) : "",
+        documentDate: item.documentDate
+          ? formatDateForAPI(item.documentDate)
+          : "",
         remarks: item.remarks || "",
       };
 
@@ -1129,6 +1146,21 @@ export function CreatePSWForm({
                                   <span className="text-gray-600">PST:</span>
                                   <span className="font-medium text-gray-800">
                                     {headerData.pstBook}-{headerData.pstNo}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {headerData.awbNo && (
+                            <div className="flex items-center gap-6 text-sm">
+                              {/* PST Information */}
+                              {(headerData.pstBook || headerData.pstNo) && (
+                                <div className="flex items-center gap-1">
+                                  <FileDigit className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-600">PSW:</span>
+                                  <span className="font-medium text-gray-800">
+                                    {headerData.pswBook}-{headerData.pswNo}
                                   </span>
                                 </div>
                               )}
