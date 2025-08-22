@@ -274,6 +274,9 @@ export function CreatePSTForm({
     dueDate: "",
   });
 
+  // Debug: Watch billEntryData.dueDate changes
+  console.log("🔍 Current billEntryData.dueDate:", billEntryData.dueDate);
+
   // Header data from API for display - initialize with dashboard data if provided
   const [headerData, setHeaderData] = useState({
     supplierName: dashboardHeaderData?.supplierName || "",
@@ -702,6 +705,10 @@ export function CreatePSTForm({
 
         // Update bill entry data with API response
 
+        console.log("🔍 API Response data:", data);
+        console.log("🔍 Raw dueDate from API:", data.dueDate);
+        console.log("🔍 Formatted dueDate:", data.dueDate ? data.dueDate.split("T")[0] : "");
+
         const transformedData: BillEntryData = {
           webSeqID:
             data.webSeqID !== undefined && data.webSeqID !== null
@@ -773,6 +780,7 @@ export function CreatePSTForm({
         };
 
         setBillEntryData(transformedData);
+        console.log("🔍 Set billEntryData.dueDate to:", transformedData.dueDate);
 
         // Set original data for comparison
         setOriginalBillEntryData(transformedData);
@@ -1335,6 +1343,9 @@ export function CreatePSTForm({
       if (data && !data.error) {
         // Update billEntryData with fresh data from API
         const freshData = data.data;
+        console.log("🔍 Fresh API data:", freshData);
+        console.log("🔍 Fresh dueDate from API:", freshData.dueDate);
+        
         const formatDateStr = (dateStr: string | null) => {
           if (!dateStr) return "";
           try {
@@ -1378,8 +1389,11 @@ export function CreatePSTForm({
           childSequenceId: freshData.childSequenceId
             ? String(freshData.childSequenceId)
             : "",
-          dueDate: "",
+          dueDate: formatDateStr(freshData.dueDate),
         };
+
+        console.log("🔍 Formatted dueDate:", formatDateStr(freshData.dueDate));
+        console.log("🔍 Final transformedData.dueDate:", formatDateStr(freshData.dueDate));
 
         setBillEntryData(transformedData);
         setOriginalBillEntryData(transformedData);
@@ -2437,12 +2451,13 @@ export function CreatePSTForm({
                               <Input
                                 type="date"
                                 value={billEntryData.dueDate || ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  console.log("🔍 Due Date changed:", e.target.value);
                                   setBillEntryData({
                                     ...billEntryData,
                                     dueDate: e.target.value,
                                   })
-                                }
+                                }}
                               />
                             </div>
                             <div className="space-y-2">

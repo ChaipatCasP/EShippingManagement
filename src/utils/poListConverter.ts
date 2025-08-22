@@ -33,6 +33,15 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       return null;
     }
 
+    // Debug: ตรวจสอบ pstWebSeqId จาก API
+    console.log('🔍 API Item:', {
+      supCode: item.supCode,
+      poNo: item.poNo,
+      pstWebSeqId: item.pstWebSeqId,
+      pstStatus: item.pstStatus,
+      pstNo: item.pstNo
+    });
+
     // กำหนด PO Type ตาม coLoadPOCount
     const poType = (item.coLoadPOCount || 0) > 0 ? 'Co-load' : 'Single';
 

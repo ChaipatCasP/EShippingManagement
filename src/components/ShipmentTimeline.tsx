@@ -43,9 +43,11 @@ interface ShipmentTimelineProps {
   selectedShipment: Shipment | null;
   onShipmentClick: (shipment: Shipment) => void;
   onCreatePST: (poNumber: string) => void;
-  onUpdatePST: (pstWebSeqId: number) => void;
+  onUpdatePST: (pstWebSeqId: number, mode?: string) => void;
+  onViewPST: (pstWebSeqId: number, mode?: string) => void;
   onCreatePSW: (poNumber: string, shipment?: Shipment) => void;
-  onUpdatePSW?: (pswWebSeqId: number) => void;
+  onUpdatePSW?: (pswWebSeqId: number, mode?: string) => void;
+  onViewPSW?: (pswWebSeqId: number, mode?: string) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
   isLoading?: boolean;
 }
@@ -56,8 +58,10 @@ export function ShipmentTimeline({
   onShipmentClick,
   onCreatePST,
   onUpdatePST,
+  onViewPST,
   onCreatePSW,
   onUpdatePSW,
+  onViewPSW,
   onCreatePSTWithConfirmation,
 }: ShipmentTimelineProps) {
   // console.log('ShipmentTimeline component rendered with', shipments.length, 'shipments');
@@ -169,15 +173,13 @@ export function ShipmentTimeline({
         handleCreatePSWWithConfirmation(shipment);
         break;
       case "update-psw":
-        // if (shipment.pswWebSeqId && onUpdatePSW) {
-        //   onUpdatePSW(shipment.pswWebSeqId);
-        // } else {
-        //   console.error("No pswWebSeqId found for shipment or onUpdatePSW not provided:", shipment);
-        // }
         if (shipment.pswWebSeqId && onUpdatePSW) {
           onUpdatePSW(shipment.pswWebSeqId);
         } else {
-          console.error("No pswWebSeqId found for shipment or onUpdatePSW not provided:", shipment);
+          console.error(
+            "No pswWebSeqId found for shipment or onUpdatePSW not provided:",
+            shipment
+          );
         }
         break;
       case "view-psw":
@@ -185,18 +187,42 @@ export function ShipmentTimeline({
           `View PSW ${shipment.pswNumber} - This feature will be implemented`
         );
         break;
+      // case "view-pst":
+      //   if (shipment.pstWebSeqId) {
+      //     onUpdatePST(shipment.pstWebSeqId, "view");
+      //   } else {
+      //     alert("PST information not available");
+      //   }
+      //   break;
+
       case "view-pst":
-        if (shipment.pstWebSeqId) {
-          onUpdatePST(shipment.pstWebSeqId);
+        console.log('🔍 View PST - shipment data:', {
+          id: shipment.id,
+          pstWebSeqId: shipment.pstWebSeqId,
+          pstNo: shipment.pstNo,
+          pstStatus: shipment.pstStatus
+        });
+        
+        if (shipment.pstWebSeqId && onViewPST) {
+          onViewPST(shipment.pstWebSeqId, "view");
+        } else if (shipment.pstNo && onViewPST) {
+          // ใช้ pstNo เป็นสำรองถ้าไม่มี pstWebSeqId
+          console.warn('Using pstNo as fallback for pstWebSeqId:', shipment.pstNo);
+          onViewPST(shipment.pstNo, "view");
         } else {
-          alert("PST information not available");
+          alert("PST information not available - no pstWebSeqId or pstNo found");
         }
         break;
+
       case "view-psw-action":
-        if (shipment.pswWebSeqId && onUpdatePSW) {
-          onUpdatePSW(shipment.pswWebSeqId);
+        if (shipment.pswWebSeqId && onViewPSW) {
+          onViewPSW(shipment.pswWebSeqId, "view");
+        } else if (shipment.pswNo && onViewPSW) {
+          // ใช้ pswNo เป็นสำรองถ้าไม่มี pswWebSeqId
+          console.warn('Using pswNo as fallback for pswWebSeqId:', shipment.pswNo);
+          onViewPSW(shipment.pswNo, "view");
         } else {
-          alert("PSW information not available");
+          alert("PSW information not available - no pswWebSeqId or pswNo found");
         }
         break;
       case "completed":
@@ -709,7 +735,9 @@ export function ShipmentTimeline({
                     {customActionConfig.action === "completed" ? (
                       <>
                         {/* Completed Badge */}
-                        <div className={`${customActionConfig.color} px-3 py-1 rounded text-sm transition-colors duration-200 mb-2`}>
+                        <div
+                          className={`${customActionConfig.color} px-3 py-1 rounded text-sm transition-colors duration-200 mb-2`}
+                        >
                           <div className="flex items-center gap-2">
                             {customActionConfig.icon}
                             <span className="text-sm font-medium">
@@ -717,9 +745,9 @@ export function ShipmentTimeline({
                             </span>
                           </div>
                         </div>
-                        
+
                         {/* View PST Button */}
-                        {shipment.pstWebSeqId && (
+                        {(shipment.pstWebSeqId || shipment.pstNo) && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -731,13 +759,15 @@ export function ShipmentTimeline({
                           >
                             <div className="flex items-center gap-2">
                               <FileText className="w-3 h-3" />
-                              <span className="text-sm font-medium">View PST</span>
+                              <span className="text-sm font-medium">
+                                View PST
+                              </span>
                             </div>
                           </Button>
                         )}
-                        
+
                         {/* View PSW Button */}
-                        {shipment.pswWebSeqId && (
+                        {(shipment.pswWebSeqId || shipment.pswNo) && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -749,7 +779,9 @@ export function ShipmentTimeline({
                           >
                             <div className="flex items-center gap-2">
                               <Calendar className="w-3 h-3" />
-                              <span className="text-sm font-medium">View PSW</span>
+                              <span className="text-sm font-medium">
+                                View PSW
+                              </span>
                             </div>
                           </Button>
                         )}
@@ -762,7 +794,10 @@ export function ShipmentTimeline({
                         disabled={!customActionConfig.enabled}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleActionClick(shipment, customActionConfig.action);
+                          handleActionClick(
+                            shipment,
+                            customActionConfig.action
+                          );
                         }}
                       >
                         <div className="flex items-center gap-2">

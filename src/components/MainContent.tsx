@@ -16,8 +16,18 @@ interface MainContentProps {
   onCreatePST: (poNumber: string) => void;
   onCreatePSW: (poNumber: string, shipment?: Shipment) => void;
   onCreatePSTWithConfirmation?: (poNumber: string, shipment: Shipment) => void;
-  onUpdatePST?: (pstWebSeqId: number, shipment: Shipment) => void;
-  onUpdatePSW?: (pswWebSeqId: number, shipment: Shipment) => void;
+  onUpdatePST?: (
+    pstWebSeqId: number,
+    shipment: Shipment,
+    mode?: string
+  ) => void;
+  onViewPST?: (pstWebSeqId: number, shipment: Shipment, mode?: string) => void;
+  onUpdatePSW?: (
+    pswWebSeqId: number,
+    shipment: Shipment,
+    mode?: string
+  ) => void;
+  onViewPSW?: (pswWebSeqId: number, shipment: Shipment, mode?: string) => void;
   onViewCompleted?: (shipment: Shipment) => void;
   onSortOptionChange: (option: SortOption) => void;
   isLoading?: boolean;
@@ -34,7 +44,9 @@ export function MainContent({
   onCreatePSW,
   onCreatePSTWithConfirmation,
   onUpdatePST,
+  onViewPST,
   onUpdatePSW,
+  onViewPSW,
   onViewCompleted,
   onSortOptionChange,
   isLoading = false,
@@ -61,21 +73,37 @@ export function MainContent({
             selectedShipment={selectedShipment}
             onShipmentClick={onShipmentClick}
             onCreatePST={onCreatePST}
-            onUpdatePST={(pstWebSeqId) => {
+            onUpdatePST={(pstWebSeqId, mode) => {
               const shipment = filteredShipments.find(
                 (s) => s.pstWebSeqId === Number(pstWebSeqId)
               );
               if (shipment && onUpdatePST) {
-                onUpdatePST(Number(pstWebSeqId), shipment);
+                onUpdatePST(Number(pstWebSeqId), shipment, mode);
+              }
+            }}
+            onViewPST={(pstWebSeqId, mode) => {
+              const shipment = filteredShipments.find(
+                (s) => s.pstWebSeqId === Number(pstWebSeqId)
+              );
+              if (shipment && onViewPST) {
+                onViewPST(Number(pstWebSeqId), shipment, mode);
               }
             }}
             onCreatePSW={onCreatePSW}
-            onUpdatePSW={(pswWebSeqId) => {
+            onUpdatePSW={(pswWebSeqId, mode) => {
               const shipment = filteredShipments.find(
                 (s) => s.pswWebSeqId === Number(pswWebSeqId)
               );
               if (shipment && onUpdatePSW) {
-                onUpdatePSW(Number(pswWebSeqId), shipment);
+                onUpdatePSW(Number(pswWebSeqId), shipment, mode);
+              }
+            }}
+            onViewPSW={(pswWebSeqId, mode) => {
+              const shipment = filteredShipments.find(
+                (s) => s.pswWebSeqId === Number(pswWebSeqId)
+              );
+              if (shipment && onViewPSW) {
+                onViewPSW(Number(pswWebSeqId), shipment, mode);
               }
             }}
             onCreatePSTWithConfirmation={onCreatePSTWithConfirmation}

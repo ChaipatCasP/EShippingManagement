@@ -1002,7 +1002,7 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleUpdatePST = (pstWebSeqId: number, shipment: Shipment) => {
+  const handleUpdatePST = (pstWebSeqId: number, shipment: Shipment, mode: string = "update") => {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPST(shipment.poNumber);
@@ -1017,7 +1017,7 @@ export default function ShippingDashboard() {
     // Navigate to create-pst with pstWebSeqId parameter
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set("pstWebSeqId", pstWebSeqId.toString());
-    newUrl.searchParams.set("mode", "update");
+    newUrl.searchParams.set("mode", mode);
     window.history.pushState({}, "", newUrl.toString());
 
     setCurrentView("create-pst");
@@ -1025,7 +1025,7 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleUpdatePSW = (pswWebSeqId: number, shipment: Shipment) => {
+  const handleUpdatePSW = (pswWebSeqId: number, shipment: Shipment, mode: string = "update") => {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPSW(shipment.poNumber);
@@ -1040,7 +1040,53 @@ export default function ShippingDashboard() {
     // Navigate to create-psw with pswWebSeqId parameter
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set("pswWebSeqId", pswWebSeqId.toString());
-    newUrl.searchParams.set("mode", "update");
+    newUrl.searchParams.set("mode", mode);
+    window.history.pushState({}, "", newUrl.toString());
+
+    setCurrentView("create-psw");
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleViewPST = (pstWebSeqId: number, shipment: Shipment, mode: string = "view") => {
+    setIsTransitioning(true);
+    setSelectedShipment(shipment);
+    setSelectedPOForPST(shipment.poNumber);
+
+    // Create and store dashboard header data in localStorage
+    createAndStoreDashboardHeaderData(shipment, 'PST');
+
+    // Store pstWebSeqId for View mode
+    setPstWebSeqId(pstWebSeqId);
+    console.log("App.tsx - View PST with pstWebSeqId:", pstWebSeqId);
+
+    // Navigate to create-pst with pstWebSeqId parameter and view mode
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set("pstWebSeqId", pstWebSeqId.toString());
+    newUrl.searchParams.set("mode", mode);
+    window.history.pushState({}, "", newUrl.toString());
+
+    setCurrentView("create-pst");
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const handleViewPSW = (pswWebSeqId: number, shipment: Shipment, mode: string = "view") => {
+    setIsTransitioning(true);
+    setSelectedShipment(shipment);
+    setSelectedPOForPSW(shipment.poNumber);
+
+    // Create and store dashboard header data in localStorage
+    createAndStoreDashboardHeaderData(shipment, 'PSW');
+
+    // Store pswWebSeqId for View mode
+    setPswWebSeqId(pswWebSeqId);
+    console.log("App.tsx - View PSW with pswWebSeqId:", pswWebSeqId);
+
+    // Navigate to create-psw with pswWebSeqId parameter and view mode
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set("pswWebSeqId", pswWebSeqId.toString());
+    newUrl.searchParams.set("mode", mode);
     window.history.pushState({}, "", newUrl.toString());
 
     setCurrentView("create-psw");
@@ -1843,6 +1889,8 @@ export default function ShippingDashboard() {
               onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
               onUpdatePST={handleUpdatePST}
               onUpdatePSW={handleUpdatePSW}
+              onViewPST={handleViewPST}
+              onViewPSW={handleViewPSW}
               onViewCompleted={handleViewCompleted}
               onSortOptionChange={setSortOption}
               isLoading={isDataLoading || isAPILoading}
