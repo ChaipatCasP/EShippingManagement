@@ -68,6 +68,7 @@ import {
   type ServiceProviderItem,
 } from "../api/services/pstService";
 import { env } from "../config/env";
+import { formatDateForAPI } from "../utils/dateUtils";
 
 // ============================================================================
 // INTERFACES & TYPES
@@ -657,7 +658,7 @@ export function CreatePSWForm({
         interiorVatAmount: item.interiorVat || 0,
         total: item.total,
         documentNo: item.documentNo || "",
-        documentDate: item.documentDate ? item.documentDate.split("T")[0] : "",
+        documentDate: item.documentDate ? formatDateForAPI(item.documentDate) : "",
         remarks: item.remarks || "",
       };
 
@@ -1493,11 +1494,12 @@ export function CreatePSWForm({
                                                   item.expenseCode}
                                               </SelectValue>
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
                                               {expenseList.map((expense) => (
                                                 <SelectItem
                                                   key={expense.expenseCode}
                                                   value={expense.expenseCode}
+                                                  className="bg-white hover:bg-gray-100 focus:bg-gray-100"
                                                 >
                                                   {expense.expenseName}
                                                 </SelectItem>
@@ -1526,22 +1528,22 @@ export function CreatePSWForm({
                                                 <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                                               </Button>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-full p-0">
-                                              <Command>
+                                            <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg">
+                                              <Command className="bg-white">
                                                 <CommandInput
                                                   placeholder="Search..."
-                                                  className="h-8 border-0 focus:ring-0 text-sm"
+                                                  className="h-8 border-0 focus:ring-0 text-sm bg-white"
                                                 />
-                                                <CommandEmpty>
+                                                <CommandEmpty className="bg-white text-gray-500 p-2">
                                                   No provider found.
                                                 </CommandEmpty>
-                                                <CommandGroup className="max-h-40 overflow-y-auto">
+                                                <CommandGroup className="max-h-40 overflow-y-auto bg-white">
                                                   {serviceProviders.map(
                                                     (provider, index) => (
                                                       <CommandItem
                                                         key={index}
                                                         value={provider.name}
-                                                        className="cursor-pointer text-sm"
+                                                        className="cursor-pointer text-sm bg-white hover:bg-gray-100 focus:bg-gray-100"
                                                         onSelect={() =>
                                                           handleServiceProviderChange(
                                                             item.id,
