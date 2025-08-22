@@ -202,6 +202,14 @@ export function CreatePSWForm({
   const [submitProgress, setSubmitProgress] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Bill Entry State - for form disable logic
+  const [billEntryData, setBillEntryData] = useState({
+    billStatus: "",
+  });
+
+  // Form disable logic - disable all inputs when Bill Status = "Y"
+  const isFormDisabled = billEntryData.billStatus === "Y";
+
   // Form state for PSW Details
   const [formData, setFormData] = useState({
     refKey: "",
@@ -393,6 +401,11 @@ export function CreatePSWForm({
           referenceCode: "",
           taxIdNo: "",
           paymentTerm: data.paymentTerm || "",
+        });
+
+        // Update bill entry data with billStatus from API
+        setBillEntryData({
+          billStatus: data.billStatus || "",
         });
 
         // Update form data with API response
@@ -1083,6 +1096,22 @@ export function CreatePSWForm({
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {/* Bill Status Display */}
+            <span className="text-sm text-gray-600">
+              Bill Status:{" "}
+              <span className="font-medium text-blue-600">
+                {billEntryData.billStatus === "Y" 
+                  ? "Submitted" 
+                  : billEntryData.billStatus === "N"
+                  ? "Not Submitted"
+                  : billEntryData.billStatus || "New Entry"}
+              </span>
+              {billEntryData.billStatus === "Y" && (
+                <Badge className="ml-2 bg-green-100 text-green-800 border-green-200">
+                  Approved - View Only
+                </Badge>
+              )}
+            </span>
             {/* Simple indicator */}
             <div className="flex items-center gap-2">
               <Badge variant="default">Complete Details</Badge>
@@ -1422,17 +1451,19 @@ export function CreatePSWForm({
                         {/* Add/Edit Expense Item Form */}
 
                         {/* Add Expense Item Button */}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addExpenseItem}
-                          disabled={isSubmitting}
-                          className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Item
-                        </Button>
+                        {!isFormDisabled && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addExpenseItem}
+                            disabled={isSubmitting || isFormDisabled}
+                            className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Item
+                          </Button>
+                        )}
 
                         {/* Expense Items Display as Full Forms */}
                         <div className="space-y-4">
@@ -1492,7 +1523,7 @@ export function CreatePSWForm({
                                         onClick={() =>
                                           handleDeleteClick(item.id)
                                         }
-                                        disabled={isSubmitting}
+                                        disabled={isSubmitting || isFormDisabled}
                                         className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
                                       >
                                         <Trash2 className="w-3 h-3" />
@@ -1518,7 +1549,7 @@ export function CreatePSWForm({
                                                 value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                           >
                                             <SelectTrigger className="h-8 w-full text-sm bg-white border-gray-300">
                                               <SelectValue placeholder="Select expense code">
@@ -1553,7 +1584,7 @@ export function CreatePSWForm({
                                                 variant="outline"
                                                 role="combobox"
                                                 className="h-8 w-full justify-between text-sm bg-white border-gray-300"
-                                                disabled={isSubmitting}
+                                                disabled={isSubmitting || isFormDisabled}
                                               >
                                                 {item.serviceProvider ||
                                                   "Select service provider"}
@@ -1621,7 +1652,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1644,7 +1675,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1656,7 +1687,8 @@ export function CreatePSWForm({
                                           <Input
                                             value={item.subTotal.toFixed(2)}
                                             readOnly
-                                            className="h-8 text-sm bg-gray-100 border-gray-300"
+                                            disabled
+                                            className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
 
@@ -1678,7 +1710,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1693,7 +1725,8 @@ export function CreatePSWForm({
                                               "0.00"
                                             }
                                             readOnly
-                                            className="h-8 text-sm bg-gray-100 border-gray-300"
+                                            disabled
+                                            className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
 
@@ -1715,7 +1748,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1739,7 +1772,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1762,7 +1795,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1777,7 +1810,8 @@ export function CreatePSWForm({
                                           <Input
                                             value={item.total.toFixed(2)}
                                             readOnly
-                                            className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
+                                            disabled
+                                            className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
 
@@ -1794,7 +1828,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1819,7 +1853,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1837,7 +1871,7 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || isFormDisabled}
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1883,19 +1917,21 @@ export function CreatePSWForm({
                         </div>
 
                         {/* Add Expense Item Button at Bottom */}
-                        <div className="pt-4">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addExpenseItem}
-                            disabled={isSubmitting}
-                            className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add Item
-                          </Button>
-                        </div>
+                        {!isFormDisabled && (
+                          <div className="pt-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={addExpenseItem}
+                              disabled={isSubmitting || isFormDisabled}
+                              className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add Item
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -2022,16 +2058,19 @@ export function CreatePSWForm({
                       </div>
 
                       {/* Action Button */}
-                      <div className="pt-4">
-                        <button
-                          type="submit"
-                          form="pst-form"
-                          className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                          onClick={() => handleAction("submit")}
-                        >
-                          Submit PSW for Approval
-                        </button>
-                      </div>
+                      {!isFormDisabled && (
+                        <div className="pt-4">
+                          <button
+                            type="submit"
+                            form="pst-form"
+                            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                            onClick={() => handleAction("submit")}
+                            disabled={isFormDisabled}
+                          >
+                            Submit PSW for Approval
+                          </button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -2118,7 +2157,7 @@ export function CreatePSWForm({
                 executeAction("submit");
               }}
               className="flex-1 bg-orange-600 text-white hover:bg-orange-700 font-medium"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isFormDisabled}
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
