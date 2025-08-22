@@ -277,6 +277,9 @@ export function CreatePSTForm({
   // Debug: Watch billEntryData.dueDate changes
   console.log("🔍 Current billEntryData.dueDate:", billEntryData.dueDate);
 
+  // Check if form should be disabled (when Bill Status = Y)
+  const isFormDisabled = billEntryData.billStatus === "Y";
+
   // Header data from API for display - initialize with dashboard data if provided
   const [headerData, setHeaderData] = useState({
     supplierName: dashboardHeaderData?.supplierName || "",
@@ -325,29 +328,6 @@ export function CreatePSTForm({
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
 
   // Expense Item State
-
-  // Expense Item Form State
-  const [expenseItemForm, setExpenseItemForm] = useState({
-    expenseCode: "",
-    expenseName: "",
-    serviceProvider: "",
-    qty: "",
-    rate: "",
-    subTotal: 0,
-    vatBase: 0,
-    vatPercent: 0,
-    vatAmount: 0,
-    exciseVat: "",
-    interiorVat: "",
-    total: 0,
-    documentNo: "",
-    documentDate: "",
-    remarks: "",
-  });
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [editingExpenseIndex, setEditingExpenseIndex] = useState<number | null>(
-    null
-  );
 
   // State for controlling collapse/expand of each expense item
   const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
@@ -405,8 +385,6 @@ export function CreatePSTForm({
   useEffect(() => {
     // Only initialize if we don't have pstWebSeqId (no API data expected)
     if (!pstWebSeqId && expenseItems.length === 0) {
-      setShowExpenseForm(true);
-
       // Only set default header data if no dashboard data was provided
       if (!dashboardHeaderData) {
         setHeaderData({
@@ -707,7 +685,10 @@ export function CreatePSTForm({
 
         console.log("🔍 API Response data:", data);
         console.log("🔍 Raw dueDate from API:", data.dueDate);
-        console.log("🔍 Formatted dueDate:", data.dueDate ? data.dueDate.split("T")[0] : "");
+        console.log(
+          "🔍 Formatted dueDate:",
+          data.dueDate ? data.dueDate.split("T")[0] : ""
+        );
 
         const transformedData: BillEntryData = {
           webSeqID:
@@ -780,7 +761,10 @@ export function CreatePSTForm({
         };
 
         setBillEntryData(transformedData);
-        console.log("🔍 Set billEntryData.dueDate to:", transformedData.dueDate);
+        console.log(
+          "🔍 Set billEntryData.dueDate to:",
+          transformedData.dueDate
+        );
 
         // Set original data for comparison
         setOriginalBillEntryData(transformedData);
@@ -864,154 +848,6 @@ export function CreatePSTForm({
       ...prev,
       [field]: value,
     }));
-  };
-
-  // Expense Item Form handlers
-  const handleExpenseFormChange = (field: string, value: string | number) => {
-    setExpenseItemForm((prev) => {
-      const updated = { ...prev, [field]: value };
-
-      // Auto-calculate when qty or rate changes
-      if (field === "qty" || field === "rate") {
-        const qty =
-          parseFloat(field === "qty" ? value.toString() : updated.qty) || 0;
-        const rate =
-          parseFloat(field === "rate" ? value.toString() : updated.rate) || 0;
-        const subTotal = qty * rate;
-
-        updated.subTotal = subTotal;
-        updated.vatBase = subTotal;
-        updated.vatAmount = subTotal * (updated.vatPercent / 100);
-
-        const exciseVat = parseFloat(updated.exciseVat) || 0;
-        const interiorVat = parseFloat(updated.interiorVat) || 0;
-        updated.total = subTotal + updated.vatAmount + exciseVat + interiorVat;
-      }
-
-      // Auto-calculate when excise or interior VAT changes
-      if (field === "exciseVat" || field === "interiorVat") {
-        const exciseVat =
-          parseFloat(
-            field === "exciseVat" ? value.toString() : updated.exciseVat
-          ) || 0;
-        const interiorVat =
-          parseFloat(
-            field === "interiorVat" ? value.toString() : updated.interiorVat
-          ) || 0;
-        updated.total =
-          updated.subTotal + updated.vatAmount + exciseVat + interiorVat;
-      }
-
-      return updated;
-    });
-  };
-
-  const handleExpenseCodeSelect = (expenseCode: string) => {
-    const expense = expenseList.find((e) => e.expenseCode === expenseCode);
-    if (expense) {
-      const vatPercent = parseFloat(expense.taxRate) || 0;
-      const qty = parseFloat(expenseItemForm.qty) || 0;
-      const rate = parseFloat(expenseItemForm.rate) || 0;
-      const subTotal = qty * rate;
-      const vatBase = subTotal;
-      const vatAmount = vatBase * (vatPercent / 100);
-      const exciseVat = parseFloat(expenseItemForm.exciseVat) || 0;
-      const interiorVat = parseFloat(expenseItemForm.interiorVat) || 0;
-      const total = subTotal + vatAmount + exciseVat + interiorVat;
-
-      setExpenseItemForm((prev) => ({
-        ...prev,
-        expenseCode,
-        expenseName: expense.expenseName,
-        vatPercent,
-        subTotal,
-        vatBase,
-        vatAmount,
-        total,
-      }));
-    }
-  };
-
-  const handleServiceProviderSelect = (providerName: string) => {
-    setExpenseItemForm((prev) => ({
-      ...prev,
-      serviceProvider: providerName,
-    }));
-  };
-
-  const resetExpenseForm = () => {
-    setExpenseItemForm({
-      expenseCode: "",
-      expenseName: "",
-      serviceProvider: "",
-      qty: "",
-      rate: "",
-      subTotal: 0,
-      vatBase: 0,
-      vatPercent: 0,
-      vatAmount: 0,
-      exciseVat: "",
-      interiorVat: "",
-      total: 0,
-      documentNo: "",
-      documentDate: "",
-      remarks: "",
-    });
-    setEditingExpenseIndex(null);
-  };
-
-  const handleSaveExpenseItem = () => {
-    // Validate required fields
-    if (
-      !expenseItemForm.expenseCode ||
-      !expenseItemForm.serviceProvider ||
-      !expenseItemForm.qty ||
-      !expenseItemForm.rate
-    ) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    const newExpenseItem: ExpenseItem = {
-      id:
-        editingExpenseIndex !== null
-          ? expenseItems[editingExpenseIndex].id
-          : Date.now().toString(),
-      expenseCode: expenseItemForm.expenseCode,
-      expenseName: expenseItemForm.expenseName,
-      serviceProvider: expenseItemForm.serviceProvider,
-      qty: parseFloat(expenseItemForm.qty),
-      rate: parseFloat(expenseItemForm.rate),
-      documentNo: expenseItemForm.documentNo,
-      documentDate: expenseItemForm.documentDate,
-      subTotal: expenseItemForm.subTotal,
-      vatBaseAmount: expenseItemForm.vatBase,
-      remarks: expenseItemForm.remarks,
-      vatPercent: expenseItemForm.vatPercent,
-      vatAmount: expenseItemForm.vatAmount,
-      exciseVatAmount: parseFloat(expenseItemForm.exciseVat) || 0,
-      interiorVat: parseFloat(expenseItemForm.interiorVat) || 0,
-      total: expenseItemForm.total,
-      isFromAPI: false,
-    };
-
-    if (editingExpenseIndex !== null) {
-      // Update existing item
-      const updatedItems = [...expenseItems];
-      updatedItems[editingExpenseIndex] = newExpenseItem;
-      setExpenseItems(updatedItems);
-    } else {
-      // Add new item
-      setExpenseItems([...expenseItems, newExpenseItem]);
-    }
-
-    setShowExpenseForm(false);
-    resetExpenseForm();
-  };
-
-  const handleCancelExpenseForm = () => {
-    setShowExpenseForm(false);
-    resetExpenseForm();
   };
 
   const addExpenseItem = () => {
@@ -1345,7 +1181,7 @@ export function CreatePSTForm({
         const freshData = data.data;
         console.log("🔍 Fresh API data:", freshData);
         console.log("🔍 Fresh dueDate from API:", freshData.dueDate);
-        
+
         const formatDateStr = (dateStr: string | null) => {
           if (!dateStr) return "";
           try {
@@ -1393,7 +1229,10 @@ export function CreatePSTForm({
         };
 
         console.log("🔍 Formatted dueDate:", formatDateStr(freshData.dueDate));
-        console.log("🔍 Final transformedData.dueDate:", formatDateStr(freshData.dueDate));
+        console.log(
+          "🔍 Final transformedData.dueDate:",
+          formatDateStr(freshData.dueDate)
+        );
 
         setBillEntryData(transformedData);
         setOriginalBillEntryData(transformedData);
@@ -2071,6 +1910,11 @@ export function CreatePSTForm({
                             ) : (
                               <ChevronDown className="w-4 h-4 text-gray-500" />
                             )}
+                            {billEntryData.billStatus === "Y" && (
+                              <Badge className="ml-2 bg-green-100 text-green-800 border-green-200">
+                                View Only
+                              </Badge>
+                            )}
                             <div className="ml-auto flex items-center gap-4 text-sm">
                               {/* Summary info when collapsed */}
                               {billEntryCollapsed && (
@@ -2123,13 +1967,21 @@ export function CreatePSTForm({
                               <span className="text-gray-600">
                                 Bill Status:{" "}
                                 <span className="font-medium text-blue-600">
-                                  {billEntryData.billStatus || "New Entry"}
+                                  {billEntryData.billStatus === "Y"
+                                    ? "Submitted"
+                                    : billEntryData.billStatus === "N"
+                                    ? "Not Submitted"
+                                    : billEntryData.billStatus || "New Entry"}
                                 </span>
                               </span>
                               <span className="text-gray-600">
                                 Jagota Status:{" "}
                                 <span className="font-medium text-blue-600">
-                                  {billEntryData.jagotaStatus || "New Entry"}
+                                  {billEntryData.jagotaStatus === "Y"
+                                    ? "Approved"
+                                    : billEntryData.jagotaStatus === "N"
+                                    ? "Not yet approved"
+                                    : billEntryData.jagotaStatus || "New Entry"}
                                 </span>
                               </span>
                             </div>
@@ -2168,6 +2020,7 @@ export function CreatePSTForm({
                                   })
                                 }
                                 required
+                                disabled={isFormDisabled}
                               />
                             </div>
                             <div className="space-y-2">
@@ -2185,6 +2038,7 @@ export function CreatePSTForm({
                                       contactPerson: e.target.value,
                                     })
                                   }
+                                  disabled={isFormDisabled}
                                 />
                               </div>
                             </div>
@@ -2207,6 +2061,7 @@ export function CreatePSTForm({
                                     invoiceDate: e.target.value,
                                   });
                                 }}
+                                disabled={isFormDisabled}
                               />
                             </div>
                             <div className="space-y-2">
@@ -2222,6 +2077,7 @@ export function CreatePSTForm({
                                       creditTerm: value,
                                     })
                                   }
+                                  disabled={isFormDisabled}
                                 >
                                   <SelectTrigger className="flex-1">
                                     <SelectValue />
@@ -2272,11 +2128,13 @@ export function CreatePSTForm({
                                   })
                                 }
                                 required
+                                disabled={isFormDisabled}
                               />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
                                 Import Entry No.(เลขที่ใบขน)
+                                <span className="text-red-500">*</span>
                               </Label>
                               <Input
                                 value={billEntryData.importEntryNo || ""}
@@ -2286,6 +2144,8 @@ export function CreatePSTForm({
                                     importEntryNo: e.target.value,
                                   })
                                 }
+                                required
+                                disabled={isFormDisabled}
                               />
                             </div>
                             <div className="space-y-2">
@@ -2330,6 +2190,7 @@ export function CreatePSTForm({
                                   })
                                 }
                                 required
+                                disabled={isFormDisabled}
                               />
                             </div>
                             <div className="space-y-2">
@@ -2344,6 +2205,7 @@ export function CreatePSTForm({
                                     vesselName: e.target.value,
                                   })
                                 }
+                                disabled={isFormDisabled}
                               />
                             </div>
                             {/* <div className="space-y-2">
@@ -2372,6 +2234,7 @@ export function CreatePSTForm({
                                     paymentTerm: e.target.value,
                                   })
                                 }
+                                disabled
                               />
                             </div>
                           </div>
@@ -2393,7 +2256,8 @@ export function CreatePSTForm({
                                     role="combobox"
                                     aria-expanded={countryDropdownOpen}
                                     className="w-full justify-between"
-                                    disabled={isLoadingCountries}
+                                    // disabled={isLoadingCountries}
+                                    disabled={isFormDisabled}
                                   >
                                     {isLoadingCountries
                                       ? "Loading countries..."
@@ -2452,12 +2316,16 @@ export function CreatePSTForm({
                                 type="date"
                                 value={billEntryData.dueDate || ""}
                                 onChange={(e) => {
-                                  console.log("🔍 Due Date changed:", e.target.value);
+                                  console.log(
+                                    "🔍 Due Date changed:",
+                                    e.target.value
+                                  );
                                   setBillEntryData({
                                     ...billEntryData,
                                     dueDate: e.target.value,
-                                  })
+                                  });
                                 }}
+                                disabled={isFormDisabled}
                               />
                             </div>
                             <div className="space-y-2">
@@ -2476,6 +2344,7 @@ export function CreatePSTForm({
                                       requestPaymentDateTime: e.target.value,
                                     })
                                   }
+                                  disabled={isFormDisabled}
                                 />
                                 <Select
                                   value={billEntryData.requestPaymentDateTime}
@@ -2519,6 +2388,7 @@ export function CreatePSTForm({
                                   remarks: e.target.value,
                                 })
                               }
+                              disabled={isFormDisabled}
                               className="min-h-20"
                               rows={3}
                             />
@@ -2533,11 +2403,12 @@ export function CreatePSTForm({
                                 variant="outline"
                                 className="bg-gray-600 text-white hover:bg-gray-700"
                                 onClick={saveBillEntry}
+                                disabled={isFormDisabled}
                               >
                                 Save Changes
                               </Button>
                             )}
-                            <Button
+                            {/* <Button
                               type="button"
                               variant="outline"
                               className="bg-gray-600 text-white hover:bg-gray-700"
@@ -2550,7 +2421,7 @@ export function CreatePSTForm({
                               onClick={handleSubmitBill}
                             >
                               Submit Bill
-                            </Button>
+                            </Button> */}
                           </div>
                         </CardContent>
                       </CollapsibleContent>
@@ -2696,349 +2567,23 @@ export function CreatePSTForm({
                             </h4>
                           </div>
 
-                          {/* Add/Edit Expense Item Form */}
-                          {showExpenseForm && (
-                            <Card className="border-green-200 bg-green-50">
-                              <CardHeader className="pb-3">
-                                <div className="flex items-center gap-2">
-                                  <Badge className="bg-green-600 text-white text-xs">
-                                    Expense Item
-                                  </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="ml-auto h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
-                                    onClick={handleCancelExpenseForm}
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                                <h3 className="text-base font-medium text-gray-900">
-                                  {editingExpenseIndex !== null
-                                    ? "Edit Expense Item"
-                                    : "Add Expense Item"}
-                                </h3>
-                              </CardHeader>
-                              <CardContent className="space-y-4">
-                                {/* Row 1: Expense Code and Service Provider */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Expense Code{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Select
-                                      value={expenseItemForm.expenseCode}
-                                      onValueChange={handleExpenseCodeSelect}
-                                      disabled={isSubmitting}
-                                    >
-                                      <SelectTrigger className="h-8 w-full bg-white border-gray-300 text-sm">
-                                        <SelectValue placeholder="Select expense code" />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                                        {expenseList.map((expense) => (
-                                          <SelectItem
-                                            key={expense.expenseCode}
-                                            value={expense.expenseCode}
-                                            className="bg-white hover:bg-gray-100 focus:bg-gray-100"
-                                          >
-                                            {expense.expenseName}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Service Provider{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          role="combobox"
-                                          className="h-8 w-full justify-between bg-white border-gray-300 text-sm"
-                                          disabled={isSubmitting}
-                                        >
-                                          {expenseItemForm.serviceProvider ||
-                                            "Select service provider"}
-                                          <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg">
-                                        <Command className="bg-white">
-                                          <CommandInput
-                                            placeholder="Search..."
-                                            className="h-8 border-0 focus:ring-0 text-sm bg-white"
-                                          />
-                                          <CommandEmpty className="bg-white text-gray-500 p-2">
-                                            No provider found.
-                                          </CommandEmpty>
-                                          <CommandGroup className="max-h-40 overflow-y-auto bg-white">
-                                            {serviceProviders.map(
-                                              (provider, index) => (
-                                                <CommandItem
-                                                  key={index}
-                                                  value={provider.name}
-                                                  className="cursor-pointer text-sm bg-white hover:bg-gray-100 focus:bg-gray-100"
-                                                  onSelect={() =>
-                                                    handleServiceProviderSelect(
-                                                      provider.name
-                                                    )
-                                                  }
-                                                >
-                                                  <Check
-                                                    className={`mr-2 h-3 w-3 ${
-                                                      expenseItemForm.serviceProvider ===
-                                                      provider.name
-                                                        ? "opacity-100"
-                                                        : "opacity-0"
-                                                    }`}
-                                                  />
-                                                  {provider.name}
-                                                </CommandItem>
-                                              )
-                                            )}
-                                          </CommandGroup>
-                                        </Command>
-                                      </PopoverContent>
-                                    </Popover>
-                                  </div>
-                                </div>
-
-                                {/* Row 2: Qty, Rate, and Calculated Fields */}
-                                <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Qty{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      value={expenseItemForm.qty}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "qty",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Rate{" "}
-                                      <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      value={expenseItemForm.rate}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "rate",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Sub Total
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.subTotal.toFixed(
-                                        2
-                                      )}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      VAT Base
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.vatBase.toFixed(2)}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      VAT %
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.vatPercent.toFixed(
-                                        2
-                                      )}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      VAT Amt
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.vatAmount.toFixed(
-                                        2
-                                      )}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Excise VAT
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.exciseVat}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "exciseVat",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Interior VAT
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.interiorVat}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "interiorVat",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Row 3: Total and Document Info */}
-                                <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Total
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.total.toFixed(2)}
-                                      readOnly
-                                      className="h-8 text-sm bg-gray-100 border-gray-300 font-medium"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Document No.
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.documentNo}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "documentNo",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Document Date
-                                    </Label>
-                                    <Input
-                                      type="date"
-                                      value={expenseItemForm.documentDate}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "documentDate",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-medium text-gray-700">
-                                      Remarks
-                                    </Label>
-                                    <Input
-                                      value={expenseItemForm.remarks}
-                                      onChange={(e) =>
-                                        handleExpenseFormChange(
-                                          "remarks",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="h-8 text-sm"
-                                      disabled={isSubmitting}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={isSubmitting}
-                                    className="h-8 px-3 text-sm"
-                                    onClick={handleCancelExpenseForm}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    className="h-8 px-3 bg-gray-800 hover:bg-gray-900 text-white text-sm"
-                                    disabled={isSubmitting}
-                                    onClick={handleSaveExpenseItem}
-                                  >
-                                    {editingExpenseIndex !== null
-                                      ? "Update"
-                                      : "Add"}
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )}
+                          {/* chaipat */}
+                          {/* chaipat */}
 
                           {/* Add Expense Item Button */}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addExpenseItem}
-                            disabled={isSubmitting}
-                            className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add Item
-                          </Button>
+                          {!isFormDisabled && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={addExpenseItem}
+                              disabled={isSubmitting || isFormDisabled}
+                              className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add Item
+                            </Button>
+                          )}
 
                           {/* Expense Items Display as Full Forms */}
                           <div className="space-y-4">
@@ -3098,7 +2643,9 @@ export function CreatePSTForm({
                                           onClick={() =>
                                             handleDeleteClick(item.id)
                                           }
-                                          disabled={isSubmitting}
+                                          disabled={
+                                            isSubmitting || isFormDisabled
+                                          }
                                           className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
                                         >
                                           <Trash2 className="w-3 h-3" />
@@ -3490,7 +3037,7 @@ export function CreatePSTForm({
                           </div>
 
                           {/* Totals Summary */}
-                          <div className="flex justify-end">
+                          {/* <div className="flex justify-end">
                             <div className="bg-gray-50 rounded-lg p-4 min-w-64">
                               <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
@@ -3510,22 +3057,24 @@ export function CreatePSTForm({
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </div> */}
 
                           {/* Add Expense Item Button at Bottom */}
-                          <div className="pt-4">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={addExpenseItem}
-                              disabled={isSubmitting}
-                              className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
-                            >
-                              <Plus className="w-4 h-4" />
-                              Add Item
-                            </Button>
-                          </div>
+                          {!isFormDisabled && (
+                            <div className="pt-4">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addExpenseItem}
+                                disabled={isSubmitting}
+                                className="w-full h-10 border-dashed border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add Item
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -3640,15 +3189,18 @@ export function CreatePSTForm({
                         </div>
 
                         {/* Action Button */}
-                        <div className="pt-4">
-                          <Button
-                            type="button"
-                            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                            onClick={handleSubmitBill}
-                          >
-                            Submit PST for Approval
-                          </Button>
-                        </div>
+                        {billEntryData.billStatus !== "Y" && (
+                          <div className="pt-4">
+                            <Button
+                              type="button"
+                              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                              onClick={handleSubmitBill}
+                              disabled={billEntryData.billStatus === "Y"}
+                            >
+                              Submit PST for Approval
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
