@@ -24,6 +24,7 @@ import {
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { LoadingSpinner, ProgressBar } from "./ui/loading";
+import { useToast } from "./ui/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
@@ -214,6 +215,9 @@ export function CreatePSTForm({
   onSubmit,
   showPSTSubmissionPopup,
 }: CreatePSTFormProps) {
+  // Toast hook for notifications
+  const { toast } = useToast();
+
   // No step management - single form only
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
@@ -623,8 +627,9 @@ export function CreatePSTForm({
   // Handle external confirm submit bill call
   useEffect(() => {
     // Expose handleConfirmedSubmitBill to parent component through global variable
-    (window as any).handleConfirmedSubmitBillFromPST = handleConfirmedSubmitBill;
-    
+    (window as any).handleConfirmedSubmitBillFromPST =
+      handleConfirmedSubmitBill;
+
     return () => {
       // Cleanup when component unmounts
       delete (window as any).handleConfirmedSubmitBillFromPST;
@@ -1293,7 +1298,6 @@ export function CreatePSTForm({
 
   // State for submit bill success popup
   const [showSubmitBillSuccess, setShowSubmitBillSuccess] = useState(false);
-  const [submittedPSTNumber, setSubmittedPSTNumber] = useState("");
 
   // Function to check if bill entry data has changed
   const hasBillEntryChanged = () => {
@@ -1496,10 +1500,9 @@ export function CreatePSTForm({
 
       // บันทึกข้อมูล request ลงใน localStorage
       try {
-        localStorage.setItem('billentry', JSON.stringify(request));
-        console.log('💾 Request data saved to localStorage:', request);
+        localStorage.setItem("billentry", JSON.stringify(request));
       } catch (error) {
-        console.error('❌ Error saving request to localStorage:', error);
+        console.error("❌ Error saving request to localStorage:", error);
       }
 
       const result = await pstService.saveBillEntry(request);
@@ -1514,9 +1517,17 @@ export function CreatePSTForm({
         // Reload fresh data with new webSeqID
         await reloadDataAfterSave(newWebSeqId);
 
-        alert("บันทึกข้อมูลสำเร็จ");
+        toast({
+          title: "บันทึกข้อมูลสำเร็จ",
+          description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
+          variant: "default",
+        });
       } else {
-        alert("บันทึกข้อมูลสำเร็จ");
+        toast({
+          title: "บันทึกข้อมูลสำเร็จ",
+          description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
+          variant: "default",
+        });
       }
     } catch (error) {
       console.error("Error saving bill entry:", error);
@@ -1576,7 +1587,7 @@ export function CreatePSTForm({
 
       await onSubmit(submissionData);
       setShowSuccess(true);
-      
+
       // Show confirmation dialog
       // setShowSubmitBillConfirmation(true);
     } catch (error) {
@@ -1611,10 +1622,6 @@ export function CreatePSTForm({
       const result = await pstService.submitBill(String(pstWebSeqId));
 
       if (result && !result.error) {
-        // Generate PST number from billEntryData (poBook + poNo)
-        const pstNumber = `${billEntryData.poBook}-${billEntryData.poNo}`;
-        setSubmittedPSTNumber(pstNumber);
-
         // Show success popup instead of alert
         setShowSubmitBillSuccess(true);
 
@@ -1638,6 +1645,35 @@ export function CreatePSTForm({
     }
   };
 
+  // Utility function to format date as DD-MMM-YYYY
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .replace(/ /g, "-");
+  };
+
+  // Utility function to format time as HH:mm
+  const formatTime = (dateTimeStr: string) => {
+    if (!dateTimeStr) return "16:00";
+    try {
+      const date = new Date(dateTimeStr);
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    } catch (e) {
+      console.error("Error formatting time:", dateTimeStr, e);
+      return "16:00";
+    }
+  };
+
   // Handle create PSW
   const handleCreatePSW = async () => {
     try {
@@ -1649,15 +1685,61 @@ export function CreatePSTForm({
       if (result && !result.error && result.data && result.data.length > 0) {
         // Get webSeqID from API response to use as pswWebSeqId
         const pswWebSeqId = result.data[0].webSeqID;
-        
+
+        const requestPSW = {
+          poBook: "PSW",
+          poDate: formatDate(billEntryData.poDate),
+          invoiceNo: billEntryData.invoiceNo,
+          invoiceDate: formatDate(billEntryData.invoiceDate),
+          awbNo: billEntryData.awbNo,
+          dueDate: formatDate(billEntryData.dueDate),
+          paymentTerm: billEntryData.paymentTerm,
+          eta: formatDate(billEntryData.eta),
+          webSeqID: pswWebSeqId,
+          contactPerson: billEntryData.contactPerson,
+          remarks: billEntryData.remarks || "",
+          countryOfOrigin: billEntryData.countryOfOrigin,
+          vesselName: billEntryData.vesselName,
+          requestPaymentDate: formatDate(billEntryData.requestPaymentDateTime),
+          requestPaymentTime: formatTime(billEntryData.requestPaymentDateTime),
+          awbDate: formatDate(billEntryData.awbDate),
+          awbType: billEntryData.awbType,
+          importEntryNo: billEntryData.importEntryNo,
+        };
+
+        const resultPSW = await pstService.saveBillEntry(requestPSW);
+
+        // Check if save was successful and extract new webSeqID
+        if (
+          resultPSW &&
+          !resultPSW.error &&
+          resultPSW.data &&
+          resultPSW.data.length > 0
+        ) {
+          // Update original data to current data (so changes are no longer detected)
+          setOriginalBillEntryData({ ...billEntryData });
+
+          toast({
+            title: "บันทึกข้อมูลสำเร็จ",
+            description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "บันทึกข้อมูลสำเร็จ",
+            description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
+            variant: "default",
+          });
+        }
+
         // Generate PSW number from billEntryData (poBook + poNo)
         const pswNumber = `${billEntryData.poBook}-${billEntryData.poNo}`;
-        
+
         // Create URL in the required format: /create-psw/{pswNumber}?pswWebSeqId={webSeqID}&mode=update
         const pswUrl = `/create-psw/${pswNumber}?pswWebSeqId=${pswWebSeqId}&mode=update`;
 
         console.log("🔗 Navigating to PSW URL:", pswUrl);
-        
+
         // Navigate to create-psw page with constructed URL
         window.location.href = pswUrl;
       } else {
@@ -2638,11 +2720,12 @@ export function CreatePSTForm({
                                       <SelectTrigger className="h-8 w-full bg-white border-gray-300 text-sm">
                                         <SelectValue placeholder="Select expense code" />
                                       </SelectTrigger>
-                                      <SelectContent>
+                                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
                                         {expenseList.map((expense) => (
                                           <SelectItem
                                             key={expense.expenseCode}
                                             value={expense.expenseCode}
+                                            className="bg-white hover:bg-gray-100 focus:bg-gray-100"
                                           >
                                             {expense.expenseName}
                                           </SelectItem>
@@ -2669,22 +2752,22 @@ export function CreatePSTForm({
                                           <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                                         </Button>
                                       </PopoverTrigger>
-                                      <PopoverContent className="w-full p-0">
-                                        <Command>
+                                      <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg">
+                                        <Command className="bg-white">
                                           <CommandInput
                                             placeholder="Search..."
-                                            className="h-8 border-0 focus:ring-0 text-sm"
+                                            className="h-8 border-0 focus:ring-0 text-sm bg-white"
                                           />
-                                          <CommandEmpty>
+                                          <CommandEmpty className="bg-white text-gray-500 p-2">
                                             No provider found.
                                           </CommandEmpty>
-                                          <CommandGroup className="max-h-40 overflow-y-auto">
+                                          <CommandGroup className="max-h-40 overflow-y-auto bg-white">
                                             {serviceProviders.map(
                                               (provider, index) => (
                                                 <CommandItem
                                                   key={index}
                                                   value={provider.name}
-                                                  className="cursor-pointer text-sm"
+                                                  className="cursor-pointer text-sm bg-white hover:bg-gray-100 focus:bg-gray-100"
                                                   onSelect={() =>
                                                     handleServiceProviderSelect(
                                                       provider.name
@@ -3034,11 +3117,12 @@ export function CreatePSTForm({
                                                     item.expenseCode}
                                                 </SelectValue>
                                               </SelectTrigger>
-                                              <SelectContent>
+                                              <SelectContent className="bg-white border border-gray-200 shadow-lg">
                                                 {expenseList.map((expense) => (
                                                   <SelectItem
                                                     key={expense.expenseCode}
                                                     value={expense.expenseCode}
+                                                    className="bg-white hover:bg-gray-100 focus:bg-gray-100"
                                                   >
                                                     {expense.expenseName}
                                                   </SelectItem>
@@ -3067,22 +3151,22 @@ export function CreatePSTForm({
                                                   <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                                                 </Button>
                                               </PopoverTrigger>
-                                              <PopoverContent className="w-full p-0">
-                                                <Command>
+                                              <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg">
+                                                <Command className="bg-white">
                                                   <CommandInput
                                                     placeholder="Search..."
-                                                    className="h-8 border-0 focus:ring-0 text-sm"
+                                                    className="h-8 border-0 focus:ring-0 text-sm bg-white"
                                                   />
-                                                  <CommandEmpty>
+                                                  <CommandEmpty className="bg-white text-gray-500 p-2">
                                                     No provider found.
                                                   </CommandEmpty>
-                                                  <CommandGroup className="max-h-40 overflow-y-auto">
+                                                  <CommandGroup className="max-h-40 overflow-y-auto bg-white">
                                                     {serviceProviders.map(
                                                       (provider, index) => (
                                                         <CommandItem
                                                           key={index}
                                                           value={provider.name}
-                                                          className="cursor-pointer text-sm"
+                                                          className="cursor-pointer text-sm bg-white hover:bg-gray-100 focus:bg-gray-100"
                                                           onSelect={() =>
                                                             handleServiceProviderChange(
                                                               item.id,
@@ -3630,11 +3714,7 @@ export function CreatePSTForm({
 
             {/* Description */}
             <p className="text-gray-600 mb-1">
-              Your PST request{" "}
-              <span className="font-semibold text-green-600">
-                {submittedPSTNumber}
-              </span>{" "}
-              has been created successfully.
+              Your PST request has been created successfully.
             </p>
 
             {/* Next Steps Question */}

@@ -6,7 +6,7 @@ import type {
 } from "./toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000 // เพิ่มเป็น 5 วินาที
 
 type ToasterToast = ToastProps & {
   id: string

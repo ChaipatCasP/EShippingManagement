@@ -23,6 +23,8 @@ import {
   AlertDialogTitle,
 } from "./components/ui/alert-dialog";
 import { Button } from "./components/ui/button";
+import { Toaster } from "./components/ui/toaster";
+import { ToastProvider } from "./components/ui/toast";
 import { InboxContainer } from "./containers/InboxContainer";
 import { useNotifications } from "./hooks/useNotifications";
 import { useEShippingPOList } from "./hooks/useEShippingPOList";
@@ -1742,11 +1744,12 @@ export default function ShippingDashboard() {
 
   // Render main dashboard with proper sticky layout
   return (
-    <div
-      className={`min-h-screen bg-gray-50 flex flex-col transition-all duration-300 ${
-        isTransitioning ? "opacity-90" : "opacity-100"
-      }`}
-    >
+    <ToastProvider>
+      <div
+        className={`min-h-screen bg-gray-50 flex flex-col transition-all duration-300 ${
+          isTransitioning ? "opacity-90" : "opacity-100"
+        }`}
+      >
       {/* Header - Sticky at top */}
       <Header
         notifications={notifications}
@@ -1871,6 +1874,10 @@ export default function ShippingDashboard() {
 
       {/* Footer */}
       <Footer />
-    </div>
+      
+      {/* Toast notifications */}
+      <Toaster />
+      </div>
+    </ToastProvider>
   );
 }
