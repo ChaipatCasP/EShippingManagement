@@ -185,6 +185,20 @@ export function ShipmentTimeline({
           `View PSW ${shipment.pswNumber} - This feature will be implemented`
         );
         break;
+      case "view-pst":
+        if (shipment.pstWebSeqId) {
+          onUpdatePST(shipment.pstWebSeqId);
+        } else {
+          alert("PST information not available");
+        }
+        break;
+      case "view-psw-action":
+        if (shipment.pswWebSeqId && onUpdatePSW) {
+          onUpdatePSW(shipment.pswWebSeqId);
+        } else {
+          alert("PSW information not available");
+        }
+        break;
       case "completed":
         break;
     }
@@ -688,26 +702,77 @@ export function ShipmentTimeline({
                   </div>
                 </div>
 
-                {/* Right side - Action Button */}
+                {/* Right side - Action Buttons */}
                 <div className="flex flex-col justify-end items-end h-full pt-16">
                   <div className="flex flex-col gap-1 items-end">
-                    {/* Action Button - Positioned on the right */}
-                    <Button
-                      size="sm"
-                      className={`${customActionConfig.color} transition-colors duration-200`}
-                      disabled={!customActionConfig.enabled}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleActionClick(shipment, customActionConfig.action);
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {customActionConfig.icon}
-                        <span className="text-sm font-medium">
-                          {customActionConfig.text}
-                        </span>
-                      </div>
-                    </Button>
+                    {/* Show View PST and View PSW buttons when completed */}
+                    {customActionConfig.action === "completed" ? (
+                      <>
+                        {/* Completed Badge */}
+                        <div className={`${customActionConfig.color} px-3 py-1 rounded text-sm transition-colors duration-200 mb-2`}>
+                          <div className="flex items-center gap-2">
+                            {customActionConfig.icon}
+                            <span className="text-sm font-medium">
+                              {customActionConfig.text}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* View PST Button */}
+                        {shipment.pstWebSeqId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors duration-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleActionClick(shipment, "view-pst");
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-3 h-3" />
+                              <span className="text-sm font-medium">View PST</span>
+                            </div>
+                          </Button>
+                        )}
+                        
+                        {/* View PSW Button */}
+                        {shipment.pswWebSeqId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleActionClick(shipment, "view-psw-action");
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-3 h-3" />
+                              <span className="text-sm font-medium">View PSW</span>
+                            </div>
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      /* Regular Action Button */
+                      <Button
+                        size="sm"
+                        className={`${customActionConfig.color} transition-colors duration-200`}
+                        disabled={!customActionConfig.enabled}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleActionClick(shipment, customActionConfig.action);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          {customActionConfig.icon}
+                          <span className="text-sm font-medium">
+                            {customActionConfig.text}
+                          </span>
+                        </div>
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
