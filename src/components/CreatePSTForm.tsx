@@ -1494,6 +1494,14 @@ export function CreatePSTForm({
         importEntryNo: billEntryData.importEntryNo,
       };
 
+      // บันทึกข้อมูล request ลงใน localStorage
+      try {
+        localStorage.setItem('billentry', JSON.stringify(request));
+        console.log('💾 Request data saved to localStorage:', request);
+      } catch (error) {
+        console.error('❌ Error saving request to localStorage:', error);
+      }
+
       const result = await pstService.saveBillEntry(request);
 
       // Check if save was successful and extract new webSeqID
