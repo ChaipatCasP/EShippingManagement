@@ -649,7 +649,7 @@ export function CreatePSTForm({
           poNo: dashboardHeaderData?.poNo || "",
           poDate: dashboardHeaderData?.poDate || "",
           etd: dashboardHeaderData?.etd || "",
-          eta: data.eta || dashboardHeaderData?.eta || "", // Prefer API data for ETA
+          eta: dashboardHeaderData?.eta || "", // Prefer API data for ETA
           wrDate: dashboardHeaderData?.wrDate || "",
           invoiceNo: dashboardHeaderData?.invoiceNo || "",
           invoiceDate: dashboardHeaderData?.invoiceDate || "",
@@ -1694,16 +1694,51 @@ export function CreatePSTForm({
               <div className="h-6 w-px bg-gray-300" />
               <div>
                 <h1 className="font-semibold text-gray-900">
-                  Create PST Request
+                  {billEntryData.billStatus === "Y"
+                    ? "View PST Request"
+                    : billEntryData.billStatus === "N"
+                    ? "Update PST Request"
+                    : billEntryData.billStatus || "Create PST Request"}
+
+                  {billEntryData.billStatus === "Y" && (
+                    <Badge className="ml-2 bg-green-100 text-green-800 border-green-200">
+                      View Only
+                    </Badge>
+                  )}
                 </h1>
-                <p className="text-sm text-gray-600">Complete PST Details</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {/* Bill Status Display */}
+              <span className="text-sm text-gray-600">
+                Bill Status:{" "}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Key className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">
+                    {billEntryData.billStatus === "Y"
+                      ? "Submitted"
+                      : billEntryData.billStatus === "N"
+                      ? "Not Submitted"
+                      : billEntryData.billStatus || "New Entry"}
+                  </span>
+                </div>
+              </span>
+
+              <span className="text-gray-600">
+                Jagota Status:{" "}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Key className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">
+                    {billEntryData.jagotaStatus === "Y"
+                      ? "Approved"
+                      : billEntryData.jagotaStatus === "N"
+                      ? "Not yet approved"
+                      : billEntryData.jagotaStatus || "New Entry"}
+                  </span>
+                </div>
+              </span>
+
               {/* Simple indicator */}
-              <div className="flex items-center gap-2">
-                <Badge variant="default">Complete Details</Badge>
-              </div>
               <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="w-4 h-4" />
               </Button>
@@ -1711,10 +1746,9 @@ export function CreatePSTForm({
           </div>
 
           {/* Progress section */}
-          <div className="px-6 pb-4">
+          {/* <div className="px-6 pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                {/* Status Display */}
                 <div className="flex items-center gap-4">
                   {createdPSTNumber ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
@@ -1734,7 +1768,7 @@ export function CreatePSTForm({
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Form Content */}
@@ -1910,11 +1944,6 @@ export function CreatePSTForm({
                             ) : (
                               <ChevronDown className="w-4 h-4 text-gray-500" />
                             )}
-                            {billEntryData.billStatus === "Y" && (
-                              <Badge className="ml-2 bg-green-100 text-green-800 border-green-200">
-                                View Only
-                              </Badge>
-                            )}
                             <div className="ml-auto flex items-center gap-4 text-sm">
                               {/* Summary info when collapsed */}
                               {billEntryCollapsed && (
@@ -1964,7 +1993,7 @@ export function CreatePSTForm({
                                 </div>
                               )}
                               {/* Status info always visible */}
-                              <span className="text-gray-600">
+                              {/* <span className="text-gray-600">
                                 Bill Status:{" "}
                                 <span className="font-medium text-blue-600">
                                   {billEntryData.billStatus === "Y"
@@ -1983,7 +2012,7 @@ export function CreatePSTForm({
                                     ? "Not yet approved"
                                     : billEntryData.jagotaStatus || "New Entry"}
                                 </span>
-                              </span>
+                              </span> */}
                             </div>
                           </CardTitle>
                         </CardHeader>

@@ -205,6 +205,7 @@ export function CreatePSWForm({
   // Bill Entry State - for form disable logic
   const [billEntryData, setBillEntryData] = useState({
     billStatus: "",
+    jagotaStatus: "",
   });
 
   // Form disable logic - disable all inputs when Bill Status = "Y"
@@ -406,6 +407,7 @@ export function CreatePSWForm({
         // Update bill entry data with billStatus from API
         setBillEntryData({
           billStatus: data.billStatus || "",
+          jagotaStatus: data.jagotaStatus || "",
         });
 
         // Update form data with API response
@@ -846,30 +848,39 @@ export function CreatePSWForm({
         const updatedItem = {
           ...item,
           [field]:
-            field === "qty" || field === "rate"
+            field === "qty" ||
+            field === "rate" ||
+            field === "vatBaseAmount" ||
+            field === "vatAmount" ||
+            field === "exciseVatAmount" ||
+            field === "interiorVat"
               ? parseFloat(value) || 0
               : value,
         };
 
-        // Recalculate when qty or rate changes
+        // เมื่อเปลี่ยน Qty หรือ Rate:
         if (field === "qty" || field === "rate") {
-          const subTotal = updatedItem.qty * updatedItem.rate;
-          updatedItem.subTotal = subTotal;
-          updatedItem.vatBaseAmount = updatedItem.vatBaseAmount || subTotal;
+          // คำนวณ Sub Total = Qty × Rate
+          updatedItem.subTotal = updatedItem.qty * updatedItem.rate;
+          // อัพเดต VAT Base = Sub Total
+          updatedItem.vatBaseAmount = updatedItem.subTotal;
+          // คำนวณ VAT Amount = VAT Base × (VAT Percent ÷ 100)
           updatedItem.vatAmount =
             (updatedItem.vatBaseAmount * (updatedItem.vatPercent || 0)) / 100;
+          // คำนวณ Total = Sub Total + VAT Amount + Excise VAT + Interior VAT
           updatedItem.total =
-            subTotal +
+            updatedItem.subTotal +
             updatedItem.vatAmount +
             (updatedItem.exciseVatAmount || 0) +
             (updatedItem.interiorVat || 0);
         }
 
-        // Recalculate when VAT base changes
+        // เมื่อเปลี่ยน VAT Base:
         if (field === "vatBaseAmount") {
-          updatedItem.vatBaseAmount = parseFloat(value) || 0;
+          // คำนวณ VAT Amount = VAT Base × (VAT Percent ÷ 100)
           updatedItem.vatAmount =
             (updatedItem.vatBaseAmount * (updatedItem.vatPercent || 0)) / 100;
+          // คำนวณ Total = Sub Total + VAT Amount + Excise VAT + Interior VAT
           updatedItem.total =
             updatedItem.subTotal +
             updatedItem.vatAmount +
@@ -877,9 +888,9 @@ export function CreatePSWForm({
             (updatedItem.interiorVat || 0);
         }
 
-        // Recalculate when VAT amount changes
+        // เมื่อเปลี่ยน VAT Amount:
         if (field === "vatAmount") {
-          updatedItem.vatAmount = parseFloat(value) || 0;
+          // คำนวณ Total = Sub Total + VAT Amount + Excise VAT + Interior VAT
           updatedItem.total =
             updatedItem.subTotal +
             updatedItem.vatAmount +
@@ -887,9 +898,9 @@ export function CreatePSWForm({
             (updatedItem.interiorVat || 0);
         }
 
-        // Recalculate when excise or interior VAT changes
+        // เมื่อเปลี่ยน Excise VAT หรือ Interior VAT:
         if (field === "exciseVatAmount" || field === "interiorVat") {
-          updatedItem[field] = parseFloat(value) || 0;
+          // คำนวณ Total = Sub Total + VAT Amount + Excise VAT + Interior VAT
           updatedItem.total =
             updatedItem.subTotal +
             updatedItem.vatAmount +
@@ -911,10 +922,14 @@ export function CreatePSWForm({
         prev.map((item) => {
           if (item.id !== itemId) return item;
 
+          // เมื่อเลือก Expense Code:
+          // ดึง VAT Percent จาก Expense Code
           const vatPercent = parseFloat(expense.taxRate) || 0;
           const subTotal = item.qty * item.rate;
-          const vatBase = subTotal;
+          const vatBase = item.vatBaseAmount || subTotal; // ใช้ VAT Base ที่มีอยู่หรือ Sub Total
+          // คำนวณ VAT Amount = VAT Base × (VAT Percent ÷ 100)
           const vatAmount = vatBase * (vatPercent / 100);
+          // คำนวณ Total ใหม่
           const total =
             subTotal +
             vatAmount +
@@ -1090,32 +1105,51 @@ export function CreatePSWForm({
             <div className="h-6 w-px bg-gray-300" />
             <div>
               <h1 className="font-semibold text-gray-900">
-                Create PSW Request
+                {billEntryData.billStatus === "Y"
+                  ? "View PSW Request"
+                  : billEntryData.billStatus === "N"
+                  ? "Update PSW Request"
+                  : billEntryData.billStatus || "Create PSW Request"}
+
+                {billEntryData.billStatus === "Y" && (
+                  <Badge className="ml-2 bg-green-100 text-green-800 border-green-200">
+                    View Only
+                  </Badge>
+                )}
               </h1>
-              <p className="text-sm text-gray-600">Complete PSW Details</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             {/* Bill Status Display */}
             <span className="text-sm text-gray-600">
               Bill Status:{" "}
-              <span className="font-medium text-blue-600">
-                {billEntryData.billStatus === "Y" 
-                  ? "Submitted" 
-                  : billEntryData.billStatus === "N"
-                  ? "Not Submitted"
-                  : billEntryData.billStatus || "New Entry"}
-              </span>
-              {billEntryData.billStatus === "Y" && (
-                <Badge className="ml-2 bg-green-100 text-green-800 border-green-200">
-                  Approved - View Only
-                </Badge>
-              )}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <Key className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700">
+                  {billEntryData.billStatus === "Y"
+                    ? "Submitted"
+                    : billEntryData.billStatus === "N"
+                    ? "Not Submitted"
+                    : billEntryData.billStatus || "New Entry"}
+                </span>
+              </div>
             </span>
+
+            <span className="text-gray-600">
+              Jagota Status:{" "}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <Key className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700">
+                  {billEntryData.jagotaStatus === "Y"
+                    ? "Approved"
+                    : billEntryData.jagotaStatus === "N"
+                    ? "Not yet approved"
+                    : billEntryData.jagotaStatus || "New Entry"}
+                </span>
+              </div>
+            </span>
+
             {/* Simple indicator */}
-            <div className="flex items-center gap-2">
-              <Badge variant="default">Complete Details</Badge>
-            </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
@@ -1523,7 +1557,9 @@ export function CreatePSWForm({
                                         onClick={() =>
                                           handleDeleteClick(item.id)
                                         }
-                                        disabled={isSubmitting || isFormDisabled}
+                                        disabled={
+                                          isSubmitting || isFormDisabled
+                                        }
                                         className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700"
                                       >
                                         <Trash2 className="w-3 h-3" />
@@ -1549,7 +1585,9 @@ export function CreatePSWForm({
                                                 value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                           >
                                             <SelectTrigger className="h-8 w-full text-sm bg-white border-gray-300">
                                               <SelectValue placeholder="Select expense code">
@@ -1584,7 +1622,9 @@ export function CreatePSWForm({
                                                 variant="outline"
                                                 role="combobox"
                                                 className="h-8 w-full justify-between text-sm bg-white border-gray-300"
-                                                disabled={isSubmitting || isFormDisabled}
+                                                disabled={
+                                                  isSubmitting || isFormDisabled
+                                                }
                                               >
                                                 {item.serviceProvider ||
                                                   "Select service provider"}
@@ -1652,7 +1692,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1675,7 +1717,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1710,7 +1754,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1748,7 +1794,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1772,7 +1820,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1795,7 +1845,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1828,7 +1880,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1853,7 +1907,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
@@ -1871,7 +1927,9 @@ export function CreatePSWForm({
                                                 e.target.value
                                               )
                                             }
-                                            disabled={isSubmitting || isFormDisabled}
+                                            disabled={
+                                              isSubmitting || isFormDisabled
+                                            }
                                             className="h-8 text-sm bg-white border-gray-300"
                                           />
                                         </div>
