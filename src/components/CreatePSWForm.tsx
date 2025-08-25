@@ -62,6 +62,7 @@ import {
 // Custom Components & Types
 import { CommunicationPanel, CommunicationMessage } from "./CommunicationPanel";
 import { FileUploadComponent } from "./FileUploadComponent";
+import { AttachmentViewer } from "./AttachmentViewer";
 import { SaveExpenseRequest } from "../api/types";
 import {
   pstService,
@@ -2153,6 +2154,14 @@ export function CreatePSWForm({
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* Attachment Viewer - Show uploaded files */}
+                  <AttachmentViewer
+                    transType="PS"
+                    poBook="PSW"
+                    poNo={headerData.pswNo}
+                    title="Uploaded Files"
+                  />
                 </div>
               </div>
             </div>
