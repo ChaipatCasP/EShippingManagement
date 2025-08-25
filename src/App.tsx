@@ -135,7 +135,7 @@ export default function ShippingDashboard() {
     // Try localStorage first, then URL parameters, then default
     const savedModeLS = localStorage.getItem("dateFilterMode");
     if (savedModeLS) return savedModeLS as DateFilterMode;
-    
+
     const savedMode = new URL(window.location.href).searchParams.get(
       "dateFilterMode"
     ) as DateFilterMode;
@@ -145,7 +145,7 @@ export default function ShippingDashboard() {
     // Try localStorage first, then URL parameters, then default
     const savedStartLS = localStorage.getItem("customDateStart");
     if (savedStartLS) return savedStartLS;
-    
+
     const savedStart = new URL(window.location.href).searchParams.get(
       "dateFrom"
     );
@@ -155,7 +155,7 @@ export default function ShippingDashboard() {
     // Try localStorage first, then URL parameters, then default
     const savedEndLS = localStorage.getItem("customDateEnd");
     if (savedEndLS) return savedEndLS;
-    
+
     const savedEnd = new URL(window.location.href).searchParams.get("dateTo");
     return savedEnd || new Date().toISOString().split("T")[0];
   });
@@ -376,20 +376,23 @@ export default function ShippingDashboard() {
         const poNumber = path.split("/")[2];
         setSelectedPOForPSW(poNumber || null);
         setCurrentView("create-psw");
-        
+
         // Handle PSW specific parameters
         const url = new URL(window.location.href);
         const pswWebSeqIdParam = url.searchParams.get("pswWebSeqId");
         const modeParam = url.searchParams.get("mode");
-        
+
         if (pswWebSeqIdParam) {
           const pswWebSeqIdValue = parseInt(pswWebSeqIdParam);
           if (!isNaN(pswWebSeqIdValue)) {
             setPswWebSeqId(pswWebSeqIdValue);
-            console.log("App.tsx - Read pswWebSeqId from URL:", pswWebSeqIdValue);
+            console.log(
+              "App.tsx - Read pswWebSeqId from URL:",
+              pswWebSeqIdValue
+            );
           }
         }
-        
+
         if (modeParam) {
           console.log("App.tsx - Read mode from URL:", modeParam);
         }
@@ -397,32 +400,32 @@ export default function ShippingDashboard() {
         const pstNumber = path.split("/")[2];
         setSelectedPOForPST(pstNumber || null);
         setCurrentView("completed-view");
-        
+
         // Handle completed-view specific parameters
         const url = new URL(window.location.href);
         const pstWebSeqIdParam = url.searchParams.get("pstWebSeqId");
         const pswWebSeqIdParam = url.searchParams.get("pswWebSeqId");
         const modeParam = url.searchParams.get("mode");
-        
+
         if (pstWebSeqIdParam) {
           const pstWebSeqIdValue = parseInt(pstWebSeqIdParam);
           if (!isNaN(pstWebSeqIdValue)) {
             setPstWebSeqId(pstWebSeqIdValue);
           }
         }
-        
+
         if (pswWebSeqIdParam) {
           const pswWebSeqIdValue = parseInt(pswWebSeqIdParam);
           if (!isNaN(pswWebSeqIdValue)) {
             setPswWebSeqId(pswWebSeqIdValue);
           }
         }
-        
+
         console.log("App.tsx - Completed view parameters:", {
           pstNumber,
           pstWebSeqIdParam,
           pswWebSeqIdParam,
-          modeParam
+          modeParam,
         });
       }
     };
@@ -478,11 +481,15 @@ export default function ShippingDashboard() {
   };
 
   // Helper function to create and store dashboard header data
-  const createAndStoreDashboardHeaderData = (shipment: Shipment, type: 'PST' | 'PSW') => {
+  const createAndStoreDashboardHeaderData = (
+    shipment: Shipment,
+    type: "PST" | "PSW"
+  ) => {
     const dashboardHeaderData = {
       supplierName: shipment.supplierName,
       poBook: shipment.originalPOData?.poBook || shipment.pstBook || "",
-      poNo: (shipment.originalPOData?.poNo || shipment.poNumber)?.toString() || "",
+      poNo:
+        (shipment.originalPOData?.poNo || shipment.poNumber)?.toString() || "",
       poDate: formatDate(shipment.poDate),
       etd: formatDate(shipment.etd),
       eta: formatDate(shipment.eta),
@@ -500,15 +507,23 @@ export default function ShippingDashboard() {
       pswNo: shipment.pswNo?.toString() || "",
       vesselName: "", // Will be filled from API data if available
       referenceCode: shipment.referenceKey || "",
+      pstTransactionType: shipment.pstTransactionType || "",
+      pswTransactionType: shipment.pswTransactionType || "",
     };
 
     // Store in localStorage with type prefix
     // const storageKey = type === 'PST' ? 'pst_dashboard_header_data' : 'psw_dashboard_header_data';
-    const storageKey = type === 'PST' ? 'pst_dashboard_header_data' : 'pst_dashboard_header_data';
+    const storageKey =
+      type === "PST"
+        ? "pst_dashboard_header_data"
+        : "pst_dashboard_header_data";
     localStorage.setItem(storageKey, JSON.stringify(dashboardHeaderData));
-    
-    console.log(`📁 Stored ${type} dashboard header data in localStorage:`, dashboardHeaderData);
-    
+
+    console.log(
+      `📁 Stored ${type} dashboard header data in localStorage:`,
+      dashboardHeaderData
+    );
+
     return dashboardHeaderData;
   };
 
@@ -1004,13 +1019,17 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleUpdatePST = (pstWebSeqId: number, shipment: Shipment, mode: string = "update") => {
+  const handleUpdatePST = (
+    pstWebSeqId: number,
+    shipment: Shipment,
+    mode: string = "update"
+  ) => {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPST(shipment.poNumber);
 
     // Create and store dashboard header data in localStorage
-    createAndStoreDashboardHeaderData(shipment, 'PST');
+    createAndStoreDashboardHeaderData(shipment, "PST");
 
     // Store pstWebSeqId for Update mode
     setPstWebSeqId(pstWebSeqId);
@@ -1027,13 +1046,17 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleUpdatePSW = (pswWebSeqId: number, shipment: Shipment, mode: string = "update") => {
+  const handleUpdatePSW = (
+    pswWebSeqId: number,
+    shipment: Shipment,
+    mode: string = "update"
+  ) => {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPSW(shipment.poNumber);
 
     // Create and store dashboard header data in localStorage
-    createAndStoreDashboardHeaderData(shipment, 'PSW');
+    createAndStoreDashboardHeaderData(shipment, "PSW");
 
     // Store pswWebSeqId for Update mode
     setPswWebSeqId(pswWebSeqId);
@@ -1050,13 +1073,17 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleViewPST = (pstWebSeqId: number, shipment: Shipment, mode: string = "view") => {
+  const handleViewPST = (
+    pstWebSeqId: number,
+    shipment: Shipment,
+    mode: string = "view"
+  ) => {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPST(shipment.poNumber);
 
     // Create and store dashboard header data in localStorage
-    createAndStoreDashboardHeaderData(shipment, 'PST');
+    createAndStoreDashboardHeaderData(shipment, "PST");
 
     // Store pstWebSeqId for View mode
     setPstWebSeqId(pstWebSeqId);
@@ -1073,13 +1100,17 @@ export default function ShippingDashboard() {
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
-  const handleViewPSW = (pswWebSeqId: number, shipment: Shipment, mode: string = "view") => {
+  const handleViewPSW = (
+    pswWebSeqId: number,
+    shipment: Shipment,
+    mode: string = "view"
+  ) => {
     setIsTransitioning(true);
     setSelectedShipment(shipment);
     setSelectedPOForPSW(shipment.poNumber);
 
     // Create and store dashboard header data in localStorage
-    createAndStoreDashboardHeaderData(shipment, 'PSW');
+    createAndStoreDashboardHeaderData(shipment, "PSW");
 
     // Store pswWebSeqId for View mode
     setPswWebSeqId(pswWebSeqId);
@@ -1243,7 +1274,7 @@ export default function ShippingDashboard() {
     // Update URL with completed-view parameters
     const newUrl = new URL(window.location.origin + "/completed-view");
     newUrl.pathname = `/completed-view/${shipment.poNumber}`;
-    
+
     // Add parameters for PST and PSW web sequence IDs
     if (shipment.pstWebSeqId) {
       newUrl.searchParams.set("pstWebSeqId", shipment.pstWebSeqId.toString());
@@ -1252,17 +1283,17 @@ export default function ShippingDashboard() {
       newUrl.searchParams.set("pswWebSeqId", shipment.pswWebSeqId.toString());
     }
     newUrl.searchParams.set("mode", "view");
-    
+
     window.history.pushState({}, "", newUrl.toString());
     setCurrentView("completed-view");
-    
+
     console.log("Navigating to completed view:", {
       poNumber: shipment.poNumber,
       pstWebSeqId: shipment.pstWebSeqId,
       pswWebSeqId: shipment.pswWebSeqId,
-      url: newUrl.toString()
+      url: newUrl.toString(),
     });
-    
+
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
@@ -1336,14 +1367,17 @@ export default function ShippingDashboard() {
     console.log("Navigating to PSW with data:", pswDataFromAPI);
 
     setIsTransitioning(true);
-    
+
     // Set any PSW-related data if needed
     setSelectedPOForPSW(pswDataFromAPI?.poNumber || null);
-    
+
     // Update URL with PSW parameters
     const newUrl = new URL(window.location.origin + "/create-psw");
     if (pswDataFromAPI?.pswWebSeqId) {
-      newUrl.searchParams.set("pswWebSeqId", pswDataFromAPI.pswWebSeqId.toString());
+      newUrl.searchParams.set(
+        "pswWebSeqId",
+        pswDataFromAPI.pswWebSeqId.toString()
+      );
       newUrl.searchParams.set("mode", "update");
       setPswWebSeqId(pswDataFromAPI.pswWebSeqId);
     } else {
@@ -1353,7 +1387,7 @@ export default function ShippingDashboard() {
       newUrl.pathname = `/create-psw/${pswDataFromAPI.poNumber}`;
     }
     window.history.pushState({}, "", newUrl.toString());
-    
+
     setCurrentView("create-psw");
     setTimeout(() => setIsTransitioning(false), 400);
   };
@@ -1376,7 +1410,7 @@ export default function ShippingDashboard() {
       if ((window as any).handleConfirmedSubmitBillFromPST) {
         // Call the function from CreatePSTForm component
         await (window as any).handleConfirmedSubmitBillFromPST();
-      } 
+      }
     } catch (error) {
       console.error("Error processing PST:", error);
       // Handle error appropriately
@@ -1432,15 +1466,21 @@ export default function ShippingDashboard() {
   if (currentView === "create-pst") {
     // Try to get dashboard header data from localStorage first, then fallback to selectedShipment
     let dashboardHeaderData = null;
-    
+
     try {
-      const storedData = localStorage.getItem('pst_dashboard_header_data');
+      const storedData = localStorage.getItem("pst_dashboard_header_data");
       if (storedData) {
         dashboardHeaderData = JSON.parse(storedData);
-        console.log("📁 Retrieved PST dashboard header data from localStorage:", dashboardHeaderData);
+        console.log(
+          "📁 Retrieved PST dashboard header data from localStorage:",
+          dashboardHeaderData
+        );
       }
     } catch (error) {
-      console.warn("Failed to parse PST dashboard header data from localStorage:", error);
+      console.warn(
+        "Failed to parse PST dashboard header data from localStorage:",
+        error
+      );
     }
 
     // Fallback to creating from selectedShipment if no stored data
@@ -1471,6 +1511,8 @@ export default function ShippingDashboard() {
         pswBook: selectedShipment.pswBook || "",
         pswNo: selectedShipment.pswNo?.toString() || "",
         vesselName: "",
+        pstTransactionType: selectedShipment.pstTransactionType || "",
+        pswTransactionType: selectedShipment.pswTransactionType || "",
       };
     }
 
@@ -1588,17 +1630,23 @@ export default function ShippingDashboard() {
   if (currentView === "create-psw") {
     // Try to get dashboard header data from localStorage first, then fallback to selectedShipment
     let dashboardHeaderData = null;
-    
+
     try {
       // const storedData = localStorage.getItem('psw_dashboard_header_data');
-      const storedData = localStorage.getItem('pst_dashboard_header_data');
+      const storedData = localStorage.getItem("pst_dashboard_header_data");
 
       if (storedData) {
         dashboardHeaderData = JSON.parse(storedData);
-        console.log("📁 Retrieved PSW dashboard header data from localStorage:", dashboardHeaderData);
+        console.log(
+          "📁 Retrieved PSW dashboard header data from localStorage:",
+          dashboardHeaderData
+        );
       }
     } catch (error) {
-      console.warn("Failed to parse PSW dashboard header data from localStorage:", error);
+      console.warn(
+        "Failed to parse PSW dashboard header data from localStorage:",
+        error
+      );
     }
 
     // Fallback to creating from selectedShipment if no stored data
@@ -1639,6 +1687,8 @@ export default function ShippingDashboard() {
         pswBook: selectedShipment.pswBook || "",
         pswNo: selectedShipment.pswNo?.toString() || "",
         vesselName: "",
+        pstTransactionType: selectedShipment.pstTransactionType || "",
+        pswTransactionType: selectedShipment.pswTransactionType || "",
       };
     }
 
@@ -1802,135 +1852,134 @@ export default function ShippingDashboard() {
           isTransitioning ? "opacity-90" : "opacity-100"
         }`}
       >
-      {/* Header - Sticky at top */}
-      <Header
-        notifications={notifications}
-        unreadNotificationCount={unreadNotificationCount}
-        isNotificationOpen={isNotificationOpen}
-        setIsNotificationOpen={setIsNotificationOpen}
-        onNotificationClick={handleNotificationClick}
-        onMarkNotificationAsRead={handleMarkNotificationAsRead}
-        onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
-        onDeleteNotification={handleDeleteNotification}
-        NotificationCenter={NotificationCenter}
-        user={user}
-        onLogout={handleLogout}
-        onHistoryClick={handleHistoryClick}
-      />
+        {/* Header - Sticky at top */}
+        <Header
+          notifications={notifications}
+          unreadNotificationCount={unreadNotificationCount}
+          isNotificationOpen={isNotificationOpen}
+          setIsNotificationOpen={setIsNotificationOpen}
+          onNotificationClick={handleNotificationClick}
+          onMarkNotificationAsRead={handleMarkNotificationAsRead}
+          onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+          onDeleteNotification={handleDeleteNotification}
+          NotificationCenter={NotificationCenter}
+          user={user}
+          onLogout={handleLogout}
+          onHistoryClick={handleHistoryClick}
+        />
 
-      {/* Main Scrollable Content */}
-      <div className="flex-1 relative">
-        {/* Top Section - Status Badges and KPIs */}
-        <div className="px-6 pt-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Completion Badges - Show when completed */}
-            {(createdPSTNumber && pstCompleted) ||
-            createdPSWNumber ? (
-              <div className="flex justify-center gap-4">
-                {createdPSTNumber && pstCompleted && (
-                  <Badge className="bg-green-50 text-green-700 border-green-200 px-4 py-2 text-sm font-medium">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    PST Completed: {createdPSTNumber}
-                    <FileText className="w-4 h-4 ml-2" />
-                  </Badge>
-                )}
-                {createdPSWNumber && (
-                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 text-sm font-medium">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    PSW Completed: {createdPSWNumber}
-                    <Calendar className="w-4 h-4 ml-2" />
-                  </Badge>
-                )}
-              </div>
-            ) : null}
+        {/* Main Scrollable Content */}
+        <div className="flex-1 relative">
+          {/* Top Section - Status Badges and KPIs */}
+          <div className="px-6 pt-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+              {/* Completion Badges - Show when completed */}
+              {(createdPSTNumber && pstCompleted) || createdPSWNumber ? (
+                <div className="flex justify-center gap-4">
+                  {createdPSTNumber && pstCompleted && (
+                    <Badge className="bg-green-50 text-green-700 border-green-200 px-4 py-2 text-sm font-medium">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      PST Completed: {createdPSTNumber}
+                      <FileText className="w-4 h-4 ml-2" />
+                    </Badge>
+                  )}
+                  {createdPSWNumber && (
+                    <Badge className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 text-sm font-medium">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      PSW Completed: {createdPSWNumber}
+                      <Calendar className="w-4 h-4 ml-2" />
+                    </Badge>
+                  )}
+                </div>
+              ) : null}
 
-            {/* KPI Section */}
-            <KPISection kpis={kpis} />
+              {/* KPI Section */}
+              <KPISection kpis={kpis} />
+            </div>
           </div>
-        </div>
 
-        {/* Sticky Filter Bar with Segment & View Controls */}
-        <div className="sticky top-0 z-40">
-          <FilterBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedTransportType={selectedTransportType}
-            setSelectedTransportType={setSelectedTransportType}
-            selectedPSTStatus={selectedPSTStatus}
-            setSelectedPSTStatus={setSelectedPSTStatus}
-            selectedPSWStatus={selectedPSWStatus}
-            setSelectedPSWStatus={setSelectedPSWStatus}
-            selectedPriority={selectedPriority}
-            setSelectedPriority={setSelectedPriority}
-            dateFilterMode={dateFilterMode}
-            handleDateFilterChange={handleDateFilterChange}
-            customDateStart={customDateStart}
-            setCustomDateStart={(date: string) =>
-              handleCustomDateChange(date, null)
-            }
-            customDateEnd={customDateEnd}
-            setCustomDateEnd={(date: string) =>
-              handleCustomDateChange(null, date)
-            }
-            filteredShipments={filteredShipments}
-            activePOTypeTab={activePOTypeTab}
-            setActivePOTypeTab={setActivePOTypeTab}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
+          {/* Sticky Filter Bar with Segment & View Controls */}
+          <div className="sticky top-0 z-40">
+            <FilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedTransportType={selectedTransportType}
+              setSelectedTransportType={setSelectedTransportType}
+              selectedPSTStatus={selectedPSTStatus}
+              setSelectedPSTStatus={setSelectedPSTStatus}
+              selectedPSWStatus={selectedPSWStatus}
+              setSelectedPSWStatus={setSelectedPSWStatus}
+              selectedPriority={selectedPriority}
+              setSelectedPriority={setSelectedPriority}
+              dateFilterMode={dateFilterMode}
+              handleDateFilterChange={handleDateFilterChange}
+              customDateStart={customDateStart}
+              setCustomDateStart={(date: string) =>
+                handleCustomDateChange(date, null)
+              }
+              customDateEnd={customDateEnd}
+              setCustomDateEnd={(date: string) =>
+                handleCustomDateChange(null, date)
+              }
+              filteredShipments={filteredShipments}
+              activePOTypeTab={activePOTypeTab}
+              setActivePOTypeTab={setActivePOTypeTab}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+            />
+          </div>
+
+          {/* Main Content */}
+          <div className="px-6 pb-6">
+            <div className="max-w-7xl mx-auto">
+              <MainContent
+                activePOTypeTab={activePOTypeTab}
+                viewMode={viewMode}
+                filteredShipments={filteredShipments}
+                selectedShipment={selectedShipment}
+                sortOption={sortOption}
+                onShipmentClick={handleShipmentClick}
+                onCreatePST={handleCreatePST}
+                onCreatePSW={handleCreatePSW}
+                onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
+                onUpdatePST={handleUpdatePST}
+                onUpdatePSW={handleUpdatePSW}
+                onViewPST={handleViewPST}
+                onViewPSW={handleViewPSW}
+                onViewCompleted={handleViewCompleted}
+                onSortOptionChange={setSortOption}
+                isLoading={isDataLoading || isAPILoading}
+              />
+            </div>
+          </div>
+
+          {/* Side Panel - Positioned overlay */}
+          <SidePanel
+            isOpen={isPanelOpen}
+            onOpenChange={setIsPanelOpen}
+            selectedShipment={selectedShipment}
+            onCreatePST={handleCreatePST}
+            onUpdatePST={(pstWebSeqId) => {
+              if (selectedShipment) {
+                handleUpdatePST(pstWebSeqId, selectedShipment);
+              }
+            }}
+            onCreatePSW={handleCreatePSW}
+            onUpdatePSW={(pswWebSeqId) => {
+              if (selectedShipment) {
+                handleUpdatePSW(pswWebSeqId, selectedShipment);
+              }
+            }}
+            onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
+            onViewDocs={handleViewDocs}
           />
         </div>
 
-        {/* Main Content */}
-        <div className="px-6 pb-6">
-          <div className="max-w-7xl mx-auto">
-            <MainContent
-              activePOTypeTab={activePOTypeTab}
-              viewMode={viewMode}
-              filteredShipments={filteredShipments}
-              selectedShipment={selectedShipment}
-              sortOption={sortOption}
-              onShipmentClick={handleShipmentClick}
-              onCreatePST={handleCreatePST}
-              onCreatePSW={handleCreatePSW}
-              onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
-              onUpdatePST={handleUpdatePST}
-              onUpdatePSW={handleUpdatePSW}
-              onViewPST={handleViewPST}
-              onViewPSW={handleViewPSW}
-              onViewCompleted={handleViewCompleted}
-              onSortOptionChange={setSortOption}
-              isLoading={isDataLoading || isAPILoading}
-            />
-          </div>
-        </div>
+        {/* Footer */}
+        <Footer />
 
-        {/* Side Panel - Positioned overlay */}
-        <SidePanel
-          isOpen={isPanelOpen}
-          onOpenChange={setIsPanelOpen}
-          selectedShipment={selectedShipment}
-          onCreatePST={handleCreatePST}
-          onUpdatePST={(pstWebSeqId) => {
-            if (selectedShipment) {
-              handleUpdatePST(pstWebSeqId, selectedShipment);
-            }
-          }}
-          onCreatePSW={handleCreatePSW}
-          onUpdatePSW={(pswWebSeqId) => {
-            if (selectedShipment) {
-              handleUpdatePSW(pswWebSeqId, selectedShipment);
-            }
-          }}
-          onCreatePSTWithConfirmation={handleCreatePSTWithConfirmation}
-          onViewDocs={handleViewDocs}
-        />
-      </div>
-
-      {/* Footer */}
-      <Footer />
-      
-      {/* Toast notifications */}
-      <Toaster />
+        {/* Toast notifications */}
+        <Toaster />
       </div>
     </ToastProvider>
   );

@@ -39,7 +39,9 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       poNo: item.poNo,
       pstWebSeqId: item.pstWebSeqId,
       pstStatus: item.pstStatus,
-      pstNo: item.pstNo
+      pstNo: item.pstNo,
+      pstTransactionType: item.pstTransactionType,
+      pswTransactionType: item.pswTransactionType
     });
 
     // กำหนด PO Type ตาม coLoadPOCount
@@ -113,14 +115,10 @@ export function convertPOListToShipments(poList: POListItem[]): Shipment[] {
       weight: '0kg', // Would need additional API data
       dimensions: '0x0x0', // Would need additional API data
       assignedAgent: 'Auto Assigned',
-      // agentContact: '+66-xxx-xxxx',
-      // trackingNumber: item.blNo || 'N/A',
-      // customsDeclaration: `CD-${item.poNo || '000'}`,
-      // insurance: true,
-      // priority: 'Medium',
-      // remarks: '',
-      // specialInstructions: '',
-      // documents: [],
+
+      pstTransactionType: item.pstTransactionType,
+      pswTransactionType: item.pswTransactionType,
+
       relatedSuppliers: (item.coLoadSupplierCount || 0) > 0 ? [
         {
           name: item.supName || 'Unknown',

@@ -61,6 +61,7 @@ import {
 
 // Custom Components & Types
 import { CommunicationPanel, CommunicationMessage } from "./CommunicationPanel";
+import { FileUploadComponent } from "./FileUploadComponent";
 import { SaveExpenseRequest } from "../api/types";
 import {
   pstService,
@@ -118,6 +119,7 @@ interface HeaderData {
   referenceCode?: string;
   taxIdNo?: string;
   paymentTerm?: string;
+  pstTransactionType?: string;
 }
 
 interface InvoiceItem {
@@ -2039,6 +2041,26 @@ export function CreatePSWForm({
                   placeholder="Send a message to JAGOTA about expenses, charges, or billing details..."
                   user={{ email: "test@example.com", name: "Test User" }}
                 />
+
+                {/* File Upload Section */}
+                <div className="mt-6">
+                  <FileUploadComponent
+                    docType={dashboardHeaderData?.pstTransactionType ?? ""}
+                    docBook="PSW"
+                    docNo={`${headerData.pswNo}`}
+
+                    // docNo={`JB.PS.PSW.${headerData.pswNo || 'NEW'}`}
+                    onUploadSuccess={(response) => {
+                      console.log("✅ File upload successful:", response);
+                      // You can add additional success handling here
+                    }}
+                    onUploadError={(error) => {
+                      console.error("❌ File upload failed:", error);
+                      // You can add additional error handling here
+                    }}
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
 
               {/* Right Column - Sticky Expense Summary */}

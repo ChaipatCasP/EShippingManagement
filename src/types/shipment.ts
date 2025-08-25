@@ -44,8 +44,9 @@ export interface Shipment {
   pswBook?: string | null; // PSW Book จาก po-list API
   pswNo?: number | null;   // PSW Number จาก po-list API
   pswJagotaStatus?: 'N' | 'Y' | 'Z' | string;
-  // PSW Web Sequence ID สำหรับ Update PSW functionality
   pswWebSeqId?: number;
+  pstTransactionType?: string;
+  pswTransactionType?: string;
   supplierContact: string;
   supplierEmail: string;
   supplierAddress: string;
@@ -53,17 +54,7 @@ export interface Shipment {
   weight: string;
   dimensions: string;
   assignedAgent: string;
-  // agentContact: string;
-  // trackingNumber: string;
-  // customsDeclaration: string;
-  // insurance: boolean;
-  // priority: 'High' | 'Medium' | 'Low';
-  // remarks: string;
-  // specialInstructions: string;
-  // documents: string[];
   relatedSuppliers: RelatedSupplier[];
-  
-  // Original PO List data for API calls
   originalPOData?: {
     supCode: string;
     poBook: string;
@@ -72,6 +63,7 @@ export interface Shipment {
     coLoadPOCount: number;
     coLoadSupplierCount: number;
   };
+
 }
 
 export interface RelatedSupplier {

@@ -290,8 +290,10 @@ export interface POListItem {
   pswJagotaStatus?: string;
   pswWebSeqId?: number; 
 
-  pstNumber?: string; // PST Number จาก API
-  pswNumber?: string; // PSW Number จาก API
+  pstNumber?: string;
+  pswNumber?: string;
+  pstTransactionType?: string;
+  pswTransactionType?: string;
 }
 
 export interface EShippingPOListResponse {

@@ -70,6 +70,7 @@ import {
   CommunicationPanel,
   type CommunicationMessage,
 } from "./CommunicationPanel";
+import { FileUploadComponent } from "./FileUploadComponent";
 
 interface Country {
   name: string;
@@ -155,6 +156,7 @@ interface HeaderData {
   referenceCode?: string;
   taxIdNo?: string;
   paymentTerm?: string;
+  pstTransactionType?: string;
 }
 
 interface CreatePSTFormProps {
@@ -222,7 +224,7 @@ export function CreatePSTForm({
     // Show welcome snackbar when component loads with a small delay
     const timer = setTimeout(() => {
       console.log("🎉 PST Form loaded - showing snackbar");
-      
+
       // Use snackbar helper for cleaner code
       snackbar.success(
         "PST Form Ready",
@@ -230,7 +232,6 @@ export function CreatePSTForm({
       );
 
       console.log("Snackbar notification displayed!");
-      
     }, 800); // Slightly faster delay for snackbar feel
 
     return () => clearTimeout(timer);
@@ -752,30 +753,6 @@ export function CreatePSTForm({
               ? String(data.childSequenceId)
               : "",
           dueDate: data.dueDate ? data.dueDate.split("T")[0] : "", // Get from API and format date
-          // poBook: data.poBook ? String(data.poBook) : "",
-          // poNo: data.poNo ? String(data.poNo) : "",
-          // poDate: data.poDate || "",
-          // invoiceDate: data.invoiceDate || "",
-          // invoiceNo: data.invoiceNo || "",
-          // contactPerson: data.contactPerson || "",
-          // awbDate: data.awbDate || "",
-          // awbNo: data.awbNo || "",
-          // importEntryNo: data.importEntryNo || "",
-          // currency: data.currency || "",
-          // eta: data.eta || "",
-          // vesselName: data.vesselName || "",
-          // paymentTerm: data.paymentTerm || "",
-          // transportMode: data.awbType || "",
-          // countryOfOrigin: data.countryOfOrigin || "",
-          // creditTerm: "",
-          // referenceCode: "",
-          // taxIdNo: "",
-          // dueDate: "",
-          // requestPaymentDate: data.requestPaymentDateTime
-          //   ? data.requestPaymentDateTime.split("T")[0]
-          //   : "",
-          // requestPaymentTime: "16:00",
-          // remarks: data.remarks || "",
         };
 
         setBillEntryData(transformedData);
@@ -3165,6 +3142,26 @@ export function CreatePSTForm({
                     title={`Communication Messages - PST Creation`}
                     placeholder="Send a message to JAGOTA about PST details, approvals, or questions..."
                     user={{ email: "test@example.com", name: "Test User" }}
+                  />
+
+                  {/* File Upload Section */}
+                  <FileUploadComponent
+                    docType={dashboardHeaderData?.pstTransactionType ?? ""}
+                    docBook="PST"
+                    docNo={billEntryData.poNo}
+                    // docNo={billEntryData.poBook && billEntryData.poNo ?
+                    //   `${billEntryData.poBook}.PS.PST.${billEntryData.poNo}` :
+                    //   `JB.PS.PST.${pstWebSeqId || 'NEW'}`
+                    // }
+                    disabled={isFormDisabled || isSubmitting}
+                    onUploadSuccess={(response) => {
+                      console.log("✅ File upload success:", response);
+                      // You can add success notification here
+                    }}
+                    onUploadError={(error) => {
+                      console.error("❌ File upload error:", error);
+                      alert(`File upload failed: ${error}`);
+                    }}
                   />
                 </div>
 
