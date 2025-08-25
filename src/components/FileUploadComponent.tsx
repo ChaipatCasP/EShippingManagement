@@ -60,8 +60,26 @@ console.log("📁 FileUploadComponent rendered with:", { docType, docBook, docNo
     
     if (files.length === 0) return;
 
+    console.log("📁 Selected files:", files.map(f => ({
+      name: f.name,
+      size: f.size,
+      type: f.type,
+      isFile: f instanceof File
+    })));
+
     // Convert to UploadFile objects with preview
     const uploadFiles: UploadFile[] = files.map((file) => {
+      // Validate file before processing
+      if (!file || !(file instanceof File)) {
+        console.error("Invalid file object:", file);
+        return null;
+      }
+
+      if (file.size === 0) {
+        console.error("File is empty:", file.name);
+        return null;
+      }
+
       // Create a wrapper object that preserves the original File
       const uploadFile: UploadFile = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -89,7 +107,7 @@ console.log("📁 FileUploadComponent rendered with:", { docType, docBook, docNo
       }
 
       return uploadFile;
-    });
+    }).filter(Boolean) as UploadFile[]; // Remove null values
 
     setSelectedFiles((prev) => [...prev, ...uploadFiles]);
     
@@ -125,15 +143,82 @@ console.log("📁 FileUploadComponent rendered with:", { docType, docBook, docNo
         prev.map((file) => ({ ...file, uploadStatus: "uploading" }))
       );
 
+      console.log("📁 Upload Request Details:", {
+        docType,
+        docBook, 
+        docNo,
+        remark: `${docType} document attachments`,
+        filesCount: selectedFiles.length,
+        files: selectedFiles.map(f => ({
+          id: f.id,
+          name: f.name,
+          size: f.size,
+          type: f.type,
+          isFile: f.file instanceof File,
+          constructor: f.file.constructor.name,
+          originalFile: {
+            name: f.file.name,
+            size: f.file.size,
+            type: f.file.type,
+            lastModified: f.file.lastModified
+          }
+        }))
+      });
+
+      // Validate files before upload - check the actual File objects
+      const validFiles = selectedFiles
+        .map(uploadFile => uploadFile.file)
+        .filter(file => {
+          const isValid = file && 
+            file instanceof File && 
+            file.size > 0 && 
+            file.name && 
+            file.name.length > 0;
+          
+          if (!isValid) {
+            console.error("❌ Invalid file detected:", {
+              file: file,
+              isFile: file instanceof File,
+              size: file?.size,
+              name: file?.name,
+              hasName: file?.name && file.name.length > 0
+            });
+          }
+          
+          return isValid;
+        });
+
+      console.log("✅ Valid files after filtering:", validFiles.map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        constructor: f.constructor.name
+      })));
+
+      if (validFiles.length === 0) {
+        alert("No valid files selected. Please select valid image or PDF files.");
+        setSelectedFiles((prev) =>
+          prev.map((file) => ({
+            ...file,
+            uploadStatus: "error",
+            errorMessage: "File validation failed"
+          }))
+        );
+        return;
+      }
+
+      if (validFiles.length !== selectedFiles.length) {
+        console.warn(`⚠️ Some files were filtered out. Valid: ${validFiles.length}, Total: ${selectedFiles.length}`);
+      }
+
+      // Create upload request with validated files
       const uploadRequest: FileUploadRequest = {
-        files: selectedFiles.map(uploadFile => uploadFile.file), // Extract the original File objects
+        files: validFiles,
         docType,
         docBook,
         docNo,
         remark: `${docType} document attachments`,
       };
-
-      console.log("📁 Starting upload for:", uploadRequest);
 
       // Simulate progress
       const progressInterval = setInterval(() => {

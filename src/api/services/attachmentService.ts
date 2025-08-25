@@ -10,6 +10,7 @@ export interface AttachmentItem {
     fileType: string;
     uploadedDate: string;
     downloadUrl?: string;
+    viewUrl?: string; // For FileViewer URL
     fileExtension: string;
 }
 
@@ -22,7 +23,41 @@ export interface AttachmentResponse {
 
 class AttachmentService {
     private baseUrl = "https://jnodeapi-staging.jagota.com/v1/es/eshipping/attachments";
+    private fileViewerBaseUrl = "https://apis-staging.jagota.com/FileViewer/";
     private token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0";
+
+    /**
+     * Convert API URL format to FileViewer format
+     * IBMattachments/PS/202508/152078825.jpg -> PS_202508_152078825.jpg
+     */
+    private convertToFileViewerUrl(apiUrl: string): string {
+        try {
+            // Remove IBMattachments/ prefix if exists
+            let cleanUrl = apiUrl.replace(/^IBMattachments\//, '');
+            
+            // Split by '/' to get parts: [PS, 202508, 152078825.jpg]
+            const parts = cleanUrl.split('/');
+            
+            if (parts.length >= 3) {
+                const transType = parts[0]; // PS
+                const yearMonth = parts[1]; // 202508
+                const fileName = parts[2]; // 152078825.jpg
+                
+                // Create file format: PS_202508_152078825.jpg
+                const fileUrl = `${transType}_${yearMonth}_${fileName}`;
+                
+                // Return full FileViewer URL
+                return `${this.fileViewerBaseUrl}?file=${fileUrl}&token=jagota`;
+            }
+            
+            // Fallback if format doesn't match expected pattern
+            return `${this.fileViewerBaseUrl}?file=${cleanUrl.replace(/\//g, '_')}&token=jagota`;
+            
+        } catch (error) {
+            console.warn("Failed to convert URL format:", error);
+            return `${this.fileViewerBaseUrl}?file=${apiUrl}&token=jagota`;
+        }
+    }
 
     async getAttachments(transType: string, poBook: string, poNo: string): Promise<AttachmentResponse> {
         try {
@@ -71,25 +106,48 @@ class AttachmentService {
                 };
             }
 
-            // Handle different response formats
-            let attachmentData = data;
-            if (data.data && Array.isArray(data.data)) {
+            // Handle different response formats based on API structure
+            let attachmentData: any[] = [];
+            
+            // Check if this is the new API format with error, message, data structure
+            if (data.hasOwnProperty('error') && data.hasOwnProperty('data')) {
+                if (data.error === true) {
+                    return {
+                        success: false,
+                        data: [],
+                        error: data.message || "API returned error",
+                    };
+                }
+                
+                // Use the data array from the new format
+                attachmentData = data.data || [];
+            } else if (data.data && Array.isArray(data.data)) {
+                // Legacy format
                 attachmentData = data.data;
-            } else if (!Array.isArray(data)) {
-                // If it's not an array and doesn't have a data property, treat as empty
+            } else if (Array.isArray(data)) {
+                // Direct array format
+                attachmentData = data;
+            } else {
+                // Unknown format, treat as empty
                 attachmentData = [];
             }
 
             // Transform the response data to our interface
-            const attachments: AttachmentItem[] = Array.isArray(attachmentData) ? attachmentData.map((item: any, index: number) => ({
-                id: item.id || `attachment-${index}`,
-                fileName: item.fileName || item.filename || item.name || "Unknown",
-                fileSize: item.fileSize || item.size || 0,
-                fileType: item.fileType || item.type || item.mimeType || "unknown",
-                uploadedDate: item.uploadedDate || item.createdDate || item.date || new Date().toISOString(),
-                downloadUrl: item.downloadUrl || item.url,
-                fileExtension: this.getFileExtension(item.fileName || item.filename || item.name || ""),
-            })) : [];
+            const attachments: AttachmentItem[] = Array.isArray(attachmentData) ? attachmentData.map((item: any, index: number) => {
+                const fileName = item.fileName || item.filename || item.name || "Unknown";
+                const originalUrl = item.downloadUrl || item.url || "";
+                
+                return {
+                    id: item.id || `attachment-${index}`,
+                    fileName: fileName,
+                    fileSize: item.fileSize || item.size || this.estimateFileSize(fileName),
+                    fileType: item.fileType || item.type || item.mimeType || this.getFileTypeFromName(fileName),
+                    uploadedDate: item.uploadedDate || item.createdDate || item.date || new Date().toISOString(),
+                    downloadUrl: originalUrl,
+                    viewUrl: originalUrl ? this.convertToFileViewerUrl(originalUrl) : undefined,
+                    fileExtension: this.getFileExtension(fileName),
+                };
+            }) : [];
 
             return {
                 success: true,
@@ -113,6 +171,40 @@ class AttachmentService {
     private getFileExtension(fileName: string): string {
         const lastDot = fileName.lastIndexOf('.');
         return lastDot !== -1 ? fileName.substring(lastDot + 1).toLowerCase() : '';
+    }
+
+    /**
+     * Get file type from filename
+     */
+    private getFileTypeFromName(fileName: string): string {
+        const extension = this.getFileExtension(fileName);
+        
+        switch (extension) {
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+            case 'bmp':
+                return 'image';
+            case 'pdf':
+                return 'application/pdf';
+            case 'doc':
+            case 'docx':
+                return 'application/msword';
+            case 'xls':
+            case 'xlsx':
+                return 'application/excel';
+            default:
+                return 'unknown';
+        }
+    }
+
+    /**
+     * Estimate file size (fallback when not provided)
+     */
+    private estimateFileSize(fileName: string): number {
+        // Return a default size if not provided
+        return 0;
     }
 
     /**

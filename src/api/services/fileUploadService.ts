@@ -57,19 +57,131 @@ class FileUploadService {
             // Prepare form data
             const formData = new FormData();
 
-            // Add files to form data
-            request.files.forEach((file) => {
-                formData.append("FILE2UPLOAD[]", file, file.name);
-            });
+            // Log file information for debugging
+            console.log("📁 Files to upload:", request.files.map(f => ({
+                name: f.name,
+                size: f.size,
+                type: f.type,
+                isValid: f instanceof File
+            })));
+
+            // Add files to form data with proper validation
+            let fileCount = 0;
+            for (let index = 0; index < request.files.length; index++) {
+                const file = request.files[index];
+                
+                if (file && file instanceof File && file.size > 0) {
+                    console.log(`📎 Processing file ${index + 1}:`, {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: file.lastModified,
+                        constructor: file.constructor.name
+                    });
+                    
+                    // Create a new File object to avoid any reference issues
+                    const clonedFile = new File([file], file.name, {
+                        type: file.type,
+                        lastModified: file.lastModified
+                    });
+                    
+                    console.log(`📋 Cloned file ${index + 1}:`, {
+                        name: clonedFile.name,
+                        size: clonedFile.size,
+                        type: clonedFile.type,
+                        lastModified: clonedFile.lastModified
+                    });
+                    
+                    // Verify file content by reading first few bytes
+                    try {
+                        const chunk = file.slice(0, 100);
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const arrayBuffer = e.target?.result as ArrayBuffer;
+                            const bytes = new Uint8Array(arrayBuffer);
+                            console.log(`📖 File ${file.name} first 10 bytes:`, Array.from(bytes.slice(0, 10)));
+                        };
+                        reader.readAsArrayBuffer(chunk);
+                    } catch (readError) {
+                        console.warn(`⚠️ Could not read file ${file.name}:`, readError);
+                    }
+                    
+                    formData.append("FILE2UPLOAD[]", clonedFile, clonedFile.name);
+                    fileCount++;
+                } else {
+                    console.warn(`⚠️ Skipping invalid file ${index + 1}:`, {
+                        file: file,
+                        isFile: file instanceof File,
+                        size: file?.size,
+                        name: file?.name,
+                        type: file?.type
+                    });
+                }
+            }
+
+            // Debug FormData contents
+            console.log("📦 FormData entries:");
+            for (const [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(`  ${key}:`, {
+                        name: value.name,
+                        size: value.size,
+                        type: value.type,
+                        lastModified: value.lastModified
+                    });
+                } else {
+                    console.log(`  ${key}:`, value);
+                }
+            }
+
+            if (fileCount === 0) {
+                return {
+                    success: false,
+                    message: "No valid files to upload",
+                    error: "All files were invalid or empty",
+                };
+            }
 
             // Document number like "JB.PS.PST.21978"
+            const documentId = `${this.company}.${request.docType}.${request.docBook}.${request.docNo}`;
+            
             // Add document information
-            formData.append("DOCUMENT", this.company + '.' + request.docType + '.' + request.docBook + '.' + request.docNo);
+            formData.append("DOCUMENT", documentId);
             formData.append("DOCUMENT_SEQ", "0");
             formData.append("DOCUMENT_TYPE", request.docType);
-            formData.append("REMARK", request.remark || "");
+            formData.append("REMARK", request.remark || `${request.docType} document attachments`);
+
+            console.log("📄 Document info:", {
+                DOCUMENT: documentId,
+                DOCUMENT_SEQ: "0",
+                DOCUMENT_TYPE: request.docType,
+                REMARK: request.remark || `${request.docType} document attachments`,
+                fileCount: fileCount
+            });
 
             console.log("📡 Sending upload request to:", this.baseUrl);
+            console.log("🔑 Headers:", {
+                Authorization: this.token.substring(0, 20) + "...",
+                Username: this.username
+            });
+
+            // Verify FormData size before sending
+            let totalFormDataSize = 0;
+            for (const [, value] of formData.entries()) {
+                if (value instanceof File) {
+                    totalFormDataSize += value.size;
+                }
+            }
+            console.log("📏 Total FormData size:", totalFormDataSize, "bytes");
+
+            if (totalFormDataSize === 0) {
+                console.error("❌ FormData contains no file data!");
+                return {
+                    success: false,
+                    message: "No file data in FormData",
+                    error: "FormData is empty or files are corrupted",
+                };
+            }
 
             // Make the API call
             const response = await fetch(this.baseUrl, {
@@ -81,17 +193,38 @@ class FileUploadService {
             const result = await response.text();
             console.log("📬 Upload response:", result);
 
+            // Try to parse the response as JSON
+            let parsedResult;
+            try {
+                parsedResult = JSON.parse(result);
+                console.log("📝 Parsed response:", parsedResult);
+            } catch (parseError) {
+                console.warn("Failed to parse response as JSON:", parseError);
+                parsedResult = { message: result };
+            }
+
+            // Check for successful response
             if (response.ok) {
+                // Check for API-level errors in the response
+                if (parsedResult.jwt === 1 && parsedResult.flag === 0) {
+                    // This indicates an API error even though HTTP status is OK
+                    return {
+                        success: false,
+                        message: "Upload failed",
+                        error: parsedResult.message || "Unknown API error",
+                    };
+                }
+                
                 return {
                     success: true,
-                    message: "Files uploaded successfully",
-                    data: result,
+                    message: parsedResult.message || "Files uploaded successfully",
+                    data: parsedResult,
                 };
             } else {
                 return {
                     success: false,
                     message: "Upload failed",
-                    error: `HTTP ${response.status}: ${result}`,
+                    error: `HTTP ${response.status}: ${parsedResult.message || result}`,
                 };
             }
         } catch (error) {
