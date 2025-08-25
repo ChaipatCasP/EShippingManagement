@@ -57,6 +57,7 @@ import {
   Check,
   CheckCircle,
   MapPin,
+  Upload,
 } from "lucide-react";
 
 // Custom Components & Types
@@ -121,6 +122,7 @@ interface HeaderData {
   taxIdNo?: string;
   paymentTerm?: string;
   pstTransactionType?: string;
+  pswTransactionType?: string;
 }
 
 interface InvoiceItem {
@@ -2044,12 +2046,11 @@ export function CreatePSWForm({
                 />
 
                 {/* File Upload Section */}
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <FileUploadComponent
-                    docType={dashboardHeaderData?.pstTransactionType ?? ""}
+                    docType={dashboardHeaderData?.pswTransactionType ?? ""}
                     docBook="PSW"
                     docNo={`${headerData.pswNo}`}
-
                     // docNo={`JB.PS.PSW.${headerData.pswNo || 'NEW'}`}
                     onUploadSuccess={(response) => {
                       console.log("✅ File upload successful:", response);
@@ -2061,7 +2062,7 @@ export function CreatePSWForm({
                     }}
                     disabled={isSubmitting}
                   />
-                </div>
+                </div> */}
               </div>
 
               {/* Right Column - Sticky Expense Summary */}
@@ -2162,6 +2163,44 @@ export function CreatePSWForm({
                     poNo={headerData.pswNo}
                     title="Uploaded Files"
                   />
+
+                  {/* File Upload Section */}
+                  <Card className="w-full mt-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 max-w-full">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-3 text-base">
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <Upload className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="text-gray-900 font-semibold">
+                              Upload Documents
+                            </div>
+                            {/* <div className="text-xs font-normal text-gray-600 mt-0.5">
+                              PSW-{headerData.pswNo} • Upload files for review
+                            </div> */}
+                          </div>
+                        </CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <FileUploadComponent
+                        docType={dashboardHeaderData?.pswTransactionType ?? ""}
+                        docBook="PSW"
+                        docNo={`${headerData.pswNo}`}
+                        // docNo={`JB.PS.PSW.${headerData.pswNo || 'NEW'}`}
+                        onUploadSuccess={(response) => {
+                          console.log("✅ File upload successful:", response);
+                          // You can add additional success handling here
+                        }}
+                        onUploadError={(error) => {
+                          console.error("❌ File upload failed:", error);
+                          // You can add additional error handling here
+                        }}
+                        disabled={isSubmitting}
+                      />
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -2191,9 +2230,7 @@ export function CreatePSWForm({
             <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Items Count:</span>
-                <span className="font-medium">
-                  {expenseItems.length} items
-                </span>
+                <span className="font-medium">{expenseItems.length} items</span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
@@ -2219,8 +2256,8 @@ export function CreatePSWForm({
             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg mt-3">
               <CheckCircle className="w-4 h-4 flex-shrink-0" />
               <span>
-                After submission, you will be redirected to the dashboard
-                where you can track your PSW status.
+                After submission, you will be redirected to the dashboard where
+                you can track your PSW status.
               </span>
             </div>
           </div>

@@ -58,6 +58,7 @@ import {
   ArrowRight,
   FileDigit,
   DollarSign,
+  Upload,
 } from "lucide-react";
 import {
   pstService,
@@ -3144,26 +3145,6 @@ export function CreatePSTForm({
                     placeholder="Send a message to JAGOTA about PST details, approvals, or questions..."
                     user={{ email: "test@example.com", name: "Test User" }}
                   />
-
-                  {/* File Upload Section */}
-                  <FileUploadComponent
-                    docType={dashboardHeaderData?.pstTransactionType ?? ""}
-                    docBook="PST"
-                    docNo={billEntryData.poNo}
-                    // docNo={billEntryData.poBook && billEntryData.poNo ?
-                    //   `${billEntryData.poBook}.PS.PST.${billEntryData.poNo}` :
-                    //   `JB.PS.PST.${pstWebSeqId || 'NEW'}`
-                    // }
-                    disabled={isFormDisabled || isSubmitting}
-                    onUploadSuccess={(response) => {
-                      console.log("✅ File upload success:", response);
-                      // You can add success notification here
-                    }}
-                    onUploadError={(error) => {
-                      console.error("❌ File upload error:", error);
-                      alert(`File upload failed: ${error}`);
-                    }}
-                  />
                 </div>
 
                 {/* Right Column - Sticky Expense Summary (20%) */}
@@ -3252,6 +3233,41 @@ export function CreatePSTForm({
                       poNo={billEntryData.poNo}
                       title="Uploaded Files"
                     />
+
+                    {/* File Upload Section */}
+                    <Card className="w-full mt-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 max-w-full">
+                      <CardHeader className="pb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-3 text-base">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                              <Upload className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div>
+                              <div className="text-gray-900 font-semibold">Upload Documents</div>
+                              {/* <div className="text-xs font-normal text-gray-600 mt-0.5">
+                                PST-{billEntryData.poNo} • Upload files for review
+                              </div> */}
+                            </div>
+                          </CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <FileUploadComponent
+                          docType={dashboardHeaderData?.pstTransactionType ?? ""}
+                          docBook="PST"
+                          docNo={billEntryData.poNo}
+                          disabled={isFormDisabled || isSubmitting}
+                          onUploadSuccess={(response) => {
+                            console.log("✅ File upload success:", response);
+                            // You can add success notification here
+                          }}
+                          onUploadError={(error) => {
+                            console.error("❌ File upload error:", error);
+                            alert(`File upload failed: ${error}`);
+                          }}
+                        />
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               </div>

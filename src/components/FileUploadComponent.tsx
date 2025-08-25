@@ -47,8 +47,6 @@ export function FileUploadComponent({
   disabled = false,
 }: FileUploadComponentProps) {
 
-console.log("📁 FileUploadComponent rendered with:", { docType, docBook, docNo });
-
   const [selectedFiles, setSelectedFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -319,8 +317,8 @@ console.log("📁 FileUploadComponent rendered with:", { docType, docBook, docNo
           <Upload className="w-5 h-5" />
           File Upload
         </CardTitle>
-        <p className="text-sm text-gray-600">
-          Upload images (PNG, JPG, JPEG) and PDF files for {docType} document: {docNo}
+        <p className="text-sm text-gray-900">
+           (PNG, JPG, JPEG) and PDF files only
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -345,13 +343,11 @@ console.log("📁 FileUploadComponent rendered with:", { docType, docBook, docNo
               asChild
             >
               <div className="flex flex-col items-center gap-2">
-                <Upload className="w-6 h-6 text-gray-400" />
-                <span className="text-sm text-gray-600">
-                  Click to select files or drag and drop
+                <Upload className="w-6 h-6 text-gray-900" />
+                <span className="text-sm text-gray-700">
+                  Click to select files <br /> or drag and drop
                 </span>
-                <span className="text-xs text-gray-500">
-                  Images (PNG, JPG, JPEG) and PDF files only
-                </span>
+            
               </div>
             </Button>
           </label>
