@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom';
-import { Button } from './ui/button';
-import { FileText, AlertCircle, X } from 'lucide-react';
+import { createPortal } from "react-dom";
+import { Button } from "./ui/button";
+import { FileText, AlertCircle, X } from "lucide-react";
 
 interface CreatePSTConfirmationProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface CreatePSTConfirmationProps {
   poBook?: string;
   shipmentNo?: string;
   portOfDestination?: string;
-  type?: 'PST' | 'PSW'; // เพิ่ม type เพื่อแยกการแสดงผล
+  type?: "PST" | "PSW"; // เพิ่ม type เพื่อแยกการแสดงผล
 }
 
 export function CreatePSTConfirmation({
@@ -19,25 +19,17 @@ export function CreatePSTConfirmation({
   onClose,
   onConfirm,
   isLoading = false,
-  poNo = '',
-  poBook = '',
-  shipmentNo = '',
-  portOfDestination = '',
-  type = 'PST' // default เป็น PST
+  poNo = "",
+  poBook = "",
+  shipmentNo = "",
+  portOfDestination = "",
+  type = "PST", // default เป็น PST
 }: CreatePSTConfirmationProps) {
-  console.log('🎭 CreatePSTConfirmation rendered:', { 
-    isOpen, 
-    poNo, 
-    poBook, 
-    shipmentNo, 
-    portOfDestination 
-  });
-
   if (!isOpen) return null;
-  
+
   const modalContent = (
-    <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black bg-opacity-50" 
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black bg-opacity-50"
       style={{ zIndex: 99999 }}
       onClick={(e) => {
         // Close modal when clicking on backdrop
@@ -46,8 +38,8 @@ export function CreatePSTConfirmation({
         }
       }}
     >
-      <div 
-        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 relative" 
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 relative"
         style={{ zIndex: 100000 }}
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on modal content
       >
@@ -62,8 +54,16 @@ export function CreatePSTConfirmation({
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 ${type === 'PSW' ? 'bg-blue-100' : 'bg-green-100'} rounded-full flex items-center justify-center`}>
-            <FileText className={`w-5 h-5 ${type === 'PSW' ? 'text-blue-600' : 'text-green-600'}`} />
+          <div
+            className={`w-10 h-10 ${
+              type === "PSW" ? "bg-blue-100" : "bg-green-100"
+            } rounded-full flex items-center justify-center`}
+          >
+            <FileText
+              className={`w-5 h-5 ${
+                type === "PSW" ? "text-blue-600" : "text-green-600"
+              }`}
+            />
           </div>
           <h2 className="text-lg font-semibold">Create {type}</h2>
         </div>
@@ -84,7 +84,8 @@ export function CreatePSTConfirmation({
                   <span className="font-medium">Shipment:</span> {shipmentNo}
                 </div>
                 <div>
-                  <span className="font-medium">Destination:</span> {portOfDestination}
+                  <span className="font-medium">Destination:</span>{" "}
+                  {portOfDestination}
                 </div>
               </div>
             </div>
@@ -96,18 +97,19 @@ export function CreatePSTConfirmation({
         </div>
 
         {/* Footer */}
-                <div className="flex justify-end gap-3">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            disabled={isLoading}
-          >
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
+          <Button
+            style={{
+              backgroundColor: "#059669",
+              color: "white",
+              border: "none",
+            }}
             onClick={onConfirm}
             disabled={isLoading}
-            className={type === 'PSW' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+            className={type === "PSW" ? "bg-blue-600 hover:bg-blue-700" : ""}
           >
             {isLoading ? (
               <>

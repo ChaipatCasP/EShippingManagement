@@ -5,9 +5,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { FileText, AlertCircle } from 'lucide-react';
+} from "./ui/dialog";
+import { Button } from "./ui/button";
+import { FileText, AlertCircle } from "lucide-react";
 
 interface CreatePSTConfirmationProps {
   isOpen: boolean;
@@ -25,19 +25,11 @@ export function CreatePSTConfirmation({
   onClose,
   onConfirm,
   isLoading = false,
-  poNo = '',
-  poBook = '',
-  shipmentNo = '',
-  portOfDestination = ''
+  poNo = "",
+  poBook = "",
+  shipmentNo = "",
+  portOfDestination = "",
 }: CreatePSTConfirmationProps) {
-  console.log('🎭 CreatePSTConfirmation rendered:', { 
-    isOpen, 
-    poNo, 
-    poBook, 
-    shipmentNo, 
-    portOfDestination 
-  });
-  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -67,7 +59,8 @@ export function CreatePSTConfirmation({
                   <span className="font-medium">Shipment:</span> {shipmentNo}
                 </div>
                 <div>
-                  <span className="font-medium">Destination:</span> {portOfDestination}
+                  <span className="font-medium">Destination:</span>{" "}
+                  {portOfDestination}
                 </div>
               </div>
             </div>
@@ -92,7 +85,12 @@ export function CreatePSTConfirmation({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            className="flex-1 !bg-green-600 hover:!bg-green-700 !text-white border-0"
+            style={{
+              backgroundColor: "#059669",
+              color: "white",
+              border: "none",
+            }}
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
@@ -100,7 +98,7 @@ export function CreatePSTConfirmation({
                 Creating...
               </span>
             ) : (
-              'Create PST'
+              "Create PST"
             )}
           </Button>
         </DialogFooter>

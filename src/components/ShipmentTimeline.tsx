@@ -823,6 +823,7 @@ export function ShipmentTimeline({
           onClose={() => setPstConfirmationOpen(false)}
           onConfirm={handleConfirmCreatePST}
           isLoading={isPstCreating}
+          type="PST"
           poNo={selectedPstShipment.poNumber || ""}
           poBook={selectedPstShipment.originalPOData?.poBook || ""}
           shipmentNo={
