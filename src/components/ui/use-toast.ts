@@ -169,22 +169,54 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
-
-  React.useEffect(() => {
-    listeners.push(setState)
-    return () => {
-      const index = listeners.indexOf(setState)
-      if (index > -1) {
-        listeners.splice(index, 1)
-      }
-    }
-  }, [state])
+  const [state, setState] = React.useReducer(reducer, {
+    toasts: [],
+  })
 
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    dismiss: (toastId?: string) => {
+      setState({
+        type: "DISMISS_TOAST",
+        toastId: toastId,
+      })
+    },
+    // Snackbar helper functions
+    snackbar: {
+      success: (message: string, description?: string) => {
+        return toast({
+          title: message,
+          description,
+          variant: "success",
+          duration: 4000,
+        })
+      },
+      error: (message: string, description?: string) => {
+        return toast({
+          title: message,
+          description,
+          variant: "destructive",
+          duration: 5000,
+        })
+      },
+      warning: (message: string, description?: string) => {
+        return toast({
+          title: message,
+          description,
+          variant: "warning",
+          duration: 4000,
+        })
+      },
+      info: (message: string, description?: string) => {
+        return toast({
+          title: message,
+          description,
+          variant: "info",
+          duration: 4000,
+        })
+      },
+    },
   }
 }
 

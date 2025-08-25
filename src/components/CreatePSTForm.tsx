@@ -208,15 +208,33 @@ const formatDateToDDMMYYYY = (dateString: string): string => {
 };
 
 export function CreatePSTForm({
-  createdPSTNumber,
+  createdPSTNumber: _createdPSTNumber,
   pstWebSeqId,
   dashboardHeaderData,
   onClose,
   onSubmit,
   showPSTSubmissionPopup,
 }: CreatePSTFormProps) {
-  // Toast hook for notifications
-  const { toast } = useToast();
+  // Snackbar hook for notifications
+  const { snackbar } = useToast();
+
+  useEffect(() => {
+    // Show welcome snackbar when component loads with a small delay
+    const timer = setTimeout(() => {
+      console.log("🎉 PST Form loaded - showing snackbar");
+      
+      // Use snackbar helper for cleaner code
+      snackbar.success(
+        "PST Form Ready",
+        "Form loaded successfully! Ready to create or update PST requests."
+      );
+
+      console.log("Snackbar notification displayed!");
+      
+    }, 800); // Slightly faster delay for snackbar feel
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // No step management - single form only
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1370,17 +1388,15 @@ export function CreatePSTForm({
         // Reload fresh data with new webSeqID
         await reloadDataAfterSave(newWebSeqId);
 
-        toast({
-          title: "บันทึกข้อมูลสำเร็จ",
-          description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
-          variant: "default",
-        });
+        snackbar.success(
+          "บันทึกข้อมูลสำเร็จ",
+          "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว"
+        );
       } else {
-        toast({
-          title: "บันทึกข้อมูลสำเร็จ",
-          description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
-          variant: "default",
-        });
+        snackbar.success(
+          "บันทึกข้อมูลสำเร็จ",
+          "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว"
+        );
       }
     } catch (error) {
       console.error("Error saving bill entry:", error);
@@ -1572,17 +1588,15 @@ export function CreatePSTForm({
           // Update original data to current data (so changes are no longer detected)
           setOriginalBillEntryData({ ...billEntryData });
 
-          toast({
-            title: "บันทึกข้อมูลสำเร็จ",
-            description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
-            variant: "default",
-          });
+          snackbar.success(
+            "บันทึกข้อมูลสำเร็จ",
+            "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว"
+          );
         } else {
-          toast({
-            title: "บันทึกข้อมูลสำเร็จ",
-            description: "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว",
-            variant: "default",
-          });
+          snackbar.success(
+            "บันทึกข้อมูลสำเร็จ",
+            "ข้อมูลได้ถูกบันทึกเรียบร้อยแล้ว"
+          );
         }
 
         // Generate PSW number from billEntryData (poBook + poNo)
