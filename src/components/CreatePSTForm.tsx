@@ -71,6 +71,7 @@ import {
   type CommunicationMessage,
 } from "./CommunicationPanel";
 import { FileUploadComponent } from "./FileUploadComponent";
+import { AttachmentViewer } from "./AttachmentViewer";
 
 interface Country {
   name: string;
@@ -3243,6 +3244,14 @@ export function CreatePSTForm({
                         )}
                       </CardContent>
                     </Card>
+
+                    {/* Attachment Viewer - Show uploaded files */}
+                    <AttachmentViewer
+                      transType="PS"
+                      poBook="PST"
+                      poNo={billEntryData.poNo}
+                      title="Uploaded Files"
+                    />
                   </div>
                 </div>
               </div>
