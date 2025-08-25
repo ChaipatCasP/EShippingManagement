@@ -738,9 +738,7 @@ export function CreatePSTForm({
           paymentTerm: data.paymentTerm || "",
           vesselName: data.vesselName || "",
           countryOfOrigin: data.countryOfOrigin || "",
-          requestPaymentDateTime: data.requestPaymentDateTime
-            ? data.requestPaymentDateTime.split("T")[0]
-            : "",
+          requestPaymentDateTime: data.requestPaymentDateTime || "",
           currency: data.currency || "",
           remarks: data.remarks || "",
           billStatus: data.billStatus || "",
@@ -1209,9 +1207,7 @@ export function CreatePSTForm({
           paymentTerm: freshData.paymentTerm || "",
           vesselName: freshData.vesselName || "",
           countryOfOrigin: freshData.countryOfOrigin || "",
-          requestPaymentDateTime: freshData.requestPaymentDateTime
-            ? formatDateStr(freshData.requestPaymentDateTime)
-            : "",
+          requestPaymentDateTime: freshData.requestPaymentDateTime || "",
           currency: freshData.currency || "THB",
           remarks: freshData.remarks || "",
           billStatus: freshData.billStatus || "New Entry",
@@ -1315,12 +1311,35 @@ export function CreatePSTForm({
       const formatTime = (dateTimeStr: string) => {
         if (!dateTimeStr) return "16:00";
         try {
+          // Handle different date-time formats
+          if (dateTimeStr.includes(' ')) {
+            // Format: "YYYY-MM-DD HH:mm"
+            const timePart = dateTimeStr.split(' ')[1];
+            if (timePart && timePart.includes(':')) {
+              return timePart.substring(0, 5); // Return HH:mm
+            }
+          } else if (dateTimeStr.includes('T')) {
+            // Format: "YYYY-MM-DDTHH:mm:ss" (ISO format)
+            const timePart = dateTimeStr.split('T')[1];
+            if (timePart && timePart.includes(':')) {
+              return timePart.substring(0, 5); // Return HH:mm
+            }
+          } else if (dateTimeStr.length === 5 && dateTimeStr.includes(':')) {
+            // Already in HH:mm format
+            return dateTimeStr;
+          }
+          
+          // Fallback: try to parse as Date
           const date = new Date(dateTimeStr);
-          return date.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          });
+          if (!isNaN(date.getTime())) {
+            return date.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            });
+          }
+          
+          return "16:00";
         } catch (e) {
           console.error("Error formatting time:", dateTimeStr, e);
           return "16:00";
@@ -1510,12 +1529,35 @@ export function CreatePSTForm({
   const formatTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "16:00";
     try {
+      // Handle different date-time formats
+      if (dateTimeStr.includes(' ')) {
+        // Format: "YYYY-MM-DD HH:mm"
+        const timePart = dateTimeStr.split(' ')[1];
+        if (timePart && timePart.includes(':')) {
+          return timePart.substring(0, 5); // Return HH:mm
+        }
+      } else if (dateTimeStr.includes('T')) {
+        // Format: "YYYY-MM-DDTHH:mm:ss" (ISO format)
+        const timePart = dateTimeStr.split('T')[1];
+        if (timePart && timePart.includes(':')) {
+          return timePart.substring(0, 5); // Return HH:mm
+        }
+      } else if (dateTimeStr.length === 5 && dateTimeStr.includes(':')) {
+        // Already in HH:mm format
+        return dateTimeStr;
+      }
+      
+      // Fallback: try to parse as Date
       const date = new Date(dateTimeStr);
-      return date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      }
+      
+      return "16:00";
     } catch (e) {
       console.error("Error formatting time:", dateTimeStr, e);
       return "16:00";
@@ -2353,45 +2395,117 @@ export function CreatePSTForm({
                             </div>
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
-                                Request Payment Date
+                                Request Payment Date & Time
                               </Label>
                               <div className="flex gap-2">
                                 <Input
                                   type="date"
-                                  value={
-                                    billEntryData.requestPaymentDateTime || ""
-                                  }
-                                  onChange={(e) =>
+                                  value={(() => {
+                                    if (!billEntryData.requestPaymentDateTime) return "";
+                                    
+                                    const dateTime = billEntryData.requestPaymentDateTime;
+                                    
+                                    // Handle "YYYY-MM-DD HH:mm" format
+                                    if (dateTime.includes(' ')) {
+                                      return dateTime.split(' ')[0];
+                                    }
+                                    
+                                    // Handle "YYYY-MM-DDTHH:mm:ss" format
+                                    if (dateTime.includes('T')) {
+                                      return dateTime.split('T')[0];
+                                    }
+                                    
+                                    // If it's just a date "YYYY-MM-DD"
+                                    if (dateTime.length === 10 && dateTime.includes('-')) {
+                                      return dateTime;
+                                    }
+                                    
+                                    return "";
+                                  })()}
+                                  onChange={(e) => {
+                                    const dateValue = e.target.value;
+                                    const currentDateTime = billEntryData.requestPaymentDateTime || "";
+                                    let timeValue = "09:00";
+                                    
+                                    // Extract existing time if available
+                                    if (currentDateTime.includes('T')) {
+                                      timeValue = currentDateTime.split('T')[1]?.substring(0, 5) || "09:00";
+                                    } else if (currentDateTime.includes(' ')) {
+                                      timeValue = currentDateTime.split(' ')[1]?.substring(0, 5) || "09:00";
+                                    }
+                                    
                                     setBillEntryData({
                                       ...billEntryData,
-                                      requestPaymentDateTime: e.target.value,
-                                    })
-                                  }
+                                      requestPaymentDateTime: dateValue ? `${dateValue} ${timeValue}` : "",
+                                    });
+                                  }}
                                   disabled={isFormDisabled}
+                                  className="flex-1"
                                 />
                                 <Select
-                                  value={billEntryData.requestPaymentDateTime}
-                                  onValueChange={(value) =>
+                                  value={(() => {
+                                    if (!billEntryData.requestPaymentDateTime) return "09:00";
+                                    
+                                    const dateTime = billEntryData.requestPaymentDateTime;
+                                    
+                                    // Handle "YYYY-MM-DD HH:mm" format
+                                    if (dateTime.includes(' ')) {
+                                      const timePart = dateTime.split(' ')[1];
+                                      return timePart ? timePart.substring(0, 5) : "09:00";
+                                    }
+                                    
+                                    // Handle "YYYY-MM-DDTHH:mm:ss" format
+                                    if (dateTime.includes('T')) {
+                                      const timePart = dateTime.split('T')[1];
+                                      return timePart ? timePart.substring(0, 5) : "09:00";
+                                    }
+                                    
+                                    return "09:00";
+                                  })()}
+                                  onValueChange={(timeValue) => {
+                                    const currentDateTime = billEntryData.requestPaymentDateTime || "";
+                                    let dateValue = "";
+                                    
+                                    // Extract existing date if available
+                                    if (currentDateTime.includes('T')) {
+                                      dateValue = currentDateTime.split('T')[0];
+                                    } else if (currentDateTime.includes(' ')) {
+                                      dateValue = currentDateTime.split(' ')[0];
+                                    } else if (currentDateTime && currentDateTime.length === 10 && currentDateTime.includes('-')) {
+                                      dateValue = currentDateTime;
+                                    }
+                                    
                                     setBillEntryData({
                                       ...billEntryData,
-                                      requestPaymentDateTime: value,
-                                    })
-                                  }
+                                      requestPaymentDateTime: dateValue ? `${dateValue} ${timeValue}` : `${timeValue}`,
+                                    });
+                                  }}
+                                  disabled={isFormDisabled}
                                 >
                                   <SelectTrigger className="w-24">
-                                    <SelectValue />
+                                    <SelectValue placeholder="เวลา" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="08:00">08:00</SelectItem>
+                                    <SelectItem value="08:30">08:30</SelectItem>
                                     <SelectItem value="09:00">09:00</SelectItem>
+                                    <SelectItem value="09:30">09:30</SelectItem>
                                     <SelectItem value="10:00">10:00</SelectItem>
+                                    <SelectItem value="10:30">10:30</SelectItem>
                                     <SelectItem value="11:00">11:00</SelectItem>
+                                    <SelectItem value="11:30">11:30</SelectItem>
                                     <SelectItem value="12:00">12:00</SelectItem>
+                                    <SelectItem value="12:30">12:30</SelectItem>
                                     <SelectItem value="13:00">13:00</SelectItem>
+                                    <SelectItem value="13:30">13:30</SelectItem>
                                     <SelectItem value="14:00">14:00</SelectItem>
+                                    <SelectItem value="14:30">14:30</SelectItem>
                                     <SelectItem value="15:00">15:00</SelectItem>
+                                    <SelectItem value="15:30">15:30</SelectItem>
                                     <SelectItem value="16:00">16:00</SelectItem>
+                                    <SelectItem value="16:30">16:30</SelectItem>
                                     <SelectItem value="17:00">17:00</SelectItem>
+                                    <SelectItem value="17:30">17:30</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
