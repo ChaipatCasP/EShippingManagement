@@ -2076,55 +2076,44 @@ export function CreatePSWForm({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Individual Expense Items */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700">
-                          Items ({expenseItems.length})
-                        </Label>
-                      </div>
-
-                      {/* <Separator /> */}
-
-                      {/* Summary Totals */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs">
+                      {/* Cost Breakdown */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            Items ({expenseItems.length})
+                          </span>
+                          {/* <span className="font-medium text-gray-900">
+                                                {expenseItems.length}
+                                              </span> */}
+                        </div>
+                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Sub Total</span>
                           <span className="font-medium">
-                            ฿{totalSubTotal.toLocaleString()}
+                            ฿
+                            {totalSubTotal.toLocaleString("th-TH", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs">
+                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">VAT Amount</span>
                           <span className="font-medium">
-                            ฿{totalVATAmount.toLocaleString()}
+                            ฿
+                            {totalVATAmount.toLocaleString("th-TH", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs">
+                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Excise VAT</span>
-                          <span className="font-medium">
-                            ฿
-                            {expenseItems
-                              .reduce(
-                                (sum, item) =>
-                                  sum + (item.exciseVatAmount || 0),
-                                0
-                              )
-                              .toLocaleString()}
-                          </span>
+                          <span className="font-medium">฿0</span>
                         </div>
-                        <div className="flex justify-between text-xs">
+                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Interior VAT</span>
-                          <span className="font-medium">
-                            ฿
-                            {expenseItems
-                              .reduce(
-                                (sum, item) => sum + (item.interiorVat || 0),
-                                0
-                              )
-                              .toLocaleString()}
-                          </span>
+                          <span className="font-medium">฿0</span>
                         </div>
-
                         <div className="border-t pt-3">
                           <div className="flex justify-between text-base font-semibold">
                             <span className="text-gray-900">Grand Total</span>
@@ -2140,7 +2129,7 @@ export function CreatePSWForm({
                       </div>
 
                       {/* Action Button */}
-                      {!isFormDisabled && (
+                      {billEntryData.billStatus !== "Y" && (
                         <div className="pt-4">
                           <button
                             type="submit"
@@ -2164,43 +2153,47 @@ export function CreatePSWForm({
                     title="Uploaded Files"
                   />
 
-                  {/* File Upload Section */}
-                  <Card className="w-full mt-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 max-w-full">
-                    <CardHeader className="pb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-3 text-base">
-                          <div className="p-2 bg-green-100 rounded-lg">
-                            <Upload className="w-4 h-4 text-green-600" />
-                          </div>
-                          <div>
-                            <div className="text-gray-900 font-semibold">
-                              Upload Documents
+                  {/* File Upload Section - Hidden in view mode */}
+                  {!isFormDisabled && (
+                    <Card className="w-full mt-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 max-w-full">
+                      <CardHeader className="pb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-3 text-base">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                              <Upload className="w-4 h-4 text-green-600" />
                             </div>
-                            {/* <div className="text-xs font-normal text-gray-600 mt-0.5">
-                              PSW-{headerData.pswNo} • Upload files for review
-                            </div> */}
-                          </div>
-                        </CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                      <FileUploadComponent
-                        docType={dashboardHeaderData?.pswTransactionType ?? ""}
-                        docBook="PSW"
-                        docNo={`${headerData.pswNo}`}
-                        // docNo={`JB.PS.PSW.${headerData.pswNo || 'NEW'}`}
-                        onUploadSuccess={(response) => {
-                          console.log("✅ File upload successful:", response);
-                          // You can add additional success handling here
-                        }}
-                        onUploadError={(error) => {
-                          console.error("❌ File upload failed:", error);
-                          // You can add additional error handling here
-                        }}
-                        disabled={isSubmitting}
-                      />
-                    </CardContent>
-                  </Card>
+                            <div>
+                              <div className="text-gray-900 font-semibold">
+                                Upload Documents
+                              </div>
+                              {/* <div className="text-xs font-normal text-gray-600 mt-0.5">
+                                PSW-{headerData.pswNo} • Upload files for review
+                              </div> */}
+                            </div>
+                          </CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <FileUploadComponent
+                          docType={
+                            dashboardHeaderData?.pswTransactionType ?? ""
+                          }
+                          docBook="PSW"
+                          docNo={`${headerData.pswNo}`}
+                          // docNo={`JB.PS.PSW.${headerData.pswNo || 'NEW'}`}
+                          onUploadSuccess={(response) => {
+                            console.log("✅ File upload successful:", response);
+                            // You can add additional success handling here
+                          }}
+                          onUploadError={(error) => {
+                            console.error("❌ File upload failed:", error);
+                            // You can add additional error handling here
+                          }}
+                          disabled={isSubmitting}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </div>
