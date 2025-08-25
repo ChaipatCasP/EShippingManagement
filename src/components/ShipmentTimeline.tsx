@@ -134,13 +134,52 @@ export function ShipmentTimeline({
       return;
     }
 
+    if (!selectedPswShipment.pstWebSeqId) {
+      console.log("❌ No pstWebSeqId found in shipment");
+      alert("PST Web Sequence ID is required to create PSW");
+      return;
+    }
+
     try {
       setIsPswCreating(true);
-      onCreatePSW(selectedPswShipment.poNumber, selectedPswShipment);
+      
+      // Import pstService dynamically
+      const { pstService } = await import("../api/services/pstService");
+      
+      console.log("📡 Calling createPSW API with pstWebSeqId:", selectedPswShipment.pstWebSeqId);
+      
+      // Call createPSW API with pstWebSeqId
+      const result = await pstService.createPSW(selectedPswShipment.pstWebSeqId.toString());
+      
+      console.log("📬 PSW API Response:", result);
+      
+      if (!result.error && result.data?.length > 0) {
+        const pswWebSeqId = result.data[0].webSeqID;
+        console.log("✅ PSW created successfully with webSeqID:", pswWebSeqId);
+        
+        // Generate PSW number from shipment data
+        const pswNumber = `${selectedPswShipment.pstBook || 'PSW'}-${selectedPswShipment.poNumber}`;
+        
+        // Navigate to PSW form with the new webSeqID
+        const pswUrl = `/create-psw/${pswNumber}?pswWebSeqId=${pswWebSeqId}&mode=update`;
+        
+        console.log("🔗 Navigating to PSW URL:", pswUrl);
+        
+        // Update browser URL and navigate
+        window.location.href = pswUrl;
+        
+      } else {
+        const errorMessage = result.message || "Failed to create PSW";
+        console.error("❌ Failed to create PSW:", errorMessage);
+        alert(`Failed to create PSW: ${errorMessage}`);
+      }
+      
       setPswConfirmationOpen(false);
       setSelectedPswShipment(null);
     } catch (error) {
       console.error("❌ Error creating PSW:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      alert(`An error occurred while creating PSW: ${errorMessage}`);
     } finally {
       setIsPswCreating(false);
     }
