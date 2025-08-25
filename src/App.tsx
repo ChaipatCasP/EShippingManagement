@@ -1651,7 +1651,7 @@ export default function ShippingDashboard() {
           onSubmit={handlePSTSubmit}
         />
 
-        {/* PST Confirmation Dialog */}
+        {/* PSWConfirmation Dialog */}
         <AlertDialog
           open={showPSTConfirmDialog}
           onOpenChange={setShowPSTConfirmDialog}
@@ -1660,10 +1660,10 @@ export default function ShippingDashboard() {
             <AlertDialogHeader className="bg-white">
               <AlertDialogTitle className="flex items-center gap-2">
                 <Building className="w-5 h-5 text-blue-600" />
-                Confirm PST Submission
+                Confirm PSW Submission
               </AlertDialogTitle>
               <AlertDialogDescription className="text-gray-600">
-                You are about to submit your PST (Prepare for Shipping Tax)
+                You are about to submit your PSW (Prepare for Shipping Work)
                 request. Please review the details before confirming.
               </AlertDialogDescription>
             </AlertDialogHeader>

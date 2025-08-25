@@ -23,7 +23,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -56,6 +55,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Check,
+  CheckCircle,
   MapPin,
 } from "lucide-react";
 
@@ -2138,92 +2138,88 @@ export function CreatePSWForm({
         </div>
       </div>
 
-      {/* Submit Bill Confirmation Dialog */}
+      {/* PSWConfirmation Dialog */}
       <AlertDialog
         open={showSubmitConfirmDialog}
         onOpenChange={setShowSubmitConfirmDialog}
       >
         <AlertDialogContent className="max-w-lg bg-white">
-          <AlertDialogHeader className="space-y-3">
-            <AlertDialogTitle className="flex items-center gap-3 text-xl">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-orange-600" />
-              </div>
-              <span className="text-gray-900">ยืนยันการส่งบิล</span>
+          <AlertDialogHeader className="bg-white">
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Building className="w-5 h-5 text-blue-600" />
+              Confirm PSW Submission
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-600 text-base leading-relaxed">
-              คุณต้องการส่งบิลหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้
+            <AlertDialogDescription className="text-gray-600">
+              You are about to submit your PSW (Prepare for Shipping Work)
+              request. Please review the details before confirming.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          {/* Bill Summary */}
-          <div className="my-6">
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
-              <h4 className="font-medium text-gray-900 text-sm mb-3">
-                รายละเอียดการส่งบิล
-              </h4>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">จำนวนรายการ:</span>
-                  <span className="font-medium text-gray-900">
-                    {expenseItems.length} รายการ
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">ยอดรวมทั้งสิ้น:</span>
-                  <span className="font-bold text-lg text-green-600">
-                    ฿
-                    {grandTotal.toLocaleString("th-TH", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-
-                {pswWebSeqId && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">PSW ID:</span>
-                    <span className="font-medium text-gray-900">
-                      {pswWebSeqId}
-                    </span>
-                  </div>
-                )}
+          {/* Details Section - Outside of AlertDialogDescription to avoid nesting issues */}
+          <div className="px-6 pb-4 bg-white">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Items Count:</span>
+                <span className="font-medium">
+                  {expenseItems.length} items
+                </span>
               </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Grand Total:</span>
+                <span className="font-bold text-lg text-green-600">
+                  ฿
+                  {grandTotal.toLocaleString("th-TH", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+
+              {pswWebSeqId && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">PSW ID:</span>
+                  <span className="font-medium text-gray-900">
+                    {pswWebSeqId}
+                  </span>
+                </div>
+              )}
             </div>
 
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start gap-2">
-                <div className="w-5 h-5 text-amber-600 mt-0.5">⚠️</div>
-                <p className="text-sm text-amber-800">
-                  หลังจากส่งบิลแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้
-                </p>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg mt-3">
+              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              <span>
+                After submission, you will be redirected to the dashboard
+                where you can track your PSW status.
+              </span>
             </div>
           </div>
 
-          <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel
+          <AlertDialogFooter className="flex gap-2 bg-white border-t border-gray-100 pt-4">
+            <Button
+              variant="outline"
               onClick={() => setShowSubmitConfirmDialog(false)}
-              className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              ยกเลิก
-            </AlertDialogCancel>
+              Cancel
+            </Button>
             <AlertDialogAction
               onClick={() => {
                 setShowSubmitConfirmDialog(false);
                 executeAction("submit");
               }}
-              className="flex-1 bg-orange-600 text-white hover:bg-orange-700 font-medium"
+              className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
               disabled={isSubmitting || isFormDisabled}
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>กำลังส่ง...</span>
+                  <span>Submitting...</span>
                 </div>
               ) : (
-                "ยืนยันส่งบิล"
+                <>
+                  <span>Confirm & Submit</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
