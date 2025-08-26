@@ -558,9 +558,24 @@ export function CreatePSTForm({
                 console.warn("⚠️ Invalid timestamp from API:", msg.createdOn);
                 timestamp = new Date(); // fallback to current time
               } else {
-                // แปลง UTC เป็น Thailand time (+7 hours)
-                const thailandOffset = 7 * 60 * 60 * 1000; // 7 hours in milliseconds
+                // แปลง UTC เป็น Thailand time (+1 hour)
+                const thailandOffset = 60 * 60 * 1000; // 1 hour in milliseconds
                 timestamp = new Date(apiTime.getTime() + thailandOffset);
+
+                // Log for debugging
+                console.log("📅 Message timestamp:", {
+                  seqId: msg.seqId,
+                  original: msg.createdOn,
+                  utcTime: apiTime.toISOString(),
+                  thailandTime: timestamp.toISOString(),
+                  local: timestamp.toLocaleString("th-TH", {
+                    timeZone: "Asia/Bangkok",
+                  }),
+                  diffFromNow:
+                    Math.floor(
+                      (new Date().getTime() - timestamp.getTime()) / (1000 * 60)
+                    ) + " minutes ago",
+                });
               }
             } else {
               timestamp = new Date(); // fallback to current time
