@@ -12,9 +12,10 @@ interface Step {
 interface StepProgressProps {
   currentStep: 'pst' | 'psw';
   pstCompleted?: boolean;
+  pswCompleted?: boolean;
 }
 
-export function StepProgress({ currentStep, pstCompleted = false }: StepProgressProps) {
+export function StepProgress({ currentStep, pstCompleted = false, pswCompleted = false }: StepProgressProps) {
   const steps: Step[] = [
     {
       id: 'pst',
@@ -26,7 +27,7 @@ export function StepProgress({ currentStep, pstCompleted = false }: StepProgress
       id: 'psw',
       title: 'PSW',
       description: 'Prepare for Shipping Weekly',
-      status: currentStep === 'psw' ? 'current' : pstCompleted ? 'upcoming' : 'upcoming'
+      status: pswCompleted ? 'completed' : currentStep === 'psw' ? 'current' : pstCompleted ? 'upcoming' : 'upcoming'
     }
   ];
 

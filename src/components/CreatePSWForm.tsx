@@ -72,6 +72,7 @@ import {
 } from "../api/services/pstService";
 import { env } from "../config/env";
 import { formatDateForAPI } from "../utils/dateUtils";
+import { StepProgress } from "./StepProgress";
 
 // ============================================================================
 // INTERFACES & TYPES
@@ -1161,6 +1162,13 @@ export function CreatePSWForm({
           </div>
         </div>
       </div>
+
+      {/* Step Progress */}
+      <StepProgress 
+        currentStep="psw" 
+        pstCompleted={true}
+        pswCompleted={billEntryData.billStatus === "Y" || Boolean(pswWebSeqId && isFormDisabled)}
+      />
 
       {/* Form Content */}
       <div className="p-6 space-y-8">

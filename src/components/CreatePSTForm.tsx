@@ -25,6 +25,7 @@ import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { LoadingSpinner, ProgressBar } from "./ui/loading";
 import { useToast } from "./ui/use-toast";
+import { StepProgress } from "./StepProgress";
 import {
   Collapsible,
   CollapsibleContent,
@@ -1805,6 +1806,19 @@ export function CreatePSTForm({
             </div>
           </div> */}
         </div>
+
+        {/* Step Progress */}
+        <StepProgress 
+          currentStep="pst" 
+          pstCompleted={
+            billEntryData.billStatus === "Y" || // ถ้า submit แล้วให้แสดงเป็น completed
+            Boolean(pstWebSeqId && isFormDisabled) // ถ้าเป็น view mode ให้แสดงเป็น completed
+          }
+          pswCompleted={
+            billEntryData.billStatus === "Y" || // ถ้า submit แล้วให้แสดงเป็น completed
+            Boolean(pstWebSeqId && isFormDisabled) // ถ้าเป็น view mode ให้แสดงเป็น completed ทั้งหมด
+          }
+        />
 
         {/* Form Content */}
         <div className="p-6 space-y-8">
