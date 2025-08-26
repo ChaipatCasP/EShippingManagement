@@ -2,6 +2,8 @@
  * File Upload Service for PST/PSW documents
  * Handles uploading of images and PDF files
  */
+import { env } from '../../config/env';
+
 
 export interface FileUploadRequest {
     files: File[];
@@ -20,7 +22,8 @@ export interface FileUploadResponse {
 }
 
 class FileUploadService {
-    private baseUrl = "https://apis-staging.jagota.com/FileUpload/";
+    
+    private baseUrl = `${env.jagotaApi.baseUrljagota}/FileUpload/`;
     private token = "Bearer eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiItIiwiaXNzdWVkQXQiOiIxNjkzMzkyNTU4IiwidHRsIjozMTU1Njk1MjB9.6pzO34CuZ7Vya8UdHdOVsDoT_Tc12MK32VvLvCegx_s";
     //   private username = "JBT04";
     private username = "GUEST04";
@@ -69,7 +72,7 @@ class FileUploadService {
             let fileCount = 0;
             for (let index = 0; index < request.files.length; index++) {
                 const file = request.files[index];
-                
+
                 if (file && file instanceof File && file.size > 0) {
                     console.log(`📎 Processing file ${index + 1}:`, {
                         name: file.name,
@@ -78,20 +81,20 @@ class FileUploadService {
                         lastModified: file.lastModified,
                         constructor: file.constructor.name
                     });
-                    
+
                     // Create a new File object to avoid any reference issues
                     const clonedFile = new File([file], file.name, {
                         type: file.type,
                         lastModified: file.lastModified
                     });
-                    
+
                     console.log(`📋 Cloned file ${index + 1}:`, {
                         name: clonedFile.name,
                         size: clonedFile.size,
                         type: clonedFile.type,
                         lastModified: clonedFile.lastModified
                     });
-                    
+
                     // Verify file content by reading first few bytes
                     try {
                         const chunk = file.slice(0, 100);
@@ -105,7 +108,7 @@ class FileUploadService {
                     } catch (readError) {
                         console.warn(`⚠️ Could not read file ${file.name}:`, readError);
                     }
-                    
+
                     formData.append("FILE2UPLOAD[]", clonedFile, clonedFile.name);
                     fileCount++;
                 } else {
@@ -144,7 +147,7 @@ class FileUploadService {
 
             // Document number like "JB.PS.PST.21978"
             const documentId = `${this.company}.${request.docType}.${request.docBook}.${request.docNo}`;
-            
+
             // Add document information
             formData.append("DOCUMENT", documentId);
             formData.append("DOCUMENT_SEQ", "0");
@@ -214,7 +217,7 @@ class FileUploadService {
                         error: parsedResult.message || "Unknown API error",
                     };
                 }
-                
+
                 return {
                     success: true,
                     message: parsedResult.message || "Files uploaded successfully",

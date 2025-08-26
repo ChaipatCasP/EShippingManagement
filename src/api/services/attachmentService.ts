@@ -25,39 +25,31 @@ export interface AttachmentResponse {
 }
 
 class AttachmentService {
-    private fileViewerBaseUrl = "https://apis-staging.jagota.com/FileViewer/";
-    
+
+    private fileViewerBaseUrl = `${env.jagotaApi.baseUrljagota}/FileViewer/`;
+
     private getToken(): string {
         return AuthUtils.getAuthToken();
     }
 
-    /**
-     * Convert API URL format to FileViewer format
-     * IBMattachments/PS/202508/152078825.jpg -> PS_202508_152078825.jpg
-     */
     private convertToFileViewerUrl(apiUrl: string): string {
         try {
-            // Remove IBMattachments/ prefix if exists
             let cleanUrl = apiUrl.replace(/^IBMattachments\//, '');
-            
-            // Split by '/' to get parts: [PS, 202508, 152078825.jpg]
+
             const parts = cleanUrl.split('/');
-            
+
             if (parts.length >= 3) {
                 const transType = parts[0]; // PS
                 const yearMonth = parts[1]; // 202508
                 const fileName = parts[2]; // 152078825.jpg
-                
-                // Create file format: PS_202508_152078825.jpg
+
                 const fileUrl = `${transType}_${yearMonth}_${fileName}`;
-                
-                // Return full FileViewer URL
+
                 return `${this.fileViewerBaseUrl}?file=${fileUrl}&token=jagota`;
             }
-            
-            // Fallback if format doesn't match expected pattern
+
             return `${this.fileViewerBaseUrl}?file=${cleanUrl.replace(/\//g, '_')}&token=jagota`;
-            
+
         } catch (error) {
             console.warn("Failed to convert URL format:", error);
             return `${this.fileViewerBaseUrl}?file=${apiUrl}&token=jagota`;
@@ -113,7 +105,7 @@ class AttachmentService {
 
             // Handle different response formats based on API structure
             let attachmentData: any[] = [];
-            
+
             // Check if this is the new API format with error, message, data structure
             if (data.hasOwnProperty('error') && data.hasOwnProperty('data')) {
                 if (data.error === true) {
@@ -123,7 +115,7 @@ class AttachmentService {
                         error: data.message || "API returned error",
                     };
                 }
-                
+
                 // Use the data array from the new format
                 attachmentData = data.data || [];
             } else if (data.data && Array.isArray(data.data)) {
@@ -141,7 +133,7 @@ class AttachmentService {
             const attachments: AttachmentItem[] = Array.isArray(attachmentData) ? attachmentData.map((item: any, index: number) => {
                 const fileName = item.fileName || item.filename || item.name || "Unknown";
                 const originalUrl = item.downloadUrl || item.url || "";
-                
+
                 return {
                     id: item.id || `attachment-${index}`,
                     fileName: fileName,
@@ -183,7 +175,7 @@ class AttachmentService {
      */
     private getFileTypeFromName(fileName: string): string {
         const extension = this.getFileExtension(fileName);
-        
+
         switch (extension) {
             case 'jpg':
             case 'jpeg':

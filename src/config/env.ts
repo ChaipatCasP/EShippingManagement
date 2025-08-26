@@ -38,6 +38,7 @@ interface AppConfig {
   };
   jagotaApi: {
     baseUrl: string;
+    baseUrljagota: string;
   };
   auth: {
     tokenKey: string;
@@ -112,6 +113,7 @@ export const env: AppConfig = {
   // JAGOTA API Configuration
   jagotaApi: {
     baseUrl: getOptionalEnv('VITE_JAGOTA_API_BASE_URL', 'https://jnodeapi-staging.jagota.com'),
+    baseUrljagota: getOptionalEnv('VITE_JAGOTA_BASE_URL', 'https://apis-staging.jagota.com'),
   },
 
   // Authentication
