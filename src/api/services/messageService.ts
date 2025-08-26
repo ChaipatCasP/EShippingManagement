@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { type CommunicationMessage } from '../../components/CommunicationPanel';
+import { AuthUtils } from '../../utils/authUtils';
 
 export interface MessageResponse {
   error: boolean;
@@ -8,7 +9,9 @@ export interface MessageResponse {
 }
 
 class MessageService {
-  private bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+  private getAuthToken(): string {
+    return AuthUtils.getAuthToken();
+  }
 
   private convertTimestamp(timestamp: string): Date {
     if (!timestamp) {
@@ -38,7 +41,7 @@ class MessageService {
         {
           method: "GET",
           headers: {
-            Authorization: this.bearerToken,
+            Authorization: this.getAuthToken(),
             "Content-Type": "application/json",
           },
         }
@@ -105,7 +108,7 @@ class MessageService {
         {
           method: 'POST',
           headers: {
-            'Authorization': this.bearerToken,
+            'Authorization': this.getAuthToken(),
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({

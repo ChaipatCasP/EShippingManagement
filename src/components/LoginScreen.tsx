@@ -278,7 +278,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                   </div>
 
                   {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="rememberMe"
@@ -297,7 +297,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                     >
                       Forgot password?
                     </Button>
-                  </div>
+                  </div> */}
 
                   {/* Sign In Button */}
                   <Button 
@@ -318,7 +318,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                   <Separator />
 
                   {/* Sign Up Link */}
-                  <div className="text-center">
+                  {/* <div className="text-center">
                     <p className="text-sm text-gray-600">
                       Don't have an account?{' '}
                       <Button
@@ -331,13 +331,13 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                         Contact Administrator
                       </Button>
                     </p>
-                  </div>
+                  </div> */}
                 </form>
               </CardContent>
             </Card>
 
             {/* Demo Credentials */}
-            <Card className="mt-4 bg-blue-50 border-blue-200">
+            {/* <Card className="mt-4 bg-blue-50 border-blue-200">
               <CardContent className="pt-4">
                 <div className="text-center">
                   <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
@@ -352,7 +352,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onSignUp }: LoginScreen
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

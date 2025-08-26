@@ -1,4 +1,5 @@
 import { env } from '../../config/env';
+import { AuthUtils } from '../../utils/authUtils';
 
 // Function to get token with error handling
 const getToken = () => {
@@ -232,7 +233,7 @@ export const pstService = {
     const res = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+        'Authorization': AuthUtils.getAuthToken(),
         'Content-Type': 'application/json'
       }
     });
@@ -254,7 +255,7 @@ export const pstService = {
     const res = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+        'Authorization': AuthUtils.getAuthToken(),
         'Content-Type': 'application/json'
       }
     });
@@ -275,7 +276,7 @@ export const pstService = {
     const res = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+        'Authorization': AuthUtils.getAuthToken(),
         'Content-Type': 'application/json'
       }
     });
@@ -296,7 +297,7 @@ export const pstService = {
     const res = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`,
+        'Authorization': AuthUtils.getAuthToken(),
         'Content-Type': 'application/json'
       }
     });
@@ -410,7 +411,7 @@ export const pstService = {
   async submitBill(webSeqId: string): Promise<{ error: boolean; message: string; data?: any }> {
     try {
       // Use the same Bearer token as other APIs
-      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+      const bearerToken = AuthUtils.getAuthToken();
       
       const myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");
@@ -454,7 +455,7 @@ export const pstService = {
   async createPSW(pstWebSeqId: string): Promise<{ error: boolean; message: string; data?: any }> {
     try {
       // Use the same Bearer token as other APIs
-      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+      const bearerToken = AuthUtils.getAuthToken();
       
       const myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");

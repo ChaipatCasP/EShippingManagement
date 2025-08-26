@@ -7,6 +7,7 @@ import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import { env } from "../config/env";
+import { AuthUtils } from "../utils/authUtils";
 import {
   MessageSquare,
   Send,
@@ -113,7 +114,7 @@ export function CommunicationPanel({
       
       try {
         // Call API to save message
-        const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
+        const bearerToken = AuthUtils.getAuthToken();
         
         const response = await fetch(
           `${env.jagotaApi.baseUrl}/v1/es/eshipping/message`,

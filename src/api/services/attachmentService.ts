@@ -1,3 +1,6 @@
+import { AuthUtils } from '../../utils/authUtils';
+import { env } from '../../config/env';
+
 /**
  * Attachment Service for viewing uploaded files
  * Fetches attachment data from the API
@@ -22,9 +25,11 @@ export interface AttachmentResponse {
 }
 
 class AttachmentService {
-    private baseUrl = "https://jnodeapi-staging.jagota.com/v1/es/eshipping/attachments";
     private fileViewerBaseUrl = "https://apis-staging.jagota.com/FileViewer/";
-    private token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0";
+    
+    private getToken(): string {
+        return AuthUtils.getAuthToken();
+    }
 
     /**
      * Convert API URL format to FileViewer format
@@ -64,10 +69,10 @@ class AttachmentService {
             console.log("📎 Fetching attachments for:", { transType, poBook, poNo });
 
             const headers = new Headers();
-            headers.append("Authorization", this.token);
+            headers.append("Authorization", this.getToken());
             // headers.append("Username", this.username);
 
-            const url = `${this.baseUrl}?transType=${transType}&poBook=${poBook}&poNo=${poNo}`;
+            const url = `${env.jagotaApi.baseUrl}/v1/es/eshipping/attachments?transType=${transType}&poBook=${poBook}&poNo=${poNo}`;
 
             const response = await fetch(url, {
                 method: "GET",
