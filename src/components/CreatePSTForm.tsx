@@ -1969,6 +1969,7 @@ export function CreatePSTForm({
                 <div className="flex-1 space-y-4">
                   {/* Bill Entry Section */}
                   <Collapsible
+                    style={{ backgroundColor: "white" }}
                     open={!billEntryCollapsed}
                     onOpenChange={(open) => setBillEntryCollapsed(!open)}
                   >
@@ -2073,7 +2074,7 @@ export function CreatePSTForm({
                             <Label className="text-sm font-medium text-gray-700">
                               Billing By
                             </Label>
-                            <div className="bg-gray-50 border border-gray-300 rounded-md p-3">
+                            <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
                               <div className="text-sm">
                                 <div className="font-medium text-gray-900">
                                   {headerData.supplierName}
@@ -2090,6 +2091,7 @@ export function CreatePSTForm({
                                 <span className="text-red-500">*</span>
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 value={billEntryData.invoiceNo || ""}
                                 onChange={(e) =>
                                   setBillEntryData({
@@ -2108,7 +2110,7 @@ export function CreatePSTForm({
                               </Label>
                               <div className="flex gap-2">
                                 <Input
-                                  className="flex-1"
+                                  className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                   value={billEntryData.contactPerson || ""}
                                   onChange={(e) =>
                                     setBillEntryData({
@@ -2125,6 +2127,7 @@ export function CreatePSTForm({
                                 Invoice Date
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 type="date"
                                 value={
                                   billEntryData.invoiceDate
@@ -2148,6 +2151,7 @@ export function CreatePSTForm({
                                 <span className="text-red-500">*</span>
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 type="date"
                                 value={billEntryData.awbDate || ""}
                                 onChange={(e) =>
@@ -2170,6 +2174,7 @@ export function CreatePSTForm({
                                 <span className="text-red-500">*</span>
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 value={billEntryData.importEntryNo || ""}
                                 onChange={(e) =>
                                   setBillEntryData({
@@ -2186,6 +2191,7 @@ export function CreatePSTForm({
                                 ETA <span className="text-red-500">*</span>
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 type="date"
                                 value={billEntryData.eta || ""}
                                 onChange={(e) =>
@@ -2203,6 +2209,7 @@ export function CreatePSTForm({
                                 Vessel Name
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 value={billEntryData.vesselName || ""}
                                 onChange={(e) =>
                                   setBillEntryData({
@@ -2227,7 +2234,7 @@ export function CreatePSTForm({
                                     variant="outline"
                                     role="combobox"
                                     aria-expanded={countryDropdownOpen}
-                                    className="w-full justify-between"
+                                    className="w-full justify-between bg-gray-50 border border-gray-200 rounded-md p-3"
                                     // disabled={isLoadingCountries}
                                     disabled={isFormDisabled}
                                   >
@@ -2289,6 +2296,7 @@ export function CreatePSTForm({
                                 Due Date
                               </Label>
                               <Input
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                                 type="date"
                                 value={billEntryData.dueDate || ""}
                                 onChange={(e) => {
@@ -2366,7 +2374,7 @@ export function CreatePSTForm({
                                     });
                                   }}
                                   disabled={isFormDisabled}
-                                  className="flex-1"
+                                  className="bg-gray-50 border border-gray-200 rounded-md p-3 flex-1"
                                 />
                                 <Select
                                   value={(() => {
@@ -2422,10 +2430,10 @@ export function CreatePSTForm({
                                   }}
                                   disabled={isFormDisabled}
                                 >
-                                  <SelectTrigger className="w-24 bg-white">
+                                  <SelectTrigger className="bg-gray-50 border border-gray-200 rounded-md p-3 flex-1">
                                     <SelectValue placeholder="เวลา" />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="bg-gray-50 border border-gray-200 rounded-md p-3 flex-1">
                                     <SelectItem value="08:00">08:00</SelectItem>
                                     <SelectItem value="08:30">08:30</SelectItem>
                                     <SelectItem value="09:00">09:00</SelectItem>
@@ -2462,9 +2470,9 @@ export function CreatePSTForm({
                                 //     paymentTerm: e.target.value,
                                 //   })
                                 // }
+                                disabled
                                 readOnly
-                                className="bg-gray-50 border-gray-300"
-                                style={{ border: "none", color: "black" }}
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                               />
                             </div>
                             <div className="space-y-2">
@@ -2473,9 +2481,9 @@ export function CreatePSTForm({
                               </Label>
                               <Input
                                 value={billEntryData.currency}
+                                disabled
                                 readOnly
-                                className="bg-gray-50 border-gray-300"
-                                style={{ border: "none", color: "black" }}
+                                className="bg-gray-50 border border-gray-200 rounded-md p-3"
                               />
                             </div>
                           </div>
@@ -2494,7 +2502,7 @@ export function CreatePSTForm({
                                 })
                               }
                               disabled={isFormDisabled}
-                              className="min-h-20"
+                              className="bg-gray-50 border border-gray-200 rounded-md p-3min-h-20"
                               rows={3}
                             />
                           </div>
@@ -2525,7 +2533,10 @@ export function CreatePSTForm({
                     className="space-y-8"
                   >
                     {/* Step 2 Information */}
-                    <Card className="shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
+                    <Card
+                      className="shadow-sm"
+                      style={{ border: "1px solid #E5E7EB" }}
+                    >
                       <CardHeader className="pb-0">
                         <CardTitle className="flex items-center gap-2">
                           <Key className="w-5 h-5 text-amber-600" />
