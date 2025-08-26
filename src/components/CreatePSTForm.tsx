@@ -67,17 +67,14 @@ import {
   type ServiceProviderItem,
   type SaveExpenseRequest,
 } from "../api/services/pstService";
-import { env } from "../config/env";
+import { countryService, type Country } from "../api/services/countryService";
+import { messageService } from "../api/services/messageService";
 import {
   CommunicationPanel,
   type CommunicationMessage,
 } from "./CommunicationPanel";
 import { FileUploadComponent } from "./FileUploadComponent";
 import { AttachmentViewer } from "./AttachmentViewer";
-
-interface Country {
-  name: string;
-}
 
 interface ExpenseItem {
   id: string;
@@ -466,48 +463,19 @@ export function CreatePSTForm({
   const loadCountries = async () => {
     setIsLoadingCountries(true);
     try {
-      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
-
-      const response = await fetch(
-        `${env.jagotaApi.baseUrl}/v1/es/eshipping/country-list`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: bearerToken,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.error && data.data) {
-        setCountries(data.data);
+      const response = await countryService.getCountries();
+      
+      if (!response.error && response.data) {
+        setCountries(response.data);
       } else {
-        console.error("❌ Countries API returned error:", data);
-        // Fallback data
-        setCountries([
-          { name: "Thailand" },
-          { name: "China" },
-          { name: "Japan" },
-          { name: "South Korea" },
-          { name: "United States" },
-        ]);
+        console.error("❌ Countries service returned error:", response.message);
+        // Use fallback data from service
+        setCountries(response.data);
       }
     } catch (error) {
       console.error("❌ Error loading countries:", error);
-      // Fallback data
-      setCountries([
-        { name: "Thailand" },
-        { name: "China" },
-        { name: "Japan" },
-        { name: "South Korea" },
-        { name: "United States" },
-      ]);
+      // In case of unexpected error, set empty array
+      setCountries([]);
     } finally {
       setIsLoadingCountries(false);
     }
@@ -521,102 +489,10 @@ export function CreatePSTForm({
     }
 
     try {
-      // Using the same bearer token pattern as other APIs
-      const bearerToken = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55IjoiSkIiLCJ1c2VybmFtZSI6Imt1c3VtYUBzYW5ndGhvbmdzdWtzaGlwcGluZ3NvbHV0aW9uLmNvLnRoIiwic3VwcGxpZXJDb2RlIjoiNjIzMiIsImlhdCI6MTc1NDI4MDIxMywiZXhwIjoxNzg1ODE2MjEzfQ.1bys3p_-9kQ-DlgWfz7g3m2ap3_0jypyQDF8FUuQIR0`;
-
-      const response = await fetch(
-        `${env.jagotaApi.baseUrl}/v1/es/eshipping/message?webSeqId=${idToUse}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: bearerToken,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.error && data.data) {
-        // Convert API data to CommunicationMessage format
-        const convertedMessages: CommunicationMessage[] = data.data.map(
-          (msg: any) => {
-            // Handle timestamp conversion properly
-            let timestamp: Date;
-
-            if (msg.createdOn) {
-              // Convert API timestamp to proper Date object
-              // API ส่งมาเป็น UTC time, ต้องแปลงเป็น Thailand timezone (+7)
-              const apiTime = new Date(msg.createdOn);
-
-              // Check if the timestamp is valid
-              if (isNaN(apiTime.getTime())) {
-                console.warn("⚠️ Invalid timestamp from API:", msg.createdOn);
-                timestamp = new Date(); // fallback to current time
-              } else {
-                // แปลง UTC เป็น Thailand time (+1 hour)
-                const thailandOffset = 60 * 60 * 1000; // 1 hour in milliseconds
-                timestamp = new Date(apiTime.getTime() + thailandOffset);
-
-                // Log for debugging
-                console.log("📅 Message timestamp:", {
-                  seqId: msg.seqId,
-                  original: msg.createdOn,
-                  utcTime: apiTime.toISOString(),
-                  thailandTime: timestamp.toISOString(),
-                  local: timestamp.toLocaleString("th-TH", {
-                    timeZone: "Asia/Bangkok",
-                  }),
-                  diffFromNow:
-                    Math.floor(
-                      (new Date().getTime() - timestamp.getTime()) / (1000 * 60)
-                    ) + " minutes ago",
-                });
-              }
-            } else {
-              timestamp = new Date(); // fallback to current time
-            }
-
-            return {
-              // API Properties (จากข้อมูลจริง)
-              seqId: msg.seqId,
-              source: msg.source as "WEB" | "JAGOTA",
-              message: msg.message,
-              createdBy: msg.createdBy,
-              createdOn: msg.createdOn,
-              readFlag: msg.readFlag as "Y" | "N",
-
-              // UI Properties (สำหรับแสดงผล)
-              id: msg.seqId.toString(),
-              content: msg.message,
-              sender: (msg.source === "WEB" ? "shipping" : "jagota") as
-                | "shipping"
-                | "jagota",
-              senderName: msg.createdBy,
-              timestamp: timestamp,
-              read: msg.readFlag === "Y",
-              type: "general" as const,
-            };
-          }
-        );
-
-        // Sort messages by timestamp (newest first)
-        convertedMessages.sort(
-          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-        );
-
-        setMessages(convertedMessages);
-      } else {
-        // If no messages or error, set empty array
-        setMessages([]);
-      }
+      const messages = await messageService.getMessages(idToUse);
+      setMessages(messages);
     } catch (error) {
-      console.error("❌ Failed to load messages for PST:", error);
-      // Keep existing messages or show empty array on error
+      console.error("❌ Error loading messages:", error);
     }
   };
 
@@ -1481,9 +1357,17 @@ export function CreatePSTForm({
   };
 
   // Communication Panel handlers
-  const handleSendMessage = async () => {
-    // No longer manually adding messages since CommunicationPanel
-    // handles API calls and refreshes messages automatically
+  const handleSendMessage = async (message: string) => {
+    // CommunicationPanel จัดการการส่งข้อความเองแล้ว
+    // เราแค่ reload messages หลังจากส่งแล้ว
+    console.log("📝 Message sent via CommunicationPanel:", message);
+    
+    // Optional: reload messages to ensure we have the latest data
+    if (pstWebSeqId) {
+      setTimeout(() => {
+        loadMessages(pstWebSeqId);
+      }, 500); // Small delay to ensure API has processed
+    }
   };
 
   const handleMarkMessageAsRead = (messageId: string) => {
