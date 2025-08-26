@@ -1313,23 +1313,23 @@ export function CreatePSTForm({
         if (!dateTimeStr) return "16:00";
         try {
           // Handle different date-time formats
-          if (dateTimeStr.includes(' ')) {
+          if (dateTimeStr.includes(" ")) {
             // Format: "YYYY-MM-DD HH:mm"
-            const timePart = dateTimeStr.split(' ')[1];
-            if (timePart && timePart.includes(':')) {
+            const timePart = dateTimeStr.split(" ")[1];
+            if (timePart && timePart.includes(":")) {
               return timePart.substring(0, 5); // Return HH:mm
             }
-          } else if (dateTimeStr.includes('T')) {
+          } else if (dateTimeStr.includes("T")) {
             // Format: "YYYY-MM-DDTHH:mm:ss" (ISO format)
-            const timePart = dateTimeStr.split('T')[1];
-            if (timePart && timePart.includes(':')) {
+            const timePart = dateTimeStr.split("T")[1];
+            if (timePart && timePart.includes(":")) {
               return timePart.substring(0, 5); // Return HH:mm
             }
-          } else if (dateTimeStr.length === 5 && dateTimeStr.includes(':')) {
+          } else if (dateTimeStr.length === 5 && dateTimeStr.includes(":")) {
             // Already in HH:mm format
             return dateTimeStr;
           }
-          
+
           // Fallback: try to parse as Date
           const date = new Date(dateTimeStr);
           if (!isNaN(date.getTime())) {
@@ -1339,7 +1339,7 @@ export function CreatePSTForm({
               hour12: false,
             });
           }
-          
+
           return "16:00";
         } catch (e) {
           console.error("Error formatting time:", dateTimeStr, e);
@@ -1531,23 +1531,23 @@ export function CreatePSTForm({
     if (!dateTimeStr) return "16:00";
     try {
       // Handle different date-time formats
-      if (dateTimeStr.includes(' ')) {
+      if (dateTimeStr.includes(" ")) {
         // Format: "YYYY-MM-DD HH:mm"
-        const timePart = dateTimeStr.split(' ')[1];
-        if (timePart && timePart.includes(':')) {
+        const timePart = dateTimeStr.split(" ")[1];
+        if (timePart && timePart.includes(":")) {
           return timePart.substring(0, 5); // Return HH:mm
         }
-      } else if (dateTimeStr.includes('T')) {
+      } else if (dateTimeStr.includes("T")) {
         // Format: "YYYY-MM-DDTHH:mm:ss" (ISO format)
-        const timePart = dateTimeStr.split('T')[1];
-        if (timePart && timePart.includes(':')) {
+        const timePart = dateTimeStr.split("T")[1];
+        if (timePart && timePart.includes(":")) {
           return timePart.substring(0, 5); // Return HH:mm
         }
-      } else if (dateTimeStr.length === 5 && dateTimeStr.includes(':')) {
+      } else if (dateTimeStr.length === 5 && dateTimeStr.includes(":")) {
         // Already in HH:mm format
         return dateTimeStr;
       }
-      
+
       // Fallback: try to parse as Date
       const date = new Date(dateTimeStr);
       if (!isNaN(date.getTime())) {
@@ -1557,7 +1557,7 @@ export function CreatePSTForm({
           hour12: false,
         });
       }
-      
+
       return "16:00";
     } catch (e) {
       console.error("Error formatting time:", dateTimeStr, e);
@@ -1808,8 +1808,8 @@ export function CreatePSTForm({
         </div>
 
         {/* Step Progress */}
-        <StepProgress 
-          currentStep="pst" 
+        <StepProgress
+          currentStep="pst"
           pstCompleted={
             billEntryData.billStatus === "Y" || // ถ้า submit แล้วให้แสดงเป็น completed
             Boolean(pstWebSeqId && isFormDisabled) // ถ้าเป็น view mode ให้แสดงเป็น completed
@@ -1976,7 +1976,7 @@ export function CreatePSTForm({
                       className={`shadow-sm transition-all duration-200 ${
                         billEntryCollapsed
                           ? "border-gray-200"
-                          : "border-orange-200"
+                          : "border-gray-200"
                       }`}
                     >
                       <CollapsibleTrigger asChild>
@@ -2144,55 +2144,6 @@ export function CreatePSTForm({
                             </div>
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
-                                Credit Term
-                              </Label>
-                              <div className="flex gap-2">
-                                <Select
-                                  value={billEntryData.creditTerm}
-                                  onValueChange={(value) =>
-                                    setBillEntryData({
-                                      ...billEntryData,
-                                      creditTerm: value,
-                                    })
-                                  }
-                                  disabled={isFormDisabled}
-                                >
-                                  <SelectTrigger className="flex-1">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="credit-30">
-                                      เครดิต 30 วัน
-                                    </SelectItem>
-                                    <SelectItem value="credit-60">
-                                      เครดิต 60 วัน
-                                    </SelectItem>
-                                    <SelectItem value="credit-90">
-                                      เครดิต 90 วัน
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <div className="flex items-center gap-1">
-                                  <span className="text-sm text-gray-600">
-                                    Credit Days
-                                  </span>
-                                  <Input
-                                    style={{ border: "none" }}
-                                    value={
-                                      billEntryData.creditTerm?.split("-")[1]
-                                    }
-                                    readOnly
-                                    className="w-20 bg-gray-50"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Row 4: AWB/BL/Truck Date, Import Entry No, Currency, Reference Code */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium text-gray-700">
                                 AWB/BL/Truck Date{" "}
                                 <span className="text-red-500">*</span>
                               </Label>
@@ -2209,6 +2160,10 @@ export function CreatePSTForm({
                                 disabled={isFormDisabled}
                               />
                             </div>
+                          </div>
+
+                          {/* Row 4: AWB/BL/Truck Date, Import Entry No, Currency, Reference Code */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
                                 Import Entry No.(เลขที่ใบขน)
@@ -2226,35 +2181,6 @@ export function CreatePSTForm({
                                 disabled={isFormDisabled}
                               />
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium text-gray-700">
-                                Currency
-                              </Label>
-                              <Input
-                                value={billEntryData.currency}
-                                readOnly
-                                className="bg-gray-50 border-gray-300"
-                                disabled
-                              />
-                            </div>
-                            {/* <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Reference Code
-                        </Label>
-                        <Input
-                          value={billEntryData.referenceCode || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              referenceCode: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-                          </div>
-
-                          {/* Row 5: ETA, Vessel Name, Tax ID No, Payment Term */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
                                 ETA <span className="text-red-500">*</span>
@@ -2287,39 +2213,6 @@ export function CreatePSTForm({
                                 disabled={isFormDisabled}
                               />
                             </div>
-                            {/* <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Tax ID No.
-                        </Label>
-                        <Input
-                          value={billEntryData.taxIdNo || ""}
-                          onChange={(e) =>
-                            setBillEntryData({
-                              ...billEntryData,
-                              taxIdNo: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium text-gray-700">
-                                Payment Term
-                              </Label>
-                              <Input
-                                value={billEntryData.paymentTerm || ""}
-                                onChange={(e) =>
-                                  setBillEntryData({
-                                    ...billEntryData,
-                                    paymentTerm: e.target.value,
-                                  })
-                                }
-                                disabled
-                              />
-                            </div>
-                          </div>
-
-                          {/* Row 6: Country of Origin, Due Date, Request Payment Date */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
                                 Country of Origin{" "}
@@ -2387,6 +2280,10 @@ export function CreatePSTForm({
                                 </PopoverContent>
                               </Popover>
                             </div>
+                          </div>
+
+                          {/* Row 5: ETA, Vessel Name, Tax ID No, Payment Term */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
                                 Due Date
@@ -2409,48 +2306,63 @@ export function CreatePSTForm({
                             </div>
                             <div className="space-y-2">
                               <Label className="text-sm font-medium text-gray-700">
-                                Request Payment Date & Time
+                                Request Payment Date Time
                               </Label>
                               <div className="flex gap-2">
                                 <Input
                                   type="date"
                                   value={(() => {
-                                    if (!billEntryData.requestPaymentDateTime) return "";
-                                    
-                                    const dateTime = billEntryData.requestPaymentDateTime;
-                                    
+                                    if (!billEntryData.requestPaymentDateTime)
+                                      return "";
+
+                                    const dateTime =
+                                      billEntryData.requestPaymentDateTime;
+
                                     // Handle "YYYY-MM-DD HH:mm" format
-                                    if (dateTime.includes(' ')) {
-                                      return dateTime.split(' ')[0];
+                                    if (dateTime.includes(" ")) {
+                                      return dateTime.split(" ")[0];
                                     }
-                                    
+
                                     // Handle "YYYY-MM-DDTHH:mm:ss" format
-                                    if (dateTime.includes('T')) {
-                                      return dateTime.split('T')[0];
+                                    if (dateTime.includes("T")) {
+                                      return dateTime.split("T")[0];
                                     }
-                                    
+
                                     // If it's just a date "YYYY-MM-DD"
-                                    if (dateTime.length === 10 && dateTime.includes('-')) {
+                                    if (
+                                      dateTime.length === 10 &&
+                                      dateTime.includes("-")
+                                    ) {
                                       return dateTime;
                                     }
-                                    
+
                                     return "";
                                   })()}
                                   onChange={(e) => {
                                     const dateValue = e.target.value;
-                                    const currentDateTime = billEntryData.requestPaymentDateTime || "";
+                                    const currentDateTime =
+                                      billEntryData.requestPaymentDateTime ||
+                                      "";
                                     let timeValue = "09:00";
-                                    
+
                                     // Extract existing time if available
-                                    if (currentDateTime.includes('T')) {
-                                      timeValue = currentDateTime.split('T')[1]?.substring(0, 5) || "09:00";
-                                    } else if (currentDateTime.includes(' ')) {
-                                      timeValue = currentDateTime.split(' ')[1]?.substring(0, 5) || "09:00";
+                                    if (currentDateTime.includes("T")) {
+                                      timeValue =
+                                        currentDateTime
+                                          .split("T")[1]
+                                          ?.substring(0, 5) || "09:00";
+                                    } else if (currentDateTime.includes(" ")) {
+                                      timeValue =
+                                        currentDateTime
+                                          .split(" ")[1]
+                                          ?.substring(0, 5) || "09:00";
                                     }
-                                    
+
                                     setBillEntryData({
                                       ...billEntryData,
-                                      requestPaymentDateTime: dateValue ? `${dateValue} ${timeValue}` : "",
+                                      requestPaymentDateTime: dateValue
+                                        ? `${dateValue} ${timeValue}`
+                                        : "",
                                     });
                                   }}
                                   disabled={isFormDisabled}
@@ -2458,45 +2370,59 @@ export function CreatePSTForm({
                                 />
                                 <Select
                                   value={(() => {
-                                    if (!billEntryData.requestPaymentDateTime) return "09:00";
-                                    
-                                    const dateTime = billEntryData.requestPaymentDateTime;
-                                    
+                                    if (!billEntryData.requestPaymentDateTime)
+                                      return "09:00";
+
+                                    const dateTime =
+                                      billEntryData.requestPaymentDateTime;
+
                                     // Handle "YYYY-MM-DD HH:mm" format
-                                    if (dateTime.includes(' ')) {
-                                      const timePart = dateTime.split(' ')[1];
-                                      return timePart ? timePart.substring(0, 5) : "09:00";
+                                    if (dateTime.includes(" ")) {
+                                      const timePart = dateTime.split(" ")[1];
+                                      return timePart
+                                        ? timePart.substring(0, 5)
+                                        : "09:00";
                                     }
-                                    
+
                                     // Handle "YYYY-MM-DDTHH:mm:ss" format
-                                    if (dateTime.includes('T')) {
-                                      const timePart = dateTime.split('T')[1];
-                                      return timePart ? timePart.substring(0, 5) : "09:00";
+                                    if (dateTime.includes("T")) {
+                                      const timePart = dateTime.split("T")[1];
+                                      return timePart
+                                        ? timePart.substring(0, 5)
+                                        : "09:00";
                                     }
-                                    
+
                                     return "09:00";
                                   })()}
                                   onValueChange={(timeValue) => {
-                                    const currentDateTime = billEntryData.requestPaymentDateTime || "";
+                                    const currentDateTime =
+                                      billEntryData.requestPaymentDateTime ||
+                                      "";
                                     let dateValue = "";
-                                    
+
                                     // Extract existing date if available
-                                    if (currentDateTime.includes('T')) {
-                                      dateValue = currentDateTime.split('T')[0];
-                                    } else if (currentDateTime.includes(' ')) {
-                                      dateValue = currentDateTime.split(' ')[0];
-                                    } else if (currentDateTime && currentDateTime.length === 10 && currentDateTime.includes('-')) {
+                                    if (currentDateTime.includes("T")) {
+                                      dateValue = currentDateTime.split("T")[0];
+                                    } else if (currentDateTime.includes(" ")) {
+                                      dateValue = currentDateTime.split(" ")[0];
+                                    } else if (
+                                      currentDateTime &&
+                                      currentDateTime.length === 10 &&
+                                      currentDateTime.includes("-")
+                                    ) {
                                       dateValue = currentDateTime;
                                     }
-                                    
+
                                     setBillEntryData({
                                       ...billEntryData,
-                                      requestPaymentDateTime: dateValue ? `${dateValue} ${timeValue}` : `${timeValue}`,
+                                      requestPaymentDateTime: dateValue
+                                        ? `${dateValue} ${timeValue}`
+                                        : `${timeValue}`,
                                     });
                                   }}
                                   disabled={isFormDisabled}
                                 >
-                                  <SelectTrigger className="w-24">
+                                  <SelectTrigger className="w-24 bg-white">
                                     <SelectValue placeholder="เวลา" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -2524,9 +2450,37 @@ export function CreatePSTForm({
                                 </Select>
                               </div>
                             </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-gray-700">
+                                Payment Term
+                              </Label>
+                              <Input
+                                value={billEntryData.paymentTerm || ""}
+                                // onChange={(e) =>
+                                //   setBillEntryData({
+                                //     ...billEntryData,
+                                //     paymentTerm: e.target.value,
+                                //   })
+                                // }
+                                readOnly
+                                className="bg-gray-50 border-gray-300"
+                                style={{ border: "none", color: "black" }}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-gray-700">
+                                Currency
+                              </Label>
+                              <Input
+                                value={billEntryData.currency}
+                                readOnly
+                                className="bg-gray-50 border-gray-300"
+                                style={{ border: "none", color: "black" }}
+                              />
+                            </div>
                           </div>
 
-                          {/* Row 7: Remarks */}
+                          {/* Row 6: Remarks */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-gray-700">
                               Remarks
@@ -2559,20 +2513,6 @@ export function CreatePSTForm({
                                 Save Changes
                               </Button>
                             )}
-                            {/* <Button
-                              type="button"
-                              variant="outline"
-                              className="bg-gray-600 text-white hover:bg-gray-700"
-                            >
-                              Cancel Bill
-                            </Button>
-                            <Button
-                              type="button"
-                              className="bg-green-600 text-white hover:bg-green-700"
-                              onClick={handleSubmitBill}
-                            >
-                              Submit Bill
-                            </Button> */}
                           </div>
                         </CardContent>
                       </CollapsibleContent>
@@ -2585,7 +2525,7 @@ export function CreatePSTForm({
                     className="space-y-8"
                   >
                     {/* Step 2 Information */}
-                    <Card className="shadow-sm">
+                    <Card className="shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
                       <CardHeader className="pb-0">
                         <CardTitle className="flex items-center gap-2">
                           <Key className="w-5 h-5 text-amber-600" />
@@ -3279,15 +3219,22 @@ export function CreatePSTForm({
                 {/* Right Column - Sticky Expense Summary (20%) */}
                 <div className="w-72">
                   <div className="sticky top-4">
-                    <Card>
-                      <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                          <DollarSign className="w-5 h-5 text-gray-500" />
-                          Expense Summary
-                        </CardTitle>
+                    <Card className="w-full mt-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 max-w-full">
+                      <CardHeader className="pb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-3 text-base">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                              <DollarSign className="w-5 h-5 text-gray-500" />
+                            </div>
+                            <div>
+                              <div className="text-gray-900 font-semibold">
+                                Expense Summary
+                              </div>
+                            </div>
+                          </CardTitle>
+                        </div>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Cost Breakdown */}
+                      <CardContent className="p-4">
                         <div className="space-y-3">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">
@@ -3355,6 +3302,77 @@ export function CreatePSTForm({
                       </CardContent>
                     </Card>
 
+                    {/* <Card>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <DollarSign className="w-5 h-5 text-gray-500" />
+                          Expense Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">
+                              Items ({expenseItems.length})
+                            </span>
+                        
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Sub Total</span>
+                            <span className="font-medium">
+                              ฿
+                              {totalSubTotal.toLocaleString("th-TH", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">VAT Amount</span>
+                            <span className="font-medium">
+                              ฿
+                              {totalVATAmount.toLocaleString("th-TH", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Excise VAT</span>
+                            <span className="font-medium">฿0</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Interior VAT</span>
+                            <span className="font-medium">฿0</span>
+                          </div>
+                          <div className="border-t pt-3">
+                            <div className="flex justify-between text-base font-semibold">
+                              <span className="text-gray-900">Grand Total</span>
+                              <span className="text-green-600">
+                                ฿
+                                {grandTotal.toLocaleString("th-TH", {
+                                  minimumFractionDigits: 1,
+                                  maximumFractionDigits: 1,
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {billEntryData.billStatus !== "Y" && (
+                          <div className="pt-4">
+                            <Button
+                              type="button"
+                              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                              onClick={handleSubmitBill}
+                              disabled={billEntryData.billStatus === "Y"}
+                            >
+                              Submit PST for Approval
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card> */}
+
                     {/* Attachment Viewer - Show uploaded files */}
                     <AttachmentViewer
                       transType="PS"
@@ -3366,24 +3384,25 @@ export function CreatePSTForm({
                     {/* File Upload Section - Hidden in view mode */}
                     {!isFormDisabled && (
                       <Card className="w-full mt-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 max-w-full">
-                        <CardHeader className="pb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                        <CardHeader className="pb-3 bg-gradient-to-r from-orange-50 to-emerald-50 border-b border-orange-100">
                           <div className="flex items-center justify-between">
                             <CardTitle className="flex items-center gap-3 text-base">
-                              <div className="p-2 bg-green-100 rounded-lg">
-                                <Upload className="w-4 h-4 text-green-600" />
+                              <div className="p-2 bg-orange-100 rounded-lg">
+                                <Upload className="w-4 h-4 text-orange-600" />
                               </div>
                               <div>
-                                <div className="text-gray-900 font-semibold">Upload Documents</div>
-                                {/* <div className="text-xs font-normal text-gray-600 mt-0.5">
-                                  PST-{billEntryData.poNo} • Upload files for review
-                                </div> */}
+                                <div className="text-gray-900 font-semibold">
+                                  Upload Documents
+                                </div>
                               </div>
                             </CardTitle>
                           </div>
                         </CardHeader>
                         <CardContent className="p-4">
                           <FileUploadComponent
-                            docType={dashboardHeaderData?.pstTransactionType ?? ""}
+                            docType={
+                              dashboardHeaderData?.pstTransactionType ?? ""
+                            }
                             docBook="PST"
                             docNo={billEntryData.poNo}
                             disabled={isFormDisabled || isSubmitting}

@@ -272,7 +272,7 @@ export function CommunicationPanel({
   const currentUserBgColor = getAvatarBgColor(currentUserName);
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export function CommunicationPanel({
         </p>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4" >
         {/* Message History */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -298,7 +298,7 @@ export function CommunicationPanel({
             Message History
           </div>
 
-          <ScrollArea className="h-64 border rounded-lg bg-gray-50 p-3">
+          <ScrollArea className="h-64 border rounded-lg bg-gray-50 p-3" style={{ border: "1px solid #E5E7EB" }}>
             {messages.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-300" />
@@ -448,7 +448,7 @@ export function CommunicationPanel({
             </div> */}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3" >
             <Textarea
               placeholder={placeholder}
               value={newMessage}

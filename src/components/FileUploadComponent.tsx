@@ -46,7 +46,6 @@ export function FileUploadComponent({
   onUploadError,
   disabled = false,
 }: FileUploadComponentProps) {
-
   const [selectedFiles, setSelectedFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -55,60 +54,65 @@ export function FileUploadComponent({
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    
+
     if (files.length === 0) return;
 
-    console.log("📁 Selected files:", files.map(f => ({
-      name: f.name,
-      size: f.size,
-      type: f.type,
-      isFile: f instanceof File
-    })));
+    console.log(
+      "📁 Selected files:",
+      files.map((f) => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        isFile: f instanceof File,
+      }))
+    );
 
     // Convert to UploadFile objects with preview
-    const uploadFiles: UploadFile[] = files.map((file) => {
-      // Validate file before processing
-      if (!file || !(file instanceof File)) {
-        console.error("Invalid file object:", file);
-        return null;
-      }
+    const uploadFiles: UploadFile[] = files
+      .map((file) => {
+        // Validate file before processing
+        if (!file || !(file instanceof File)) {
+          console.error("Invalid file object:", file);
+          return null;
+        }
 
-      if (file.size === 0) {
-        console.error("File is empty:", file.name);
-        return null;
-      }
+        if (file.size === 0) {
+          console.error("File is empty:", file.name);
+          return null;
+        }
 
-      // Create a wrapper object that preserves the original File
-      const uploadFile: UploadFile = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        file: file, // Keep reference to original File object
-        uploadStatus: "pending",
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified,
-      };
-
-      // Create preview for images
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setSelectedFiles((prev) =>
-            prev.map((f) =>
-              f.id === uploadFile.id
-                ? { ...f, preview: e.target?.result as string }
-                : f
-            )
-          );
+        // Create a wrapper object that preserves the original File
+        const uploadFile: UploadFile = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file: file, // Keep reference to original File object
+          uploadStatus: "pending",
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified,
         };
-        reader.readAsDataURL(file);
-      }
 
-      return uploadFile;
-    }).filter(Boolean) as UploadFile[]; // Remove null values
+        // Create preview for images
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setSelectedFiles((prev) =>
+              prev.map((f) =>
+                f.id === uploadFile.id
+                  ? { ...f, preview: e.target?.result as string }
+                  : f
+              )
+            );
+          };
+          reader.readAsDataURL(file);
+        }
+
+        return uploadFile;
+      })
+      .filter(Boolean) as UploadFile[]; // Remove null values
 
     setSelectedFiles((prev) => [...prev, ...uploadFiles]);
-    
+
     // Clear input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -143,11 +147,11 @@ export function FileUploadComponent({
 
       console.log("📁 Upload Request Details:", {
         docType,
-        docBook, 
+        docBook,
         docNo,
         remark: `${docType} document attachments`,
         filesCount: selectedFiles.length,
-        files: selectedFiles.map(f => ({
+        files: selectedFiles.map((f) => ({
           id: f.id,
           name: f.name,
           size: f.size,
@@ -158,55 +162,53 @@ export function FileUploadComponent({
             name: f.file.name,
             size: f.file.size,
             type: f.file.type,
-            lastModified: f.file.lastModified
-          }
-        }))
+            lastModified: f.file.lastModified,
+          },
+        })),
       });
 
       // Validate files before upload - check the actual File objects
       const validFiles = selectedFiles
-        .map(uploadFile => uploadFile.file)
-        .filter(file => {
-          const isValid = file && 
-            file instanceof File && 
-            file.size > 0 && 
-            file.name && 
+        .map((uploadFile) => uploadFile.file)
+        .filter((file) => {
+          const isValid =
+            file &&
+            file instanceof File &&
+            file.size > 0 &&
+            file.name &&
             file.name.length > 0;
-          
+
           if (!isValid) {
             console.error("❌ Invalid file detected:", {
               file: file,
               isFile: file instanceof File,
               size: file?.size,
               name: file?.name,
-              hasName: file?.name && file.name.length > 0
+              hasName: file?.name && file.name.length > 0,
             });
           }
-          
+
           return isValid;
         });
 
-      console.log("✅ Valid files after filtering:", validFiles.map(f => ({
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        constructor: f.constructor.name
-      })));
-
       if (validFiles.length === 0) {
-        alert("No valid files selected. Please select valid image or PDF files.");
+        alert(
+          "No valid files selected. Please select valid image or PDF files."
+        );
         setSelectedFiles((prev) =>
           prev.map((file) => ({
             ...file,
             uploadStatus: "error",
-            errorMessage: "File validation failed"
+            errorMessage: "File validation failed",
           }))
         );
         return;
       }
 
       if (validFiles.length !== selectedFiles.length) {
-        console.warn(`⚠️ Some files were filtered out. Valid: ${validFiles.length}, Total: ${selectedFiles.length}`);
+        console.warn(
+          `⚠️ Some files were filtered out. Valid: ${validFiles.length}, Total: ${selectedFiles.length}`
+        );
       }
 
       // Create upload request with validated files
@@ -260,8 +262,9 @@ export function FileUploadComponent({
       }
     } catch (error) {
       console.error("❌ Upload error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Upload failed";
-      
+      const errorMessage =
+        error instanceof Error ? error.message : "Upload failed";
+
       setSelectedFiles((prev) =>
         prev.map((file) => ({
           ...file,
@@ -311,14 +314,14 @@ export function FileUploadComponent({
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" style={{ border: "none" }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="w-5 h-5" />
           File Upload
         </CardTitle>
         <p className="text-sm text-gray-900">
-           (PNG, JPG, JPEG) and PDF files only
+          (PNG, JPG, JPEG) and PDF files only
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -347,7 +350,6 @@ export function FileUploadComponent({
                 <span className="text-sm text-gray-700">
                   Click to select files <br /> or drag and drop
                 </span>
-            
               </div>
             </Button>
           </label>
@@ -356,7 +358,9 @@ export function FileUploadComponent({
         {/* Selected Files List */}
         {selectedFiles.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-medium text-sm">Selected Files ({selectedFiles.length})</h4>
+            <h4 className="font-medium text-sm">
+              Selected Files ({selectedFiles.length})
+            </h4>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {selectedFiles.map((file) => (
                 <div
@@ -394,9 +398,7 @@ export function FileUploadComponent({
                   </div>
 
                   {/* Status Badge */}
-                  <div className="flex-shrink-0">
-                    {getStatusBadge(file)}
-                  </div>
+                  <div className="flex-shrink-0">{getStatusBadge(file)}</div>
 
                   {/* Remove Button */}
                   {!isUploading && file.uploadStatus !== "success" && (
