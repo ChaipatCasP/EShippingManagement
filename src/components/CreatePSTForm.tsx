@@ -2809,10 +2809,13 @@ export function CreatePSTForm({
                                                   role="combobox"
                                                   className="h-8 w-full justify-between text-sm bg-white border-gray-300"
                                                   disabled={isSubmitting}
+                                                  title={item.serviceProvider || "Select service provider"}
                                                 >
-                                                  {item.serviceProvider ||
-                                                    "Select service provider"}
-                                                  <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                                  <span className="truncate">
+                                                    {item.serviceProvider ||
+                                                      "Select service provider"}
+                                                  </span>
+                                                  <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50 flex-shrink-0" />
                                                 </Button>
                                               </PopoverTrigger>
                                               <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg">
